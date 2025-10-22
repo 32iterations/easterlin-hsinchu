@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4頁：創新亮點</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 720pt;
+            height: 405pt;
+            font-family: Arial, sans-serif;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #FF6600 0%, #FF8C42 100%);
+            padding: 25pt 40pt;
+            display: flex;
+        }
+
+        .header h1 {
+            color: #FFFFFF;
+            font-size: 24pt;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            padding: 25pt 40pt;
+            gap: 25pt;
+        }
+
+        .left-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15pt;
+        }
+
+        .right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15pt;
+        }
+
+        .feature-box {
+            background: #F5F5F5;
+            border-left: 5pt solid #0066CC;
+            padding: 15pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-box.orange {
+            border-left-color: #FF6600;
+        }
+
+        .feature-box.green {
+            border-left-color: #00A651;
+        }
+
+        .feature-box h2 {
+            color: #0066CC;
+            font-size: 15pt;
+            font-weight: bold;
+            margin: 0 0 10pt 0;
+        }
+
+        .feature-box.orange h2 {
+            color: #FF6600;
+        }
+
+        .feature-box.green h2 {
+            color: #00A651;
+        }
+
+        .feature-box p {
+            color: #333333;
+            font-size: 12pt;
+            margin: 0 0 6pt 0;
+            line-height: 1.4;
+        }
+
+        .feature-box ul {
+            margin: 8pt 0 0 0;
+            padding-left: 18pt;
+        }
+
+        .feature-box li {
+            color: #333333;
+            font-size: 11pt;
+            margin-bottom: 4pt;
+            line-height: 1.3;
+        }
+
+        .international-box {
+            background: #E3F2FD;
+            border: 2pt solid #0066CC;
+            border-radius: 6pt;
+            padding: 15pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .international-box h2 {
+            color: #0066CC;
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0 0 10pt 0;
+        }
+
+        .international-box p {
+            color: #333333;
+            font-size: 11pt;
+            margin: 0 0 4pt 0;
+            line-height: 1.3;
+        }
+
+        .footer {
+            background: #F5F5F5;
+            padding: 12pt 40pt;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer p {
+            color: #666666;
+            font-size: 9pt;
+            margin: 0;
+        }
+
+        .page-number {
+            background: #FF6600;
+            color: #FFFFFF;
+            padding: 4pt 12pt;
+            border-radius: 3pt;
+        }
+
+        .page-number p {
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>台灣首創：失智日照 + 公托 + 青少年中心 三合一</h1>
+    </div>
+
+    <div class="content-area">
+        <div class="left-column">
+            <div class="feature-box">
+                <h2>🔊 隔音設計（CDC 2025標準）</h2>
+                <p><b>STC 65隔音牆</b></p>
+                <ul>
+                    <li>1F失智專區 vs 2F幼兒區</li>
+                    <li>降噪效果：40-45 dB</li>
+                </ul>
+                <p><b>IIC 70地板</b></p>
+                <ul>
+                    <li>4F籃球場 vs 3F諮商室</li>
+                    <li>確保午睡品質</li>
+                </ul>
+            </div>
+
+            <div class="feature-box orange">
+                <h2>🍽️ 分時共享策略</h2>
+                <p><b>共用餐廳錯峰使用：</b></p>
+                <ul>
+                    <li>11:30 長者午餐</li>
+                    <li>12:00 幼兒午餐（錯峰30分鐘）</li>
+                    <li>17:30 青少年晚餐</li>
+                </ul>
+                <p><b>社區廚房：</b></p>
+                <ul>
+                    <li>日間供餐130人</li>
+                    <li>夜間親子烹飪課程</li>
+                </ul>
+            </div>
+
+            <div class="feature-box green">
+                <h2>🤝 跨齡互動時段</h2>
+                <ul>
+                    <li><b>每週五 10:00-11:00</b><br>1F長者 + 2F幼兒園藝活動</li>
+                    <li><b>每月第3週日</b><br>三代同堂節慶活動</li>
+                    <li><b>每季1次</b><br>青少年為長者錄製生命故事</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="international-box">
+                <h2>國際實證基礎</h2>
+                <p><b>🇯🇵 日本共生型服務（2018年實施）</b></p>
+                <p>• 兒童發展支援機構可提供日照服務給長者</p>
+                <p>• 法規基礎：介護保險法修正案</p>
+                <p>• 運作6年，感染率未增加</p>
+                <p style="margin-top: 12pt;"><b>🇳🇱 荷蘭 Humanitas 跨代護理之家</b></p>
+                <p>• 160位長者 + 6位大學生共居</p>
+                <p>• 運作10年+，建立完整SOP</p>
+                <p style="margin-top: 12pt;"><b>🇹🇼 台灣老幼共學（2016年起）</b></p>
+                <p>• 高雄大同福樂學堂：日照設於小學內</p>
+                <p>• 台北、新北多處試點成功</p>
+            </div>
+
+            <div class="feature-box">
+                <h2>技術規格亮點</h2>
+                <p><b>HEPA H13過濾</b></p>
+                <p>新風交換系統過濾99.97%病毒與PM2.5</p>
+                <p style="margin-top: 8pt;"><b>獨立空調系統</b></p>
+                <p>1F、2F各獨立，防交叉感染</p>
+                <p style="margin-top: 8pt;"><b>智慧監控</b></p>
+                <p>跌倒偵測、生理監測、家長APP即時查看</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>資料來源：cross-age-integration-design-2025.md (Line 30-54) | architectural-floor-plans-2025.md</p>
+        <div class="page-number"><p>4 / 10</p></div>
+    </div>
+</body>
+</html>
+
+<!--
+數據來源：
+- 隔音設計: architectural-floor-plans-2025.md, Line 499-502 (STC 65), Line 1022-1024 (IIC 70)
+- 分時共享: cross-age-integration-design-2025.md, Line 56-65
+- 跨齡互動: architectural-floor-plans-2025.md, Line 1486-1498
+- 國際實證: cross-age-integration-design-2025.md, Line 30-54
+- CDC標準: architectural-floor-plans-2025.md, Line 1349-1352
+-->

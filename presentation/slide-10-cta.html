@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第10頁：行動呼籲</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 720pt;
+            height: 405pt;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #FF6600 0%, #0066CC 60%, #00A651 100%);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 720pt;
+            height: 405pt;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            padding: 35pt 40pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 32pt;
+            font-weight: bold;
+            margin: 0 0 30pt 0;
+            line-height: 1.3;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .reasons-container {
+            display: flex;
+            gap: 18pt;
+            margin-bottom: 25pt;
+        }
+
+        .reason-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8pt;
+            padding: 20pt;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6pt 12pt rgba(0,0,0,0.3);
+        }
+
+        .reason-number {
+            background: linear-gradient(135deg, #FF6600 0%, #FF8C42 100%);
+            color: #FFFFFF;
+            font-size: 32pt;
+            font-weight: bold;
+            width: 50pt;
+            height: 50pt;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12pt auto;
+            box-shadow: 0 3pt 6pt rgba(0,0,0,0.2);
+        }
+
+        .reason-card h2 {
+            color: #0066CC;
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0 0 10pt 0;
+            text-align: center;
+        }
+
+        .reason-card ul {
+            margin: 0;
+            padding-left: 18pt;
+        }
+
+        .reason-card li {
+            color: #333333;
+            font-size: 11pt;
+            margin-bottom: 6pt;
+            line-height: 1.3;
+        }
+
+        .cta-box {
+            background: rgba(255, 255, 255, 0.95);
+            border: 4pt solid #FFD700;
+            border-radius: 10pt;
+            padding: 20pt;
+            text-align: center;
+            box-shadow: 0 6pt 12pt rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cta-box h2 {
+            color: #FF6600;
+            font-size: 22pt;
+            font-weight: bold;
+            margin: 0 0 12pt 0;
+        }
+
+        .cta-box p {
+            color: #333333;
+            font-size: 15pt;
+            margin: 0 0 8pt 0;
+            line-height: 1.4;
+        }
+
+        .cta-box .highlight {
+            color: #0066CC;
+            font-weight: bold;
+            font-size: 18pt;
+            margin: 10pt 0 0 0;
+        }
+
+        .footer {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12pt 40pt;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer p {
+            color: #333333;
+            font-size: 10pt;
+            margin: 0;
+        }
+
+        .footer .presenter {
+            font-weight: bold;
+            font-size: 11pt;
+        }
+
+        .page-number {
+            background: #FF6600;
+            color: #FFFFFF;
+            padding: 4pt 12pt;
+            border-radius: 3pt;
+        }
+
+        .page-number p {
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="content">
+        <h1>給評審的三個理由：為什麼選擇我們？</h1>
+
+        <div class="reasons-container">
+            <div class="reason-card">
+                <div class="reason-number">1</div>
+                <h2>時機就是現在 🔥</h2>
+                <ul>
+                    <li>標案10/30開標，設計階段黃金窗口</li>
+                    <li>財劃法修正後，新竹市預算+210億</li>
+                    <li>長照3.0、托育新法政策到位</li>
+                    <li>新竹縣社福館成功經驗可複製</li>
+                </ul>
+            </div>
+
+            <div class="reason-card">
+                <div class="reason-number">2</div>
+                <h2>財務與技術雙重可行 💰</h2>
+                <ul>
+                    <li>2.3億預算，資金來源穩定</li>
+                    <li>月淨收入+51.9萬，年盈餘623萬</li>
+                    <li>SROI 1:2.04，社會價值量化</li>
+                    <li>CDC 2025標準，技術規格明確</li>
+                </ul>
+            </div>
+
+            <div class="reason-card">
+                <div class="reason-number">3</div>
+                <h2>影響力可擴展 🌍</h2>
+                <ul>
+                    <li>直接服務1,000家庭，節省73萬小時</li>
+                    <li>潛在複製7處，服務10萬家庭</li>
+                    <li>推動台灣版「共生型服務」立法</li>
+                    <li>創造15億元社會價值，國際輸出</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cta-box">
+            <h2>今天的提案，明天的政策，後天的全台典範</h2>
+            <p>不是等政府做，而是政府已經在做</p>
+            <p>我們只是讓它做得更好</p>
+            <p class="highlight">我們準備好了，新竹也準備好了。</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>
+            <p class="presenter">報告人：蔡秀吉</p>
+            <p>赤土崎全齡社福樞紐 — 解決竹科家庭「時間貧窮」的整合方案</p>
+        </div>
+        <div class="page-number"><p>10 / 10</p></div>
+    </div>
+</body>
+</html>
+
+<!--
+數據來源：
+- 三大理由: 10-page-hackathon-presentation-outline.md, Line 1187-1232
+- 時機優勢: CLAUDE.md, Line 16-27（標案）、Line 53-57（財劃法）
+- 財務數據: policy-docking-and-financial-model.md, Line 8-14
+- 影響力數據: 10-page-hackathon-presentation-outline.md, Line 1026-1067
+-->

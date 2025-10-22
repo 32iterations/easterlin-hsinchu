@@ -1,0 +1,15 @@
+{
+  "name": "presentation",
+  "version": "1.0.0",
+  "description": "**提案名稱**: 赤土崎全齡社福樞紐\r **報告人**: 蔡秀吉\r **檔案格式**: HTML幻燈片（可轉換為PPTX）",
+  "main": "convert-to-pptx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}

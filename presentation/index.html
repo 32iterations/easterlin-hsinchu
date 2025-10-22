@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤土崎全齡社福樞紐 - 114年新竹政策黑客松</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.min.css">
+    <style>
+        /* 自定義樣式 */
+        .reveal {
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+
+        .reveal section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 漸層背景樣式 */
+        .gradient-blue-green {
+            background: linear-gradient(135deg, #0066CC 0%, #00A651 100%);
+        }
+
+        .gradient-orange {
+            background: linear-gradient(135deg, #FF6600 0%, #FF8C42 100%);
+        }
+
+        .gradient-red {
+            background: linear-gradient(135deg, #DC143C 0%, #FF6600 100%);
+        }
+
+        .gradient-green {
+            background: linear-gradient(135deg, #00A651 0%, #4CAF50 100%);
+        }
+
+        .gradient-purple {
+            background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+        }
+
+        .gradient-blue {
+            background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+        }
+
+        .gradient-multi {
+            background: linear-gradient(135deg, #FF6600 0%, #0066CC 60%, #00A651 100%);
+        }
+
+        /* 數據卡片 */
+        .data-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+            min-width: 200px;
+        }
+
+        .data-card h2 {
+            color: #FF6600;
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+
+        .data-card p {
+            color: #333;
+            font-size: 1em;
+            margin: 5px 0;
+        }
+
+        /* 金句樣式 */
+        .quote-box {
+            background: rgba(255, 243, 224, 0.95);
+            border-left: 6px solid #FF6600;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            font-style: italic;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        /* 頁碼 */
+        .slide-number {
+            background: #0066CC;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-weight: bold;
+        }
+
+        /* 表格樣式 */
+        .comparison-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px auto;
+            max-width: 900px;
+        }
+
+        .comparison-table thead {
+            background: linear-gradient(90deg, #9C27B0 0%, #7B1FA2 100%);
+            color: white;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .comparison-table tr:hover {
+            background: #FFF3E0;
+        }
+
+        .check { color: #00A651; font-weight: bold; }
+        .star { color: #FF6600; font-weight: bold; }
+
+        /* 原因卡片 */
+        .reason-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            display: inline-block;
+            width: 280px;
+            vertical-align: top;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .reason-number {
+            background: linear-gradient(135deg, #FF6600 0%, #FF8C42 100%);
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .reason-card h3 {
+            color: #0066CC;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .reason-card ul {
+            text-align: left;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- 第1頁：開場金句 -->
+            <section class="gradient-blue-green">
+                <h1 style="color: #FFD700; font-size: 3em; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                    「為什麼媽媽你今天<br>不用在公司？」
+                </h1>
+                <p style="color: white; font-size: 1.3em; margin: 30px 0;">
+                    竹科孩子在晚上8:30看到媽媽提早回家時，脫口而出的疑問
+                </p>
+
+                <div class="data-card">
+                    <h2>100%</h2>
+                    <p><strong>工作-家庭失衡困境</strong></p>
+                </div>
+
+                <div class="data-card">
+                    <h2>54.5%</h2>
+                    <p><strong>時間貧窮痛點</strong></p>
+                </div>
+
+                <div class="data-card">
+                    <h2>36.4%</h2>
+                    <p><strong>家庭關係危機</strong></p>
+                </div>
+
+                <p style="color: white; font-size: 1.2em; margin-top: 40px;">
+                    <strong>赤土崎全齡社福樞紐</strong> — 解決竹科家庭「時間貧窮」的整合方案
+                </p>
+                <p style="color: white; font-size: 0.9em;">
+                    報告人：蔡秀吉 | 資料來源：11篇竹科家庭質性研究分析（2021-2025）
+                </p>
+                <div class="slide-number">1 / 10</div>
+            </section>
+
+            <!-- 第2頁：痛點量化 -->
+            <section>
+                <h2 style="color: #0066CC; border-bottom: 4px solid #00A651; padding-bottom: 10px;">
+                    竹科家庭的痛點不是「缺服務」<br>而是「服務分散」
+                </h2>
+
+                <div class="quote-box">
+                    <p>「如同被鐵網困住的倉鼠」</p>
+                    <small style="color: #666;">— 鏡週刊深度報導，2025年6月</small>
+                </div>
+
+                <div style="display: flex; justify-content: space-around; margin: 30px 0;">
+                    <div>
+                        <h3 style="color: #0066CC;">痛點分類矩陣（11篇分析）</h3>
+                        <ul style="text-align: left; font-size: 1.1em; line-height: 1.8;">
+                            <li><span style="color: #FF6600; font-weight: bold; font-size: 1.2em;">54.5%</span> <strong>時間類</strong>：接送、通勤、等待</li>
+                            <li><span style="color: #FF6600; font-weight: bold; font-size: 1.2em;">36.4%</span> <strong>關係類</strong>：夫妻衝突、親子疏離</li>
+                            <li><span style="color: #FF6600; font-weight: bold; font-size: 1.2em;">9.1%</span> <strong>健康類</strong>：慢性病、心理健康</li>
+                            <li><span style="color: #FF6600; font-weight: bold; font-size: 1.2em;">9.1%</span> <strong>資源類</strong>：服務分散、托育不足</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 style="color: #FF6600;">一天的動線地圖</h3>
+                        <div style="background: #FFF3E0; padding: 15px; border-radius: 8px; text-align: left;">
+                            <p><strong>07:00</strong> 東區 - 送長輩至日照（8公里）</p>
+                            <p><strong>07:30</strong> 北區 - 送幼兒至托育（6公里）</p>
+                            <p><strong>08:00</strong> 竹科 - 到公司上班（5公里）</p>
+                            <p><strong>17:00</strong> 北區 - 接小孩放學（5公里）</p>
+                            <p><strong>17:30</strong> 東區 - 接長輩回家（6公里）</p>
+                            <p><strong>18:30</strong> 回家（2公里）</p>
+                            <hr style="border: 2px solid #FF6600; margin: 10px 0;">
+                            <p style="color: #FF6600; font-size: 1.3em; font-weight: bold; text-align: center;">
+                                每日總計：32公里 | 2小時
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.8em; color: #666;">
+                    資料來源：hackathon_data_summary.md（痛點分類Line 34-44）| 紮根理論三層編碼分析
+                </p>
+                <div class="slide-number" style="background: #0066CC;">2 / 10</div>
+            </section>
+
+            <!-- 第3頁：解決方案 -->
+            <section>
+                <div style="background: linear-gradient(90deg, #0066CC 0%, #00A651 100%); color: white; padding: 20px; margin-bottom: 30px;">
+                    <h2 style="color: white; margin: 0;">赤土崎全齡社福樞紐：<br>用「一館」解決「三代」的時間貧窮</h2>
+                </div>
+
+                <div style="display: flex; justify-content: space-around; align-items: flex-start;">
+                    <div style="width: 35%;">
+                        <h3 style="color: #0066CC; margin-bottom: 15px;">建築配置（B1+4F）</h3>
+                        <div style="background: #F5F5F5; border: 2px solid #0066CC; border-radius: 4px; padding: 12px; margin-bottom: 10px;">
+                            <strong>4F</strong> 青少年活動中心<br>
+                            <small>30-40人 | 17:00-21:00</small>
+                        </div>
+                        <div style="background: #F5F5F5; border: 2px solid #0066CC; border-radius: 4px; padding: 12px; margin-bottom: 10px;">
+                            <strong>3F</strong> 家庭支持服務<br>
+                            <small>20-30人 | 18:00-21:00</small>
+                        </div>
+                        <div style="background: #F5F5F5; border: 2px solid #0066CC; border-radius: 4px; padding: 12px; margin-bottom: 10px;">
+                            <strong>2F</strong> 公共托嬰中心<br>
+                            <small>40-50人 | 07:30-17:30</small>
+                        </div>
+                        <div style="background: #F5F5F5; border: 2px solid #0066CC; border-radius: 4px; padding: 12px; margin-bottom: 10px;">
+                            <strong>1F</strong> 長照日照中心<br>
+                            <small>50-60人 | 09:00-17:00</small>
+                        </div>
+                        <div style="background: #E3F2FD; border: 2px solid #1976D2; border-radius: 4px; padding: 12px;">
+                            <strong>B1</strong> 停車場+設備層<br>
+                            <small>30車位 | 全日開放</small>
+                        </div>
+                    </div>
+
+                    <div style="width: 60%;">
+                        <div class="quote-box" style="margin: 0 0 20px 0;">
+                            <h3 style="color: #FF6600; margin-top: 0;">核心設計理念</h3>
+                            <p style="font-style: normal; font-weight: bold;">「分時共享、跨齡互助」</p>
+                            <p style="font-style: normal;">• 一站式接送，省下的不只是2小時，而是家庭的溫度</p>
+                            <p style="font-style: normal;">• 托育+日照+青少年活動中心整合</p>
+                            <p style="font-style: normal;">• 每週五10:00-11:00：長者教幼兒園藝</p>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between;">
+                            <div class="data-card" style="margin: 0;">
+                                <h2 style="color: #00A651;">3,100 m²</h2>
+                                <p>總樓地板面積<br>(940坪)</p>
+                            </div>
+                            <div class="data-card" style="margin: 0;">
+                                <h2 style="color: #00A651;">B1+4F</h2>
+                                <p>5層建築<br>整合設計</p>
+                            </div>
+                            <div class="data-card" style="margin: 0;">
+                                <h2 style="color: #00A651;">140-180人</h2>
+                                <p>每日服務<br>人數</p>
+                            </div>
+                            <div class="data-card" style="margin: 0;">
+                                <h2 style="color: #00A651;">29人</h2>
+                                <p>專業工作<br>團隊</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.8em; color: #666; margin-top: 20px;">
+                    資料來源：architectural-floor-plans-2025.md (Line 22-31) | cross-age-integration-design-2025.md
+                </p>
+                <div class="slide-number">3 / 10</div>
+            </section>
+
+            <!-- 第4頁：創新亮點 -->
+            <section class="gradient-orange">
+                <div style="color: white; padding: 20px;">
+                    <h2 style="color: white; font-size: 2.2em;">台灣首創：失智日照 + 公托 + 青少年中心 三合一</h2>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                        <div style="width: 48%; background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 20px; color: #333;">
+                            <h3 style="color: #0066CC;">🔊 隔音設計（CDC 2025標準）</h3>
+                            <p><strong>STC 65隔音牆</strong></p>
+                            <ul style="font-size: 0.9em;">
+                                <li>1F失智專區 vs 2F幼兒區</li>
+                                <li>降噪效果：40-45 dB</li>
+                            </ul>
+                            <p><strong>IIC 70地板</strong></p>
+                            <ul style="font-size: 0.9em;">
+                                <li>4F籃球場 vs 3F諮商室</li>
+                                <li>確保午睡品質</li>
+                            </ul>
+
+                            <h3 style="color: #FF6600; margin-top: 20px;">🍽️ 分時共享策略</h3>
+                            <ul style="font-size: 0.9em;">
+                                <li>11:30 長者午餐 → 12:00 幼兒午餐（錯峰30分鐘）</li>
+                                <li>日間供餐130人 → 夜間親子烹飪課程</li>
+                            </ul>
+
+                            <h3 style="color: #00A651; margin-top: 20px;">🤝 跨齡互動時段</h3>
+                            <ul style="font-size: 0.9em;">
+                                <li><strong>每週五 10:00-11:00</strong>：1F長者 + 2F幼兒園藝活動</li>
+                                <li><strong>每月第3週日</strong>：三代同堂節慶活動</li>
+                                <li><strong>每季1次</strong>：青少年為長者錄製生命故事</li>
+                            </ul>
+                        </div>
+
+                        <div style="width: 48%; background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 20px; color: #333;">
+                            <h3 style="color: #0066CC;">國際實證基礎</h3>
+                            <p><strong>🇯🇵 日本共生型服務（2018年實施）</strong></p>
+                            <p style="font-size: 0.9em;">• 兒童發展支援機構可提供日照服務給長者<br>• 法規基礎：介護保險法修正案<br>• 運作6年，感染率未增加</p>
+
+                            <p style="margin-top: 15px;"><strong>🇳🇱 荷蘭 Humanitas 跨代護理之家</strong></p>
+                            <p style="font-size: 0.9em;">• 160位長者 + 6位大學生共居<br>• 運作10年+，建立完整SOP</p>
+
+                            <p style="margin-top: 15px;"><strong>🇹🇼 台灣老幼共學（2016年起）</strong></p>
+                            <p style="font-size: 0.9em;">• 高雄大同福樂學堂：日照設於小學內<br>• 台北、新北多處試點成功</p>
+
+                            <hr style="border: 1px solid #ddd; margin: 15px 0;">
+
+                            <h3 style="color: #00A651;">技術規格亮點</h3>
+                            <p style="font-size: 0.9em;">
+                                <strong>HEPA H13過濾</strong>：新風交換系統過濾99.97%病毒<br>
+                                <strong>獨立空調系統</strong>：1F、2F各獨立，防交叉感染<br>
+                                <strong>智慧監控</strong>：跌倒偵測、生理監測、家長APP即時查看
+                            </p>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        資料來源：cross-age-integration-design-2025.md (Line 30-54) | architectural-floor-plans-2025.md
+                    </p>
+                    <div class="slide-number" style="background: #FF6600;">4 / 10</div>
+                </div>
+            </section>
+
+            <!-- 第5頁：政策對接 -->
+            <section class="gradient-red">
+                <div style="color: white; padding: 20px;">
+                    <h2 style="color: white; font-size: 2.5em;">
+                        🔥 10/30標案開標<br>設計階段影響功能的最後窗口
+                    </h2>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                        <div style="width: 58%; background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 20px; color: #333;">
+                            <h3 style="color: #DC143C; margin-top: 0;">時間軸</h3>
+
+                            <div style="background: #E8F5E9; border-left: 5px solid #00A651; padding: 12px; margin-bottom: 10px;">
+                                <strong style="color: #00A651;">2025/10/07 ✓ 標案公告</strong><br>
+                                <small>114A109 | 2,287萬元 | 新竹市政府社會處</small>
+                            </div>
+
+                            <div style="background: #FFF3E0; border-left: 5px solid #FF6600; padding: 12px; margin-bottom: 10px;">
+                                <strong style="color: #FF6600;">2025/10/30 🔥 開標（本週三）</strong><br>
+                                <small>規劃設計及監造技術服務案</small>
+                            </div>
+
+                            <div style="background: #F5F5F5; border-left: 5px solid #0066CC; padding: 12px; margin-bottom: 10px;">
+                                <strong style="color: #0066CC;">2025/11 - 2026/04 黃金窗口</strong><br>
+                                <small>規劃設計階段（6個月）— 納入整合功能的最後機會</small>
+                            </div>
+
+                            <div style="background: #F5F5F5; border-left: 5px solid #0066CC; padding: 12px; margin-bottom: 10px;">
+                                <strong style="color: #0066CC;">2026/05 - 2027/06 工程施工</strong><br>
+                                <small>主體工程（14個月）</small>
+                            </div>
+
+                            <div style="background: #F5F5F5; border-left: 5px solid #0066CC; padding: 12px;">
+                                <strong style="color: #0066CC;">2027/07 正式營運</strong><br>
+                                <small>試營運2個月後全面啟用</small>
+                            </div>
+                        </div>
+
+                        <div style="width: 38%; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="background: linear-gradient(135deg, #0066CC 0%, #00A651 100%); border-radius: 8px; padding: 20px; color: white; text-align: center;">
+                                <h3 style="color: white; margin-top: 0;">財劃法修正影響</h3>
+                                <p><strong>修法前（114年）</strong></p>
+                                <p style="font-size: 2.5em; font-weight: bold; margin: 10px 0;">83億</p>
+                                <p><strong>修法後（115年）</strong></p>
+                                <p style="font-size: 2.5em; font-weight: bold; margin: 10px 0;">293億</p>
+                                <p><strong>增加幅度：+210億（+253%）</strong></p>
+                                <p style="font-size: 0.8em; margin-top: 10px;">資料來源：新竹市政府財政處公告 2025/05/26</p>
+                            </div>
+
+                            <div style="background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 15px; color: #333;">
+                                <h3 style="color: #0066CC; margin-top: 0;">三館規劃進度對比</h3>
+                                <p><span class="check">✓✓✓</span> 赤土崎多功能館：<strong>已發包</strong></p>
+                                <p><span style="color: #FF6600;">⚠</span> 兒少家庭福利館：選址未定</p>
+                                <p><span style="color: #FF6600;">⚠</span> 少年福利服務中心：規劃階段</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        資料來源：Xin-Zhu-Shi-Zheng-Fu-Biao-An-Fen-Xi.md | 台灣政府電子採購網 | CLAUDE.md (Line 16-38)
+                    </p>
+                    <div class="slide-number" style="background: #DC143C;">5 / 10</div>
+                </div>
+            </section>
+
+            <!-- 第6頁：財務可行性 -->
+            <section class="gradient-green">
+                <div style="color: white; padding: 20px;">
+                    <h2 style="color: white; font-size: 2.5em;">2.3億預算，月淨收入+51.9萬<br>SROI 1:2.04</h2>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                        <div style="width: 68%; background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 20px; color: #333;">
+                            <div style="background: linear-gradient(135deg, #00A651 0%, #66BB6A 100%); border-radius: 8px; padding: 20px; color: white; text-align: center; margin-bottom: 15px;">
+                                <h3 style="color: white; margin: 0;">總預算規模</h3>
+                                <p style="font-size: 3em; font-weight: bold; margin: 10px 0;">2.3億</p>
+                                <p>新竹市預算65.2% + 中央補助14.6% + 企業ESG 3.4%</p>
+                            </div>
+
+                            <div style="display: flex; gap: 15px;">
+                                <div style="flex: 1; background: #E8F5E9; border: 2px solid #00A651; border-radius: 6px; padding: 15px;">
+                                    <h4 style="color: #00A651; margin-top: 0;">月度收入</h4>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">日照中心（55人）：145.2萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">托嬰中心（45人）：65.3萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">青少年中心：12.5萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">場地租借：8.0萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">停車收入：12.0萬元</p>
+                                    <hr style="border: 2px solid #00A651; margin: 10px 0;">
+                                    <p style="font-weight: bold; font-size: 1.1em;"><strong>總月收入：243.0萬元</strong></p>
+                                </div>
+
+                                <div style="flex: 1; background: #FFF3E0; border: 2px solid #FF9800; border-radius: 6px; padding: 15px;">
+                                    <h4 style="color: #FF9800; margin-top: 0;">月度支出</h4>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">人事成本（29人）：145.0萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">水電瓦斯：18.0萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">設備維護：12.0萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">食材耗材：15.0萬元</p>
+                                    <p style="font-size: 0.9em; margin: 5px 0;">保險稅金及其他：11.0萬元</p>
+                                    <hr style="border: 2px solid #FF9800; margin: 10px 0;">
+                                    <p style="font-weight: bold; font-size: 1.1em;"><strong>總月支出：191.0萬元</strong></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="width: 28%; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="background: #0066CC; border-radius: 6px; padding: 15px; color: white; text-align: center;">
+                                <h4 style="color: white; margin-top: 0;">月淨收入</h4>
+                                <p style="font-size: 2.5em; font-weight: bold; margin: 10px 0;">+51.9萬</p>
+                                <p>年盈餘 623萬元</p>
+                                <p style="font-size: 0.9em; margin-top: 10px;">投資回收期：5.8年</p>
+                            </div>
+
+                            <div style="background: #FF6600; border-radius: 6px; padding: 15px; color: white; text-align: center;">
+                                <h4 style="color: white; margin-top: 0;">社會投資報酬率</h4>
+                                <p style="font-size: 2.8em; font-weight: bold; margin: 10px 0;">1:2.04</p>
+                                <p>每投入1元，創造2.04元社會價值</p>
+                                <p style="margin-top: 10px;"><strong>✓ 符合社福標準 1.5-2.0</strong></p>
+                                <p style="font-size: 0.8em; margin-top: 10px;">計算標準：台灣社會影響力研究院</p>
+                            </div>
+
+                            <div style="background: rgba(255, 255, 255, 0.95); border-radius: 6px; padding: 12px; color: #333;">
+                                <h4 style="color: #0066CC; margin-top: 0; font-size: 1em;">社會價值產出</h4>
+                                <p style="font-size: 0.85em; margin: 4px 0;">• 時間節省：1.2億元/年</p>
+                                <p style="font-size: 0.85em; margin: 4px 0;">• 關係改善：3,600萬元/年</p>
+                                <p style="font-size: 0.85em; margin: 0;">• 健康促進：2,400萬元/年</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        資料來源：policy-docking-and-financial-model.md (Line 8-14, 231-296) | SROI計算：台灣社會影響力研究院標準
+                    </p>
+                    <div class="slide-number" style="background: #00A651;">6 / 10</div>
+                </div>
+            </section>
+
+            <!-- 第7頁：標竿驗證 -->
+            <section class="gradient-purple">
+                <div style="color: white; padding: 20px;">
+                    <h2 style="color: white; font-size: 2.2em;">新竹縣綜合社福館（2.8億，2023營運）證實模式可行</h2>
+
+                    <div class="quote-box" style="margin: 20px auto;">
+                        <p style="font-size: 1.1em; margin: 0;">不是異想天開，而是有前例可循 — 新竹縣已經做了，新竹市可以做得更好</p>
+                    </div>
+
+                    <table class="comparison-table" style="width: 100%; max-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>比較項目</th>
+                                <th>新竹縣綜合社福館</th>
+                                <th>赤土崎全齡樞紐（本提案）</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>預算規模</strong></td>
+                                <td>2.8億元</td>
+                                <td class="star">2.3億元 ⭐ 節省17.9%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>樓層數</strong></td>
+                                <td>4層（無地下）</td>
+                                <td class="check">B1+4F（5層）✓ 多停車場</td>
+                            </tr>
+                            <tr>
+                                <td><strong>整合功能</strong></td>
+                                <td>托嬰+親子+兒少</td>
+                                <td class="star">托嬰+親子+兒少+長照 ⭐ 多1項</td>
+                            </tr>
+                            <tr>
+                                <td><strong>服務人數</strong></td>
+                                <td>約150人/日</td>
+                                <td class="check">140-180人/日 ✓ 相當</td>
+                            </tr>
+                            <tr>
+                                <td><strong>跨齡設計</strong></td>
+                                <td>無明確跨齡活動</td>
+                                <td class="star">固定時段跨齡互動 ⭐ 創新</td>
+                            </tr>
+                            <tr>
+                                <td><strong>標案進度</strong></td>
+                                <td>已完工（2023營運）</td>
+                                <td class="star">10/30開標 ⭐ 黃金窗口</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SROI</strong></td>
+                                <td>未公開</td>
+                                <td class="star">1:2.04 ⭐ 數據透明</td>
+                            </tr>
+                            <tr>
+                                <td><strong>營運狀況</strong></td>
+                                <td class="check">收支平衡 ✓<br>托育收托率95%<br>滿意度4.2/5.0</td>
+                                <td>預計收支平衡<br>月淨收入+51.9萬</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        資料來源：新竹縣政府社會處、綜合社福館營運報告（2024年中）| CLAUDE.md標竿分析章節
+                    </p>
+                    <div class="slide-number" style="background: #9C27B0;">7 / 10</div>
+                </div>
+            </section>
+
+            <!-- 第8頁：實施路徑 -->
+            <section class="gradient-blue">
+                <div style="color: white; padding: 20px;">
+                    <h2 style="color: white; font-size: 2.5em;">從標案到營運：18個月實施路徑</h2>
+
+                    <div style="display: flex; gap: 20px; margin-top: 30px;">
+                        <div style="flex: 1; background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 20px; color: #333;">
+                            <div style="background: #E3F2FD; border-left: 6px solid #FF6600; padding: 15px; margin-bottom: 12px;">
+                                <h3 style="color: #FF6600; margin: 0 0 8px 0;">階段1：規劃設計（6個月）</h3>
+                                <p style="font-size: 0.9em; margin: 0;"><strong>2025/11 - 2026/04 | 預算：2,287萬元</strong></p>
+                                <ul style="font-size: 0.9em; margin: 8px 0 0 0;">
+                                    <li>建築師簽約（決標後1週）</li>
+                                    <li>需求訪談（社區說明會3場、訪談30人）</li>
+                                    <li>初步設計 → 細部設計 → 審查通過</li>
+                                </ul>
+                                <p style="font-size: 0.85em; margin: 8px 0 0 0;"><strong>交付物：</strong>完整施工圖說 + 工程預算書</p>
+                            </div>
+
+                            <div style="background: #F5F5F5; border-left: 6px solid #1976D2; padding: 15px; margin-bottom: 12px;">
+                                <h3 style="color: #1976D2; margin: 0 0 8px 0;">階段2：工程施工（14個月）</h3>
+                                <p style="font-size: 0.9em; margin: 0;"><strong>2026/05 - 2027/06 | 預算：2.0億元</strong></p>
+                                <ul style="font-size: 0.9em; margin: 8px 0 0 0;">
+                                    <li>地質調查 → 主體結構（6個月）</li>
+                                    <li>機電設備安裝（3個月）</li>
+                                    <li>室內裝修 → 景觀庭園 → 驗收測試</li>
+                                </ul>
+                                <p style="font-size: 0.85em; margin: 8px 0 0 0;"><strong>交付物：</strong>使用執照 + 消防安檢合格證</p>
+                            </div>
+
+                            <div style="background: #F5F5F5; border-left: 6px solid #1976D2; padding: 15px; margin-bottom: 12px;">
+                                <h3 style="color: #1976D2; margin: 0 0 8px 0;">階段3：人員招募與訓練（3個月，並行）</h3>
+                                <p style="font-size: 0.9em; margin: 0;"><strong>2027/04 - 2027/06 | 預算：300萬元</strong></p>
+                                <ul style="font-size: 0.9em; margin: 8px 0 0 0;">
+                                    <li>招募29人（護理師、教保員、照服員）</li>
+                                    <li>職前訓練、設備操作訓練</li>
+                                    <li>試營運演練、社區宣傳</li>
+                                </ul>
+                                <p style="font-size: 0.85em; margin: 8px 0 0 0;"><strong>交付物：</strong>服務手冊 + SOP文件 + 人員證照齊備</p>
+                            </div>
+
+                            <div style="background: #F5F5F5; border-left: 6px solid #1976D2; padding: 15px;">
+                                <h3 style="color: #1976D2; margin: 0 0 8px 0;">階段4：試營運與正式營運</h3>
+                                <p style="font-size: 0.9em; margin: 0;"><strong>2027/07 試營運 | 2027/09 正式營運</strong></p>
+                                <p style="font-size: 0.85em; margin: 4px 0;"><strong>試營運2個月：</strong>收托率50%，每週檢討優化</p>
+                                <p style="font-size: 0.85em; margin: 0;"><strong>正式營運目標：</strong>6個月達80%，12個月達95%</p>
+                            </div>
+                        </div>
+
+                        <div style="width: 280px; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="background: linear-gradient(135deg, #FF6600 0%, #FF8C42 100%); border-radius: 8px; padding: 18px; color: white;">
+                                <h3 style="color: white; margin: 0 0 12px 0;">關鍵里程碑</h3>
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
+                                    <p style="font-weight: bold; margin: 0 0 3px 0;">2025/10/30</p>
+                                    <p style="margin: 0; font-size: 0.9em;">標案開標 🔥</p>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
+                                    <p style="font-weight: bold; margin: 0 0 3px 0;">2025/12/01</p>
+                                    <p style="margin: 0; font-size: 0.9em;">建築師簽約</p>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
+                                    <p style="font-weight: bold; margin: 0 0 3px 0;">2026/05/15</p>
+                                    <p style="margin: 0; font-size: 0.9em;">工程開工</p>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
+                                    <p style="font-weight: bold; margin: 0 0 3px 0;">2027/06/30</p>
+                                    <p style="margin: 0; font-size: 0.9em;">工程完工驗收</p>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 8px; margin-bottom: 6px;">
+                                    <p style="font-weight: bold; margin: 0 0 3px 0;">2027/09/01</p>
+                                    <p style="margin: 0; font-size: 0.9em;">正式營運</p>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.2); border-radius: 4px; padding: 8px;">
+                                    <p style="font-weight: bold; margin: 0 0 3px 0;">2028/09/01</p>
+                                    <p style="margin: 0; font-size: 0.9em;">收支平衡、滿載營運</p>
+                                </div>
+                            </div>
+
+                            <div style="background: #E8F5E9; border: 2px solid #00A651; border-radius: 6px; padding: 15px; color: #333;">
+                                <h4 style="color: #00A651; margin: 0 0 8px 0;">品質把關機制</h4>
+                                <p style="font-size: 0.9em; margin: 0;">✓ 每階段獨立驗收</p>
+                                <p style="font-size: 0.9em; margin: 0;">✓ 風險管理與應變</p>
+                                <p style="font-size: 0.9em; margin: 0;">✓ 社區溝通與參與</p>
+                                <p style="font-size: 0.9em; margin: 0;">✓ 專案進度月報</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        資料來源：10-page-hackathon-presentation-outline.md (Line 903-1007) | 專案管理標準流程
+                    </p>
+                    <div class="slide-number" style="background: #1976D2;">8 / 10</div>
+                </div>
+            </section>
+
+            <!-- 第9頁：社會影響 -->
+            <section class="gradient-blue-green">
+                <div style="color: white; padding: 20px;">
+                    <h2 style="color: white; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                        從赤土崎到全台灣：可複製的社福整合模式
+                    </h2>
+
+                    <div style="display: flex; justify-content: space-around; margin: 30px 0;">
+                        <div class="data-card" style="min-width: 250px;">
+                            <h3 style="color: #0066CC; margin: 0 0 10px 0;">直接影響</h3>
+                            <h2 style="font-size: 3em;">1,000</h2>
+                            <p style="font-weight: bold;">服務家庭數/年</p>
+                            <hr style="border: 1px solid #ddd; margin: 10px 0;">
+                            <p style="font-size: 0.9em;">• 3,500人受惠</p>
+                            <p style="font-size: 0.9em;">• 節省73萬小時</p>
+                            <p style="font-size: 0.9em;">• 2.19億元社會價值</p>
+                        </div>
+
+                        <div class="data-card" style="min-width: 250px;">
+                            <h3 style="color: #FF6600; margin: 0 0 10px 0;">間接影響</h3>
+                            <h2 style="color: #FF6600; font-size: 3em;">10萬</h2>
+                            <p style="font-weight: bold;">科學園區家庭總數</p>
+                            <hr style="border: 1px solid #ddd; margin: 10px 0;">
+                            <p style="font-size: 0.9em;">• 竹科：5萬家庭</p>
+                            <p style="font-size: 0.9em;">• 中科：3萬家庭</p>
+                            <p style="font-size: 0.9em;">• 南科：2.5萬家庭</p>
+                        </div>
+
+                        <div class="data-card" style="min-width: 250px;">
+                            <h3 style="color: #00A651; margin: 0 0 10px 0;">擴展潛力</h3>
+                            <h2 style="color: #00A651; font-size: 3em;">15億</h2>
+                            <p style="font-weight: bold;">總社會價值（若複製7處）</p>
+                            <hr style="border: 1px solid #ddd; margin: 10px 0;">
+                            <p style="font-size: 0.9em;">• 7,000家庭/年</p>
+                            <p style="font-size: 0.9em;">• 511萬小時節省</p>
+                            <p style="font-size: 0.9em;">• 國際示範效應</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 25px; color: #333; margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <div style="width: 65%;">
+                                <h3 style="color: #00A651; margin-top: 0;">潛在複製地點（科學園區周邊）</h3>
+                                <div style="display: flex; gap: 15px;">
+                                    <div style="flex: 1; background: #E8F5E9; border-left: 4px solid #00A651; padding: 12px;">
+                                        <h4 style="color: #00A651; margin: 0 0 5px 0;">🏭 新竹科學園區</h4>
+                                        <p style="font-size: 0.9em; margin: 0;">竹科X園區、寶山園區（2處）</p>
+                                    </div>
+                                    <div style="flex: 1; background: #E8F5E9; border-left: 4px solid #00A651; padding: 12px;">
+                                        <h4 style="color: #00A651; margin: 0 0 5px 0;">🏭 台中科學園區</h4>
+                                        <p style="font-size: 0.9em; margin: 0;">中科、精密園區（2處）</p>
+                                    </div>
+                                    <div style="flex: 1; background: #E8F5E9; border-left: 4px solid #00A651; padding: 12px;">
+                                        <h4 style="color: #00A651; margin: 0 0 5px 0;">🏭 台南科學園區</h4>
+                                        <p style="font-size: 0.9em; margin: 0;">南科、橋頭園區（2處）</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="width: 30%;">
+                                <div style="background: linear-gradient(135deg, #FF6600 0%, #FF8C42 100%); border-radius: 6px; padding: 15px; color: white; text-align: center; margin-bottom: 12px;">
+                                    <h4 style="color: white; margin: 0 0 8px 0;">若複製7處</h4>
+                                    <p style="font-size: 2.5em; font-weight: bold; margin: 5px 0;">7,000</p>
+                                    <p style="margin: 0;">服務家庭數/年</p>
+                                    <p style="font-size: 0.9em; margin-top: 8px;">24,500人受惠</p>
+                                    <p style="font-size: 0.9em;">511萬小時節省</p>
+                                </div>
+
+                                <div style="background: #E3F2FD; border: 2pt solid #0066CC; border-radius: 6px; padding: 12px;">
+                                    <h4 style="color: #0066CC; margin: 0 0 8px 0;">政策影響</h4>
+                                    <p style="font-size: 0.85em; margin: 3px 0;">✓ 推動「共生型服務」立法</p>
+                                    <p style="font-size: 0.85em; margin: 3px 0;">✓ 納入長照3.0策略</p>
+                                    <p style="font-size: 0.85em; margin: 0;">✓ 國際輸出典範</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8em; margin-top: 20px;">
+                        資料來源：10-page-hackathon-presentation-outline.md (Line 1014-1131) | 科學園區從業人數：科技部統計（2025）
+                    </p>
+                    <div class="slide-number" style="background: #00A651;">9 / 10</div>
+                </div>
+            </section>
+
+            <!-- 第10頁：行動呼籲 -->
+            <section class="gradient-multi">
+                <div style="color: white; padding: 20px;">
+                    <h1 style="color: white; font-size: 2.8em; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 30px;">
+                        給評審的三個理由：為什麼選擇我們？
+                    </h1>
+
+                    <div style="display: flex; justify-content: center; gap: 18px; margin-bottom: 25px;">
+                        <div class="reason-card">
+                            <div class="reason-number">1</div>
+                            <h3>時機就是現在 🔥</h3>
+                            <ul style="text-align: left; padding-left: 20px;">
+                                <li>標案10/30開標，設計階段黃金窗口</li>
+                                <li>財劃法修正後，新竹市預算+210億</li>
+                                <li>長照3.0、托育新法政策到位</li>
+                                <li>新竹縣社福館成功經驗可複製</li>
+                            </ul>
+                        </div>
+
+                        <div class="reason-card">
+                            <div class="reason-number">2</div>
+                            <h3>財務與技術雙重可行 💰</h3>
+                            <ul style="text-align: left; padding-left: 20px;">
+                                <li>2.3億預算，資金來源穩定</li>
+                                <li>月淨收入+51.9萬，年盈餘623萬</li>
+                                <li>SROI 1:2.04，社會價值量化</li>
+                                <li>CDC 2025標準，技術規格明確</li>
+                            </ul>
+                        </div>
+
+                        <div class="reason-card">
+                            <div class="reason-number">3</div>
+                            <h3>影響力可擴展 🌍</h3>
+                            <ul style="text-align: left; padding-left: 20px;">
+                                <li>直接服務1,000家庭，節省73萬小時</li>
+                                <li>潛在複製7處，服務10萬家庭</li>
+                                <li>推動台灣版「共生型服務」立法</li>
+                                <li>創造15億元社會價值，國際輸出</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255, 255, 255, 0.95); border: 4px solid #FFD700; border-radius: 10px; padding: 25px; text-align: center; box-shadow: 0 6px 12px rgba(0,0,0,0.3);">
+                        <h2 style="color: #FF6600; font-size: 2em; margin: 0 0 15px 0;">今天的提案，明天的政策，後天的全台典範</h2>
+                        <p style="color: #333; font-size: 1.3em; margin: 10px 0;">不是等政府做，而是政府已經在做</p>
+                        <p style="color: #333; font-size: 1.3em; margin: 10px 0;">我們只是讓它做得更好</p>
+                        <p style="color: #0066CC; font-weight: bold; font-size: 1.6em; margin: 20px 0 0 0;">我們準備好了，新竹也準備好了。</p>
+                    </div>
+
+                    <div style="margin-top: 25px; text-align: center;">
+                        <p style="font-weight: bold; font-size: 1.2em;">報告人：蔡秀吉</p>
+                        <p style="font-size: 1em;">赤土崎全齡社福樞紐 — 解決竹科家庭「時間貧窮」的整合方案</p>
+                    </div>
+
+                    <div class="slide-number" style="background: #FF6600;">10 / 10</div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.min.js"></script>
+    <script>
+        // 初始化 Reveal.js
+        Reveal.initialize({
+            // 基本設定
+            hash: true,
+            center: true,
+            controls: true,
+            progress: true,
+            slideNumber: false, // 我們已經有自訂的slide-number
+
+            // 過場動畫
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+            transitionSpeed: 'default', // default/fast/slow
+
+            // 演講者模式
+            showNotes: false,
+
+            // 鍵盤快捷鍵
+            keyboard: {
+                13: 'next', // Enter鍵前進
+                32: 'next', // 空白鍵前進
+            },
+
+            // PDF匯出
+            pdfSeparateFragments: false,
+            pdfMaxPagesPerSlide: 1,
+        });
+
+        // 演講者模式提示
+        console.log('🎤 簡報操作提示：');
+        console.log('- 方向鍵 或 空白鍵：前後翻頁');
+        console.log('- F鍵：全螢幕');
+        console.log('- S鍵：演講者模式（顯示筆記和下一頁預覽）');
+        console.log('- Esc鍵：鳥瞰模式（查看所有幻燈片）');
+        console.log('- ?鍵：顯示所有快捷鍵');
+        console.log('\n📄 匯出PDF：');
+        console.log('1. 在URL後面加上 ?print-pdf');
+        console.log('2. 使用瀏覽器列印功能（Ctrl+P）');
+        console.log('3. 選擇「另存為PDF」');
+    </script>
+</body>
+</html>

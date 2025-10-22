@@ -1,4 +1,6 @@
+# ===================================
 # Python
+# ===================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,22 +25,75 @@ wheels/
 .installed.cfg
 *.egg
 
+# ===================================
+# Node.js
+# ===================================
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===================================
+# Generated Output Files
+# ===================================
+# PowerPoint presentations (generated from scripts)
+*.pptx
+# Excel files (generated from scripts)
+*.xlsx
+# Office temporary files
+~$*.pptx
+~$*.xlsx
+~$*.docx
+# Generated HTML dashboards
+interactive-dashboard.html
+
+# ===================================
+# Python Script Variants (keep only final versions)
+# ===================================
+generate_*_v2.py
+generate_mediatek_*.py
+generate_tsmc_*.py
+
+# ===================================
+# Temporary Files
+# ===================================
+nul
+*.tmp
+*.temp
+
+# ===================================
 # IDE
+# ===================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
+# ===================================
 # Claude Code
+# ===================================
 .claude/
 
+# ===================================
 # HTML resource folders (too large for git)
+# ===================================
 *_files/
 
+# ===================================
 # OS
+# ===================================
 .DS_Store
 Thumbs.db
 臺灣長期照顧實作指引/
 臺灣長期照顧實作指引_files/
+
+# ===================================
+# Documentation (keep these - NOT ignored)
+# ===================================
+# All .md files should be tracked
+# README.md, CLAUDE.md, etc.
+# Explicitly NOT ignoring documentation
 

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8頁：實施路徑</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 720pt;
+            height: 405pt;
+            font-family: Arial, sans-serif;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #1976D2 0%, #1565C0 100%);
+            padding: 25pt 40pt;
+            display: flex;
+        }
+
+        .header h1 {
+            color: #FFFFFF;
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 25pt 40pt;
+            display: flex;
+            gap: 25pt;
+        }
+
+        .timeline {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phase {
+            background: #F5F5F5;
+            border-left: 6pt solid #1976D2;
+            border-radius: 4pt;
+            padding: 15pt;
+            margin-bottom: 12pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phase.highlight {
+            background: #E3F2FD;
+            border-left-color: #FF6600;
+        }
+
+        .phase h2 {
+            color: #1976D2;
+            font-size: 15pt;
+            font-weight: bold;
+            margin: 0 0 8pt 0;
+        }
+
+        .phase.highlight h2 {
+            color: #FF6600;
+        }
+
+        .phase h3 {
+            color: #333333;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0 0 6pt 0;
+        }
+
+        .phase p {
+            color: #333333;
+            font-size: 10pt;
+            margin: 0 0 4pt 0;
+            line-height: 1.3;
+        }
+
+        .phase ul {
+            margin: 6pt 0 0 0;
+            padding-left: 16pt;
+        }
+
+        .phase li {
+            color: #333333;
+            font-size: 10pt;
+            margin-bottom: 2pt;
+            line-height: 1.2;
+        }
+
+        .sidebar {
+            width: 260pt;
+            display: flex;
+            flex-direction: column;
+            gap: 15pt;
+        }
+
+        .milestone-card {
+            background: linear-gradient(135deg, #FF6600 0%, #FF8C42 100%);
+            border-radius: 8pt;
+            padding: 18pt;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .milestone-card h2 {
+            color: #FFFFFF;
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0 0 12pt 0;
+        }
+
+        .milestone-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4pt;
+            padding: 8pt;
+            margin-bottom: 6pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .milestone-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .milestone-item p {
+            color: #FFFFFF;
+            font-size: 10pt;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .milestone-item .date {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 3pt;
+        }
+
+        .deliverable-card {
+            background: #E8F5E9;
+            border: 2pt solid #00A651;
+            border-radius: 6pt;
+            padding: 15pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .deliverable-card h3 {
+            color: #00A651;
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0 0 8pt 0;
+        }
+
+        .deliverable-card p {
+            color: #333333;
+            font-size: 10pt;
+            margin: 0 0 4pt 0;
+            line-height: 1.3;
+        }
+
+        .footer {
+            background: #F5F5F5;
+            padding: 12pt 40pt;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer p {
+            color: #666666;
+            font-size: 9pt;
+            margin: 0;
+        }
+
+        .page-number {
+            background: #1976D2;
+            color: #FFFFFF;
+            padding: 4pt 12pt;
+            border-radius: 3pt;
+        }
+
+        .page-number p {
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>從標案到營運：18個月實施路徑</h1>
+    </div>
+
+    <div class="content-area">
+        <div class="timeline">
+            <div class="phase highlight">
+                <h2>階段1：規劃設計（6個月）</h2>
+                <h3>2025/11 - 2026/04 | 預算：2,287萬元</h3>
+                <ul>
+                    <li>建築師簽約（決標後1週）</li>
+                    <li>需求訪談（社區說明會3場、訪談30人）</li>
+                    <li>初步設計 → 細部設計 → 審查通過</li>
+                </ul>
+                <p><b>交付物：</b>完整施工圖說 + 工程預算書</p>
+            </div>
+
+            <div class="phase">
+                <h2>階段2：工程施工（14個月）</h2>
+                <h3>2026/05 - 2027/06 | 預算：2.0億元</h3>
+                <ul>
+                    <li>地質調查 → 主體結構（6個月）</li>
+                    <li>機電設備安裝（3個月）</li>
+                    <li>室內裝修 → 景觀庭園 → 驗收測試</li>
+                </ul>
+                <p><b>交付物：</b>使用執照 + 消防安檢合格證</p>
+            </div>
+
+            <div class="phase">
+                <h2>階段3：人員招募與訓練（3個月，並行）</h2>
+                <h3>2027/04 - 2027/06 | 預算：300萬元</h3>
+                <ul>
+                    <li>招募29人（護理師、教保員、照服員）</li>
+                    <li>職前訓練、設備操作訓練</li>
+                    <li>試營運演練、社區宣傳</li>
+                </ul>
+                <p><b>交付物：</b>服務手冊 + SOP文件 + 人員證照齊備</p>
+            </div>
+
+            <div class="phase">
+                <h2>階段4：試營運與正式營運</h2>
+                <h3>2027/07 試營運 | 2027/09 正式營運</h3>
+                <p><b>試營運2個月：</b>收托率50%，每週檢討優化</p>
+                <p><b>正式營運目標：</b>6個月達80%，12個月達95%</p>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="milestone-card">
+                <h2>關鍵里程碑</h2>
+                <div class="milestone-item">
+                    <p class="date">2025/10/30</p>
+                    <p>標案開標 🔥</p>
+                </div>
+                <div class="milestone-item">
+                    <p class="date">2025/12/01</p>
+                    <p>建築師簽約</p>
+                </div>
+                <div class="milestone-item">
+                    <p class="date">2026/04/30</p>
+                    <p>施工圖審查通過</p>
+                </div>
+                <div class="milestone-item">
+                    <p class="date">2026/05/15</p>
+                    <p>工程開工</p>
+                </div>
+                <div class="milestone-item">
+                    <p class="date">2027/06/30</p>
+                    <p>工程完工驗收</p>
+                </div>
+                <div class="milestone-item">
+                    <p class="date">2027/09/01</p>
+                    <p>正式營運</p>
+                </div>
+                <div class="milestone-item">
+                    <p class="date">2028/09/01</p>
+                    <p>收支平衡、滿載營運</p>
+                </div>
+            </div>
+
+            <div class="deliverable-card">
+                <h3>品質把關機制</h3>
+                <p>✓ 每階段獨立驗收</p>
+                <p>✓ 風險管理與應變</p>
+                <p>✓ 社區溝通與參與</p>
+                <p>✓ 專案進度月報</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>資料來源：10-page-hackathon-presentation-outline.md (Line 903-1007) | 專案管理標準流程</p>
+        <div class="page-number"><p>8 / 10</p></div>
+    </div>
+</body>
+</html>
+
+<!--
+數據來源：
+- 4階段規劃: 10-page-hackathon-presentation-outline.md, Line 914-1001
+- 關鍵里程碑: 10-page-hackathon-presentation-outline.md, Line 1003-1012
+- 預算分配: policy-docking-and-financial-model.md（設計2,287萬、施工2億、人員300萬）
+-->

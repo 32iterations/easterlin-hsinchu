@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1頁：開場金句</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 720pt;
+            height: 405pt;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0066CC 0%, #00A651 100%);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 720pt;
+            height: 405pt;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            padding: 40pt;
+            height: 100%;
+        }
+
+        .title-area {
+            margin-bottom: 30pt;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 48pt;
+            font-weight: bold;
+            margin: 0 0 20pt 0;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .quote-highlight {
+            color: #FFD700;
+        }
+
+        .subtitle {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 6pt solid #FF6600;
+            padding: 15pt 20pt;
+            margin: 0 0 30pt 0;
+            display: flex;
+        }
+
+        .subtitle p {
+            color: #333333;
+            font-size: 20pt;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .data-cards {
+            display: flex;
+            gap: 20pt;
+            margin-bottom: 30pt;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8pt;
+            padding: 20pt;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4pt 8pt rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #FF6600;
+            font-size: 36pt;
+            font-weight: bold;
+            margin: 0 0 8pt 0;
+            text-align: center;
+        }
+
+        .card p {
+            color: #333333;
+            font-size: 14pt;
+            margin: 0;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .footer p {
+            color: #FFFFFF;
+            font-size: 11pt;
+            margin: 0;
+        }
+
+        .page-number {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6pt 12pt;
+            border-radius: 4pt;
+        }
+
+        .page-number p {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <div class="content-container">
+        <div class="title-area">
+            <h1><span class="quote-highlight">「為什麼媽媽你今天</span></h1>
+            <h1><span class="quote-highlight">不用在公司？」</span></h1>
+        </div>
+
+        <div class="subtitle">
+            <p><b>竹科孩子在晚上8:30看到媽媽提早回家時，脫口而出的疑問</b></p>
+        </div>
+
+        <div class="data-cards">
+            <div class="card">
+                <h2>100%</h2>
+                <p><b>工作-家庭</b></p>
+                <p><b>失衡困境</b></p>
+            </div>
+
+            <div class="card">
+                <h2>54.5%</h2>
+                <p><b>時間貧窮</b></p>
+                <p><b>痛點</b></p>
+            </div>
+
+            <div class="card">
+                <h2>36.4%</h2>
+                <p><b>家庭關係</b></p>
+                <p><b>危機</b></p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>
+                <p><b>赤土崎全齡社福樞紐</b> — 解決竹科家庭「時間貧窮」的整合方案</p>
+                <p style="font-size: 9pt; margin-top: 4pt;">報告人：蔡秀吉 | 資料來源：11篇竹科家庭質性研究分析（2021-2025）</p>
+            </div>
+            <div class="page-number">
+                <p>1 / 10</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<!--
+圖片建議（background-image）:
+- Unsplash搜索: "taiwan tech park night" 或 "family working late"
+- 建議圖片: https://unsplash.com/photos/city-buildings-during-night-time-[ID]
+- 備選: 新竹科學園區夜景官方照片
+
+數據來源:
+- 100%工作-家庭失衡: hackathon_data_summary.md, Line 187
+- 54.5%時間貧窮: hackathon_data_summary.md, Line 35-36
+- 36.4%關係危機: hackathon_data_summary.md, Line 38-39
+-->

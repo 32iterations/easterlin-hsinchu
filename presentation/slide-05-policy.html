@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5頁：政策對接</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 720pt;
+            height: 405pt;
+            font-family: Arial, sans-serif;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #DC143C 0%, #FF6600 100%);
+            padding: 25pt 40pt;
+            display: flex;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #FFFFFF;
+            font-size: 26pt;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .fire-icon {
+            font-size: 36pt;
+            margin-right: 15pt;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            padding: 25pt 40pt;
+            gap: 25pt;
+        }
+
+        .timeline-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-item {
+            background: #F5F5F5;
+            border-left: 5pt solid #0066CC;
+            padding: 12pt 15pt;
+            margin-bottom: 12pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-item.active {
+            background: #FFF3E0;
+            border-left-color: #FF6600;
+        }
+
+        .timeline-item.completed {
+            background: #E8F5E9;
+            border-left-color: #00A651;
+        }
+
+        .timeline-item h2 {
+            color: #0066CC;
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0 0 4pt 0;
+        }
+
+        .timeline-item.active h2 {
+            color: #FF6600;
+        }
+
+        .timeline-item.completed h2 {
+            color: #00A651;
+        }
+
+        .timeline-item p {
+            color: #333333;
+            font-size: 11pt;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .budget-section {
+            width: 300pt;
+            display: flex;
+            flex-direction: column;
+            gap: 15pt;
+        }
+
+        .highlight-card {
+            background: linear-gradient(135deg, #0066CC 0%, #00A651 100%);
+            border-radius: 8pt;
+            padding: 20pt;
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .highlight-card h2 {
+            color: #FFFFFF;
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 0 0 12pt 0;
+        }
+
+        .highlight-card .big-number {
+            font-size: 42pt;
+            font-weight: bold;
+            margin: 8pt 0;
+            line-height: 1;
+        }
+
+        .highlight-card p {
+            color: #FFFFFF;
+            font-size: 12pt;
+            margin: 0 0 6pt 0;
+            line-height: 1.4;
+        }
+
+        .comparison-table {
+            background: #F5F5F5;
+            border-radius: 6pt;
+            padding: 15pt;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comparison-table h3 {
+            color: #0066CC;
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 0 0 10pt 0;
+        }
+
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6pt 0;
+            border-bottom: 1pt solid #CCCCCC;
+        }
+
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-row p {
+            color: #333333;
+            font-size: 11pt;
+            margin: 0;
+        }
+
+        .comparison-row .status {
+            font-weight: bold;
+        }
+
+        .status.yes {
+            color: #00A651;
+        }
+
+        .status.pending {
+            color: #FF6600;
+        }
+
+        .footer {
+            background: #F5F5F5;
+            padding: 12pt 40pt;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer p {
+            color: #666666;
+            font-size: 9pt;
+            margin: 0;
+        }
+
+        .page-number {
+            background: #DC143C;
+            color: #FFFFFF;
+            padding: 4pt 12pt;
+            border-radius: 3pt;
+        }
+
+        .page-number p {
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="fire-icon">🔥</div>
+        <h1>10/30標案開標<br>設計階段影響功能的最後窗口</h1>
+    </div>
+
+    <div class="content-area">
+        <div class="timeline-section">
+            <div class="timeline-item completed">
+                <h2>2025/10/07 ✓ 標案公告</h2>
+                <p><b>114A109</b> | 2,287萬元 | 新竹市政府社會處</p>
+            </div>
+
+            <div class="timeline-item active">
+                <h2>2025/10/30 🔥 開標（本週三）</h2>
+                <p>規劃設計及監造技術服務案</p>
+            </div>
+
+            <div class="timeline-item">
+                <h2>2025/11 - 2026/04 黃金窗口</h2>
+                <p>規劃設計階段（6個月）— 納入整合功能的最後機會</p>
+            </div>
+
+            <div class="timeline-item">
+                <h2>2026/05 - 2027/06 工程施工</h2>
+                <p>主體工程（14個月）</p>
+            </div>
+
+            <div class="timeline-item">
+                <h2>2027/07 正式營運</h2>
+                <p>試營運2個月後全面啟用</p>
+            </div>
+        </div>
+
+        <div class="budget-section">
+            <div class="highlight-card">
+                <h2>財劃法修正影響</h2>
+                <p><b>修法前（114年）</b></p>
+                <p class="big-number">83億</p>
+                <p><b>修法後（115年）</b></p>
+                <p class="big-number">293億</p>
+                <p><b>增加幅度：+210億（+253%）</b></p>
+                <p style="font-size: 10pt; margin-top: 10pt;">資料來源：新竹市政府財政處公告 2025/05/26</p>
+            </div>
+
+            <div class="comparison-table">
+                <h3>三館規劃進度對比</h3>
+                <div class="comparison-row">
+                    <p>赤土崎多功能館</p>
+                    <p class="status yes">✓✓✓ 已發包</p>
+                </div>
+                <div class="comparison-row">
+                    <p>兒少家庭福利館</p>
+                    <p class="status pending">⚠ 選址未定</p>
+                </div>
+                <div class="comparison-row">
+                    <p>少年福利服務中心</p>
+                    <p class="status pending">⚠ 規劃階段</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>資料來源：Xin-Zhu-Shi-Zheng-Fu-Biao-An-Fen-Xi.md | 台灣政府電子採購網 acebidx.com | CLAUDE.md (Line 16-38)</p>
+        <div class="page-number"><p>5 / 10</p></div>
+    </div>
+</body>
+</html>
+
+<!--
+數據來源：
+- 標案資訊: CLAUDE.md, Line 16-27（標案案號114A109、金額2,287萬、開標時間2025/10/30）
+- 財劃法數據: CLAUDE.md, Line 53-57（83億→293億、+210億、+253%）
+- 三館對比: CLAUDE.md, Line 33-38
+- 資料來源: 新竹市政府財政處公告（2025/05/26）
+-->
