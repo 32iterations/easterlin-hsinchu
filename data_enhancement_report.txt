@@ -1,0 +1,55 @@
+=== Starting Data Enhancement Pipeline ===
+载入 19 篇文章
+
+【阶段一：基础清理】
+1. 去重处理...
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第2頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第3頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第4頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第5頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第6頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第7頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第8頁)
+  重复: 只剩薪水好！竹科人曝「新竹5缺點」嘆：生活充滿厭惡 (第9頁)
+  移除 8 篇重复文章，保留 11 篇
+
+2. 去噪处理...
+  完成内容去噪处理
+
+3. 文本标准化...
+  标准化 0 个日期
+
+【阶段二：情绪与强度标注】
+  完成 11 篇文章的情绪与强度标注
+
+【阶段三：实体识别】
+  完成 11 篇文章的实体识别
+
+【阶段五：政策对接与主题增强】
+  完成 11 篇文章的政策对接标注
+
+【阶段六：关键引文提取与痛点分类】
+  完成 11 篇文章的引文提取与痛点分类
+
+保存增强数据至: cleaned_data_enhanced.json
+
+【生成分析报告】
+  生成: emotion_analysis_enhanced.csv
+  生成: entity_extraction_enhanced.csv
+  生成: policy_mapping_report.csv
+  生成: pain_point_matrix.csv
+  生成: key_quotes_collection.json
+
+=== Pipeline Complete ===
+Processed 11 articles
+
+Generated files:
+  - cleaned_data_enhanced.json
+  - emotion_analysis_enhanced.csv
+  - entity_extraction_enhanced.csv
+  - policy_mapping_report.csv
+  - pain_point_matrix.csv
+  - key_quotes_collection.json
+  - data_enhancement_report.txt
+
+=== Report saved successfully ===

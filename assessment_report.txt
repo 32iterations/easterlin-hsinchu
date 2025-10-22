@@ -1,0 +1,9 @@
+============================================================
+Traceback (most recent call last):
+  File "C:\Users\thc1006\Desktop\dev\easterlin-hsinchu\data_assessment.py", line 79, in <module>
+    data, duplicates = assess_data_quality()
+                       ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\thc1006\Desktop\dev\easterlin-hsinchu\data_assessment.py", line 16, in assess_data_quality
+    print("\u6570Õu«~\u8d28\u8bc4¦ô\u62a5§i")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp950' codec can't encode character '\u6570' in position 0: illegal multibyte sequence

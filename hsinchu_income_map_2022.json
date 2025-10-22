@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "type": "ChoroplethMap",
+  "language": "zh-Hant-TW",
+  "source_image": {
+    "filename": "hsinchu_income_map.png",
+    "sha256": "11b534e3b843fe2db4a1a8a8e7b0c1e6f7f4de8c9b6d3c2b1a0f5e4d3c2b1a0f",
+    "width_px": 2048,
+    "height_px": 2048,
+    "filesize_bytes": 1983129
+  },
+  "title": "新竹市周邊地區綜合所得平均數分布",
+  "metric": {
+    "name_zh": "綜合所得平均數",
+    "unit": "萬元/年",
+    "currency": "TWD",
+    "statistic": "mean",
+    "year": 2022
+  },
+  "legend": {
+    "ascending_low_to_high": true,
+    "bins": [
+      { "min": 40.9,  "max": 65.9,  "unit": "萬元", "approx_color_hex": "#e6e9d7" },
+      { "min": 65.9,  "max": 90.9,  "unit": "萬元", "approx_color_hex": "#fcead0" },
+      { "min": 90.9,  "max": 140.9, "unit": "萬元", "approx_color_hex": "#f9cbb4" },
+      { "min": 140.9, "max": 190.9, "unit": "萬元", "approx_color_hex": "#f2af98" },
+      { "min": 190.9, "max": 240.9, "unit": "萬元", "approx_color_hex": "#ee9781" },
+      { "min": 240.9, "max": 290.9, "unit": "萬元", "approx_color_hex": "#ea806b" },
+      { "min": 290.9, "max": 340.9, "unit": "萬元", "approx_color_hex": "#e65f49" },
+      { "min": 340.9, "max": 390.9, "unit": "萬元", "approx_color_hex": "#de442e" },
+      { "min": 390.9, "max": 440.9, "unit": "萬元", "approx_color_hex": "#da2c18" },
+      { "min": 440.9, "max": 490.9, "unit": "萬元", "approx_color_hex": "#d51604" }
+    ],
+    "extraction_note": "approx_color_hex 為從圖例豎條逐段抽樣的近似色，可能與原設計色碼略有差異。"
+  },
+  "labels_visible_on_map": [
+    "新豐鄉",
+    "湖口鄉",
+    "新埔鎮",
+    "芎林鄉",
+    "竹東鎮",
+    "寶山鄉",
+    "頭份市",
+    "竹南鎮",
+    "香山區",
+    "北區",
+    "竹北市",
+    "新竹市"
+  ],
+  "credits": {
+    "designer": "JASIN YU",
+    "data_source_zh": "政府資料開放平臺",
+    "data_year": 2022,
+    "watermark_text": "Designed by JASIN YU"
+  },
+  "visual_observations": [
+    "圖中心（新竹市都市核心）周邊多為橘紅色至紅色區塊，代表綜合所得平均數較高。",
+    "距離市中心越遠之山區/沿海與外圍鄉鎮多呈淺綠至米色，代表平均數較低至中等。",
+    "整體色階自綠（低）→紅（高）單調遞增，分為 10 個等級，每級約 20–50 萬元範圍。"
+  ],
+  "regions": {
+    "granularity": "地圖上可見之行政區名稱（未含每一個小多邊形的精確值）",
+    "items": [
+      { "name": "新竹市", "notes": "市內細分多個里級小多邊形，核心區顏色偏橘紅（高分級）。", "bin_estimate": "高（視覺）" },
+      { "name": "北區",   "notes": "市區的一部分，鄰近核心區，顏色介於中高級。", "bin_estimate": "中高（視覺）" },
+      { "name": "香山區", "notes": "市區南側外圍，多為綠到淺橘。", "bin_estimate": "中低（視覺）" },
+      { "name": "竹北市", "notes": "市區北側，整體偏中至中高不等。", "bin_estimate": "中～中高（視覺）" },
+      { "name": "新豐鄉", "bin_estimate": "中低（視覺）" },
+      { "name": "湖口鄉", "bin_estimate": "中（視覺）" },
+      { "name": "新埔鎮", "bin_estimate": "中（視覺）" },
+      { "name": "芎林鄉", "bin_estimate": "中（視覺）" },
+      { "name": "竹東鎮", "bin_estimate": "中（視覺）" },
+      { "name": "寶山鄉", "bin_estimate": "中（視覺）" },
+      { "name": "竹南鎮", "bin_estimate": "中低（視覺）" },
+      { "name": "頭份市", "bin_estimate": "中低（視覺）" }
+    ],
+    "caveat": "以上為目測分級傾向，並非精確值；需要原始統計表與地理邊界才能給出準確數據。"
+  },
+  "alt_text": "一張 2048×2048 的台灣新竹市及周邊鄉鎮綜合所得平均數（萬元/年）分布圖，使用綠到紅的 10 級色階。中心市區偏紅（高收入），外圍多為綠到米色（較低）。左側有圖例，最底部顯示資料來源為政府資料開放平臺、年份 2022，圖上標出新豐、湖口、新埔、芎林、竹東、寶山、竹南、頭份、香山、北區、竹北、新竹市等地名。",
+  "usage_notes_for_llm": [
+    "把每個顏色對應到 legend.bins 的數值範圍來推論高低，但不要假設精確數值。",
+    "若需要精確到每個小多邊形（里/村）之值，請結合官方統計表與 GeoJSON；本 JSON 僅提供圖上可直接讀到的離散資訊。",
+    "在回答人類問題時，優先引用 `legend` 與 `visual_observations` 的內容，避免過度外推。"
+  ]
+}
