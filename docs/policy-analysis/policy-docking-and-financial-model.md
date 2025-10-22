@@ -864,7 +864,7 @@ SROI = 2.04
 
 **文件版本**: v2.0（完整版）
 **最後更新**: 2025年10月23日
-**撰寫者**: Claude Code + Easterlin Hsinchu Team
+**撰寫者**: Easterlin Hsinchu Team
 **審核狀態**: ✅ 研究完成，待提交評審
 
 ---

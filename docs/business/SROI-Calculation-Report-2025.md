@@ -1234,7 +1234,7 @@ SROI 比率: 1 : 2.04
 
 **聯絡資訊**:
 專案團隊: Easterlin Hsinchu Team
-報告撰寫: Claude Code + Human Collaboration
+報告撰寫: Easterlin Hsinchu Team
 資料來源: policy-docking-and-financial-model.md + 2025年最新研究
 
 ---

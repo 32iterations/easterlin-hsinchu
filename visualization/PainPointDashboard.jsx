@@ -797,7 +797,7 @@ export const CompleteDashboard = () => {
           <strong>標案時機：</strong>114A109標案10/30開標，設計階段（11-12月）為納入整合功能的黃金窗口 🔥
         </p>
         <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>
-          生成時間：2025-10-22 | Claude Code + React Visualization Suite
+          生成時間：2025-10-22 | React Visualization Suite
         </p>
       </div>
     </div>

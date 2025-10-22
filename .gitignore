@@ -38,23 +38,19 @@ yarn-error.log*
 # ===================================
 # Generated Output Files
 # ===================================
-# PowerPoint presentations (generated from scripts)
-*.pptx
-# Excel files (generated from scripts)
-*.xlsx
-# Office temporary files
+# Office temporary files (auto-saved versions)
 ~$*.pptx
 ~$*.xlsx
 ~$*.docx
-# Generated HTML dashboards
-interactive-dashboard.html
 
 # ===================================
-# Python Script Variants (keep only final versions)
+# Reorganized Project Structure (2025-10-23)
 # ===================================
-generate_*_v2.py
-generate_mediatek_*.py
-generate_tsmc_*.py
+# Keep all organized files in:
+# - outputs/presentations/*.pptx ✓
+# - outputs/presentations/*.xlsx ✓
+# - outputs/dashboards/*.html ✓
+# - scripts/presentation-generation/*.py ✓
 
 # ===================================
 # Temporary Files
@@ -73,7 +69,7 @@ nul
 *~
 
 # ===================================
-# Claude Code
+# Development Configuration
 # ===================================
 .claude/
 

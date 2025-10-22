@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竹科家庭痛點分析儀表板 - 114年新竹政策黑客松</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .stat-card .label {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            color: #333;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .description {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stat-card.highlight .label,
+        .stat-card.highlight .value,
+        .stat-card.highlight .description {
+            color: white;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        .insight-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .insight-box p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .legend-custom {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 竹科家庭痛點分析儀表板</h1>
+            <p class="subtitle">114年新竹政策黑客松 - 赤土崎全齡社福樞紐提案</p>
+            <p class="subtitle" style="font-size: 0.9em; margin-top: 10px;">數據來源：19篇文章去重後11篇 | 時間跨度：2021-2025 | 更新日期：2025-10-22</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card highlight">
+                <div class="label">核心洞察</div>
+                <div class="value">54.5%</div>
+                <div class="description">痛點來自「時間貧窮」而非金錢</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="label">工作-家庭平衡</div>
+                <div class="value">100%</div>
+                <div class="description">所有文章涉及此主題</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="label">服務缺口</div>
+                <div class="value">81.5%</div>
+                <div class="description">日照中心供需缺口</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="label">標案金額</div>
+                <div class="value">2,287萬</div>
+                <div class="description">赤土崎多功能館規劃設計</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h2>📊 痛點類別分布</h2>
+                <div class="chart-container">
+                    <canvas id="painPointChart"></canvas>
+                </div>
+                <div class="insight-box">
+                    <h3>💡 關鍵洞察</h3>
+                    <p>時間類痛點占54.5%，遠超其他類別。竹科家庭的核心問題是「服務分散」導致的時間貧窮，而非財務困難（金錢類痛點0%）。</p>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>😊 情緒分數分布</h2>
+                <div class="chart-container">
+                    <canvas id="emotionChart"></canvas>
+                </div>
+                <div class="insight-box">
+                    <h3>💡 關鍵洞察</h3>
+                    <p>18.2%文章呈現負面情緒（-0.1以下），反映竹科家庭真實壓力。大部分文章保持中立報導，增加數據可信度。</p>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h2>🎯 優先級矩陣：影響廣度 × 痛點深度</h2>
+                <div class="chart-container" style="height: 500px;">
+                    <canvas id="priorityMatrix"></canvas>
+                </div>
+                <div class="legend-custom">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6384;"></div>
+                        <span>高優先級（廣度≥50% & 深度≥2.0）</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffcd56;"></div>
+                        <span>中優先級（廣度≥30% & 深度≥1.5）</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4bc0c0;"></div>
+                        <span>低優先級</span>
+                    </div>
+                </div>
+                <div class="insight-box">
+                    <h3>💡 優先順序建議</h3>
+                    <p><strong>第一優先（右上象限）：</strong>時間類痛點 - 影響54.5%家庭，強度3.0。需透過整合服務（托育+日照+青少年）解決。</p>
+                    <p><strong>第二優先：</strong>關係類痛點 - 影響36.4%家庭，涉及隔代教養、社群壓力。</p>
+                    <p><strong>第三優先：</strong>健康類與資源類痛點 - 各影響9.1%家庭，可透過社區營造改善。</p>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>📈 主題覆蓋率（多選）</h2>
+                <div class="chart-container">
+                    <canvas id="topicChart"></canvas>
+                </div>
+                <div class="insight-box">
+                    <h3>💡 關鍵洞察</h3>
+                    <p>工作-家庭平衡議題100%覆蓋，托育壓力（54.5%）與社群焦慮（36.4%）為次要議題。長照議題僅9.1%，顯示資料樣本以雙薪家庭為主。</p>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2>🏢 服務缺口對比</h2>
+                <div class="chart-container">
+                    <canvas id="serviceGapChart"></canvas>
+                </div>
+                <div class="insight-box">
+                    <h3>💡 關鍵洞察</h3>
+                    <p>公共托嬰中心（100%缺口）與C級長照站（91%缺口）為最嚴重缺口。赤土崎多功能館可優先整合這兩大功能，創造「1+1>2」綜效。</p>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h2>📅 議題熱度時間軸</h2>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+                <div class="insight-box">
+                    <h3>💡 關鍵洞察</h3>
+                    <p>2022年「竹科5缺點」引發討論，2025年「年薪300萬貧戶」再掀熱潮。議題持續發酵5年未解決，顯示政策介入的迫切性與正當性。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>資料處理：</strong>6階段增強管道 | 去重率：42% (19→11篇) | 政策對接：100%</p>
+            <p style="margin-top: 10px;"><strong>標案時機：</strong>114A109標案10/30開標，設計階段（11-12月）為納入整合功能的黃金窗口 🔥</p>
+            <p style="margin-top: 15px; color: #999;">生成時間：2025-10-22 | DataEnhancer Pipeline</p>
+        </div>
+    </div>
+
+    <script>
+        // Chart.js 全局配置
+        Chart.defaults.font.family = "'Segoe UI', 'Microsoft JhengHei', sans-serif";
+        Chart.defaults.font.size = 14;
+
+        // 1. 痛點類別分布 (橫條圖)
+        const painPointData = {
+            labels: ['時間類', '關係類', '健康類', '資源類', '心理類', '金錢類'],
+            datasets: [{
+                label: '出現頻率 (%)',
+                data: [54.5, 36.4, 9.1, 9.1, 0, 0],
+                backgroundColor: [
+                    '#ff6384',
+                    '#ffcd56',
+                    '#4bc0c0',
+                    '#36a2eb',
+                    '#9966ff',
+                    '#c9cbcf'
+                ],
+                borderWidth: 0
+            }]
+        };
+
+        new Chart(document.getElementById('painPointChart'), {
+            type: 'bar',
+            data: painPointData,
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.x + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 60,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. 情緒分數分布 (圓餅圖)
+        const emotionData = {
+            labels: ['中性 (0.0)', '負面 (-0.1~-0.3)', '正面 (+0.5)'],
+            datasets: [{
+                data: [72.7, 18.2, 9.1],
+                backgroundColor: ['#c9cbcf', '#ff6384', '#4bc0c0'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        };
+
+        new Chart(document.getElementById('emotionChart'), {
+            type: 'doughnut',
+            data: emotionData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. 優先級矩陣 (散點圖)
+        const priorityData = {
+            datasets: [
+                {
+                    label: '時間類',
+                    data: [{x: 54.5, y: 3.0}],
+                    backgroundColor: '#ff6384',
+                    pointRadius: 15,
+                    pointHoverRadius: 20
+                },
+                {
+                    label: '關係類',
+                    data: [{x: 36.4, y: 2.5}],
+                    backgroundColor: '#ffcd56',
+                    pointRadius: 12,
+                    pointHoverRadius: 17
+                },
+                {
+                    label: '健康類',
+                    data: [{x: 9.1, y: 2.0}],
+                    backgroundColor: '#4bc0c0',
+                    pointRadius: 8,
+                    pointHoverRadius: 13
+                },
+                {
+                    label: '資源類',
+                    data: [{x: 9.1, y: 1.5}],
+                    backgroundColor: '#36a2eb',
+                    pointRadius: 8,
+                    pointHoverRadius: 13
+                },
+                {
+                    label: '心理類',
+                    data: [{x: 0, y: 1.0}],
+                    backgroundColor: '#9966ff',
+                    pointRadius: 5,
+                    pointHoverRadius: 10
+                },
+                {
+                    label: '金錢類',
+                    data: [{x: 0, y: 0}],
+                    backgroundColor: '#c9cbcf',
+                    pointRadius: 5,
+                    pointHoverRadius: 10
+                }
+            ]
+        };
+
+        new Chart(document.getElementById('priorityMatrix'), {
+            type: 'scatter',
+            data: priorityData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': 影響' + context.parsed.x + '%家庭, 強度' + context.parsed.y;
+                            }
+                        }
+                    },
+                    annotation: {
+                        annotations: {
+                            line1: {
+                                type: 'line',
+                                xMin: 30,
+                                xMax: 30,
+                                borderColor: 'rgba(255, 99, 132, 0.3)',
+                                borderWidth: 2,
+                                borderDash: [10, 5]
+                            },
+                            line2: {
+                                type: 'line',
+                                yMin: 2.0,
+                                yMax: 2.0,
+                                borderColor: 'rgba(255, 99, 132, 0.3)',
+                                borderWidth: 2,
+                                borderDash: [10, 5]
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '影響廣度（受影響家庭比例 %）',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        min: 0,
+                        max: 60
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '痛點深度（平均強度 1-3分）',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        min: 0,
+                        max: 3.5
+                    }
+                }
+            }
+        });
+
+        // 4. 主題覆蓋率 (雷達圖)
+        const topicData = {
+            labels: [
+                '工作-家庭平衡',
+                '托育/教育壓力',
+                '社群焦慮/教養競爭',
+                '心理健康',
+                '時間貧窮',
+                '長照/失智照護'
+            ],
+            datasets: [{
+                label: '覆蓋率 (%)',
+                data: [100, 54.5, 36.4, 27.3, 18.2, 9.1],
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 3,
+                pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(102, 126, 234, 1)',
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }]
+        };
+
+        new Chart(document.getElementById('topicChart'), {
+            type: 'radar',
+            data: topicData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20,
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // 5. 服務缺口對比 (群組橫條圖)
+        const serviceGapData = {
+            labels: ['C級長照站', '日照中心', '公共托嬰', '青少年中心'],
+            datasets: [
+                {
+                    label: '現有供給',
+                    data: [9, 18.5, 0, 0],
+                    backgroundColor: '#4bc0c0'
+                },
+                {
+                    label: '缺口',
+                    data: [91, 81.5, 100, 100],
+                    backgroundColor: '#ff6384'
+                }
+            ]
+        };
+
+        new Chart(document.getElementById('serviceGapChart'), {
+            type: 'bar',
+            data: serviceGapData,
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.x + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+
+        // 6. 議題熱度時間軸 (折線圖)
+        const timelineData = {
+            labels: ['2021', '2022', '2023', '2024', '2025'],
+            datasets: [
+                {
+                    label: '竹科家庭議題文章數',
+                    data: [1, 2, 0, 0, 8],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointHoverRadius: 10
+                }
+            ]
+        };
+
+        new Chart(document.getElementById('timelineChart'), {
+            type: 'line',
+            data: timelineData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '文章數：' + context.parsed.y + '篇';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 2
+                        },
+                        title: {
+                            display: true,
+                            text: '文章數量'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '年份'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
