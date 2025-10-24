@@ -41,7 +41,14 @@ app.use((req, res, next) => {
 
 // 首頁 - 提供完整專業版本（3D FPS 完整實現）
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '赤土崎多功能館_專業版_完整內部規劃.html'));
+    const filePath = path.join(__dirname, '赤土崎多功能館_專業版_完整內部規劃.html');
+    console.log(`[首頁路由] 發送: ${filePath}`);
+    console.log(`[首頁路由] 文件是否存在: ${fs.existsSync(filePath)}`);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(`[首頁路由] 發送錯誤: ${err.message}`);
+        }
+    });
 });
 
 // 提供簡化版本（無CDN依賴）

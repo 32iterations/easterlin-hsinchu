@@ -479,23 +479,24 @@
         </div>
     </div>
 
-    <!-- Three.js from Local Server (No CDN) -->
-    <script src="/libs/three/three.min.js"></script>
+    <!-- Three.js ES Modules from Local Server (No CDN) -->
     <script type="importmap">
     {
         "imports": {
-            "three": "/libs/three/three.min.js",
+            "three": "/libs/three/three.module.js",
             "three/addons/controls/OrbitControls.js": "/libs/three/OrbitControls.js",
             "three/addons/controls/PointerLockControls.js": "/libs/three/PointerLockControls.js"
         }
     }
     </script>
     <script type="module">
-        // Import ES modules
-        import { OrbitControls } from '/libs/three/OrbitControls.js';
-        import { PointerLockControls } from '/libs/three/PointerLockControls.js';
+        // Import Three.js and controls
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        // Make them globally accessible
+        // Make them globally accessible for non-module scripts
+        window.THREE = THREE;
         window.OrbitControls = OrbitControls;
         window.PointerLockControls = PointerLockControls;
     </script>
@@ -629,14 +630,14 @@
             container.appendChild(renderer.domElement);
 
             // 軌道控制器（外部視角）
-            orbitControls = new THREE.OrbitControls(orbitCamera, renderer.domElement);
+            orbitControls = new window.OrbitControls(orbitCamera, renderer.domElement);
             orbitControls.enableDamping = true;
             orbitControls.dampingFactor = 0.05;
             orbitControls.autoRotate = true;
             orbitControls.autoRotateSpeed = 2;
 
             // FPS 控制器（第一人稱）
-            pointerLockControls = new THREE.PointerLockControls(fpsCamera, renderer.domElement);
+            pointerLockControls = new window.PointerLockControls(fpsCamera, renderer.domElement);
             scene.add(pointerLockControls.getObject());
 
             // 光照
