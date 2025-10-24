@@ -39,9 +39,9 @@ app.use((req, res, next) => {
 
 // ==================== 路由 ====================
 
-// 首頁 - 使用簡化版本（無CDN依賴，100%穩定）
+// 首頁 - 提供完整專業版本（3D FPS 完整實現）
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '赤土崎多功能館_簡化版_無CDN依賴.html'));
+    res.sendFile(path.join(__dirname, '赤土崎多功能館_專業版_完整內部規劃.html'));
 });
 
 // 提供簡化版本（無CDN依賴）

@@ -1,0 +1,598 @@
+{
+  "timestamp": "2025-10-24T05:54:41.244Z",
+  "summary": {
+    "professional": {
+      "total": 7,
+      "critical": 6,
+      "high": 1,
+      "medium": 0,
+      "low": 0
+    },
+    "simple": {
+      "total": 8,
+      "critical": 3,
+      "high": 4,
+      "medium": 1,
+      "low": 0
+    }
+  },
+  "details": {
+    "professional": {
+      "issues": [
+        {
+          "severity": "Critical",
+          "category": "Network Failure",
+          "description": "請求完全失敗: https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js",
+          "reproduction": "嘗試加載 https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js",
+          "solution": "檢查 CDN 可用性、CORS 配置、網絡連接",
+          "timestamp": "2025-10-24T05:54:35.170Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Network Failure",
+          "description": "請求完全失敗: https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js",
+          "reproduction": "嘗試加載 https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js",
+          "solution": "檢查 CDN 可用性、CORS 配置、網絡連接",
+          "timestamp": "2025-10-24T05:54:35.473Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "JavaScript Exception",
+          "description": "頁面異常: THREE.OrbitControls is not a constructor",
+          "reproduction": "重現錯誤場景",
+          "solution": "修復異常: TypeError: THREE.OrbitControls is not a constructor\n    at initThreeJS (http://localhost:8080/professional:603:29)\n    at http://localhost:8080/professional:994:13",
+          "timestamp": "2025-10-24T05:54:35.527Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Rendering",
+          "description": "WebGL 上下文創建失敗",
+          "reproduction": "嘗試獲取 WebGL context",
+          "solution": "檢查瀏覽器 WebGL 支持、硬件加速設置",
+          "timestamp": "2025-10-24T05:54:38.025Z"
+        },
+        {
+          "severity": "High",
+          "category": "Rendering",
+          "description": "渲染錯誤: WebGL context 無法創建",
+          "reproduction": "執行渲染測試",
+          "solution": "修復渲染相關代碼",
+          "timestamp": "2025-10-24T05:54:38.025Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Dependencies",
+          "description": "PointerLockControls 模塊加載失敗",
+          "reproduction": "檢查 Network 面板中的 PointerLockControls 請求",
+          "solution": "檢查 import 語句、CDN URL、確保 Three.js 版本匹配",
+          "timestamp": "2025-10-24T05:54:38.029Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Test Execution",
+          "description": "測試執行失敗: page.metrics is not a function",
+          "reproduction": "運行測試套件",
+          "solution": "修復錯誤: TypeError: page.metrics is not a function\n    at testResourceUsage (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:391:30)\n    at runTests (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:722:11)\n    at runNextTicks (node:internal/process/task_queues:60:5)\n    at process.processImmediate (node:internal/timers:454:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)\n    at async C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:921:5",
+          "timestamp": "2025-10-24T05:54:38.056Z"
+        }
+      ],
+      "metrics": {
+        "performance": {
+          "loadTime": 940,
+          "domContentLoaded": 889.8999999985099,
+          "firstPaint": 268,
+          "firstContentfulPaint": 268,
+          "domInteractive": 889.8999999985099,
+          "resources": 3
+        },
+        "rendering": {
+          "canvas": true,
+          "webgl": false,
+          "context": null,
+          "errors": [
+            "WebGL context 無法創建"
+          ],
+          "canvasSize": {
+            "width": 1318,
+            "height": 1020
+          }
+        },
+        "cdn": {
+          "three": true,
+          "pointerLockControls": false,
+          "errors": [
+            "PointerLockControls 未加載"
+          ]
+        },
+        "buttons": [
+          {
+            "text": "外部視角",
+            "id": "",
+            "className": "mode-btn active",
+            "disabled": false
+          },
+          {
+            "text": "內部導覽",
+            "id": "",
+            "className": "mode-btn",
+            "disabled": false
+          },
+          {
+            "text": "第一人稱",
+            "id": "",
+            "className": "mode-btn",
+            "disabled": false
+          },
+          {
+            "text": "B1 停車場+機房",
+            "id": "",
+            "className": "floor-btn",
+            "disabled": false
+          },
+          {
+            "text": "1F 長照+AI記憶",
+            "id": "",
+            "className": "floor-btn active",
+            "disabled": false
+          },
+          {
+            "text": "2F 托嬰+SIDS監測",
+            "id": "",
+            "className": "floor-btn",
+            "disabled": false
+          },
+          {
+            "text": "3F 親子共學",
+            "id": "",
+            "className": "floor-btn",
+            "disabled": false
+          },
+          {
+            "text": "4F VR教室",
+            "id": "",
+            "className": "floor-btn",
+            "disabled": false
+          },
+          {
+            "text": "5F 綠能系統",
+            "id": "",
+            "className": "floor-btn",
+            "disabled": false
+          },
+          {
+            "text": "6F 會議廳",
+            "id": "",
+            "className": "floor-btn",
+            "disabled": false
+          },
+          {
+            "text": "線框",
+            "id": "",
+            "className": "ctrl-btn",
+            "disabled": false
+          },
+          {
+            "text": "自動旋轉",
+            "id": "",
+            "className": "ctrl-btn",
+            "disabled": false
+          },
+          {
+            "text": "重置視角",
+            "id": "",
+            "className": "ctrl-btn",
+            "disabled": false
+          },
+          {
+            "text": "幫助",
+            "id": "",
+            "className": "ctrl-btn",
+            "disabled": false
+          }
+        ],
+        "keyboard": {
+          "listenersAttached": true,
+          "eventsReceived": 8,
+          "keys": [
+            "w",
+            "a",
+            "s",
+            "d",
+            "ArrowUp",
+            "ArrowLeft",
+            "ArrowDown",
+            "ArrowRight"
+          ]
+        },
+        "mouse": {
+          "clickReceived": true,
+          "moveReceived": true
+        },
+        "collision": {
+          "exists": true,
+          "functional": true,
+          "errors": []
+        },
+        "compatibility": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+          "webgl": true,
+          "canvas": true,
+          "pointerLock": true,
+          "requestAnimationFrame": true,
+          "es6Support": true,
+          "localStorage": true,
+          "sessionStorage": true
+        }
+      },
+      "console": [
+        {
+          "type": "warning",
+          "text": "[GroupMarkerNotSet(crbug.com/242999)!:A030290044330000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+          "timestamp": "2025-10-24T05:54:35.545Z"
+        },
+        {
+          "type": "warning",
+          "text": "[.WebGL-0x82c001a1400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "timestamp": "2025-10-24T05:54:35.545Z"
+        },
+        {
+          "type": "warning",
+          "text": "[GroupMarkerNotSet(crbug.com/242999)!:A000290044330000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+          "timestamp": "2025-10-24T05:54:38.057Z"
+        }
+      ],
+      "network": [
+        {
+          "type": "request",
+          "url": "http://localhost:8080/professional",
+          "method": "GET",
+          "resourceType": "document",
+          "timestamp": "2025-10-24T05:54:34.588Z"
+        },
+        {
+          "type": "response",
+          "url": "http://localhost:8080/professional",
+          "status": 200,
+          "resourceType": "document",
+          "timestamp": "2025-10-24T05:54:34.603Z"
+        },
+        {
+          "type": "request",
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+          "method": "GET",
+          "resourceType": "script",
+          "timestamp": "2025-10-24T05:54:34.616Z"
+        },
+        {
+          "type": "request",
+          "url": "https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js",
+          "method": "GET",
+          "resourceType": "script",
+          "timestamp": "2025-10-24T05:54:34.616Z"
+        },
+        {
+          "type": "request",
+          "url": "https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js",
+          "method": "GET",
+          "resourceType": "script",
+          "timestamp": "2025-10-24T05:54:34.617Z"
+        },
+        {
+          "type": "response",
+          "url": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+          "status": 200,
+          "resourceType": "script",
+          "timestamp": "2025-10-24T05:54:34.820Z"
+        }
+      ],
+      "errors": [
+        {
+          "message": "THREE.OrbitControls is not a constructor",
+          "stack": "TypeError: THREE.OrbitControls is not a constructor\n    at initThreeJS (http://localhost:8080/professional:603:29)\n    at http://localhost:8080/professional:994:13",
+          "timestamp": "2025-10-24T05:54:35.527Z"
+        }
+      ]
+    },
+    "simple": {
+      "issues": [
+        {
+          "severity": "High",
+          "category": "Network Error",
+          "description": "網絡請求失敗: http://localhost:8080/simple (HTTP 404)",
+          "reproduction": "訪問 http://localhost:8080/simple",
+          "solution": "檢查資源路徑是否正確",
+          "timestamp": "2025-10-24T05:54:38.538Z"
+        },
+        {
+          "severity": "High",
+          "category": "JavaScript Error",
+          "description": "控制台錯誤: Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "reproduction": "打開開發者工具查看控制台",
+          "solution": "檢查並修復 JavaScript 代碼錯誤",
+          "timestamp": "2025-10-24T05:54:38.541Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Page Load",
+          "description": "頁面返回錯誤狀態碼: 404",
+          "reproduction": "訪問 http://localhost:8080/simple",
+          "solution": "檢查服務器路由配置",
+          "timestamp": "2025-10-24T05:54:39.051Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Rendering",
+          "description": "Canvas 元素未找到或未創建",
+          "reproduction": "檢查頁面 DOM 中的 canvas 元素",
+          "solution": "確保 Canvas 元素正確創建並添加到 DOM",
+          "timestamp": "2025-10-24T05:54:41.060Z"
+        },
+        {
+          "severity": "High",
+          "category": "Rendering",
+          "description": "2D Canvas 上下文創建失敗",
+          "reproduction": "嘗試獲取 2D context",
+          "solution": "檢查 Canvas API 使用是否正確",
+          "timestamp": "2025-10-24T05:54:41.060Z"
+        },
+        {
+          "severity": "High",
+          "category": "Rendering",
+          "description": "渲染錯誤: 未找到 Canvas 元素",
+          "reproduction": "執行渲染測試",
+          "solution": "修復渲染相關代碼",
+          "timestamp": "2025-10-24T05:54:41.060Z"
+        },
+        {
+          "severity": "Medium",
+          "category": "UI",
+          "description": "未找到任何按鈕元素",
+          "reproduction": "檢查頁面中的按鈕",
+          "solution": "確認按鈕是否正確渲染",
+          "timestamp": "2025-10-24T05:54:41.062Z"
+        },
+        {
+          "severity": "Critical",
+          "category": "Test Execution",
+          "description": "測試執行失敗: page.metrics is not a function",
+          "reproduction": "運行測試套件",
+          "solution": "修復錯誤: TypeError: page.metrics is not a function\n    at testResourceUsage (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:391:30)\n    at runTests (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:722:11)\n    at runNextTicks (node:internal/process/task_queues:60:5)\n    at process.processImmediate (node:internal/timers:454:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)\n    at async C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:924:5",
+          "timestamp": "2025-10-24T05:54:41.079Z"
+        }
+      ],
+      "metrics": {
+        "performance": {
+          "loadTime": 14.699999999254942,
+          "domContentLoaded": 14.199999999254942,
+          "firstPaint": 84,
+          "firstContentfulPaint": 84,
+          "domInteractive": 14.199999999254942,
+          "resources": 0
+        },
+        "rendering": {
+          "canvas": false,
+          "webgl": false,
+          "context": null,
+          "errors": [
+            "未找到 Canvas 元素"
+          ]
+        },
+        "buttons": [],
+        "keyboard": {
+          "listenersAttached": true,
+          "eventsReceived": 8,
+          "keys": [
+            "w",
+            "a",
+            "s",
+            "d",
+            "ArrowUp",
+            "ArrowLeft",
+            "ArrowDown",
+            "ArrowRight"
+          ]
+        },
+        "mouse": {
+          "clickReceived": true,
+          "moveReceived": true
+        },
+        "collision": {
+          "exists": true,
+          "functional": true,
+          "errors": []
+        },
+        "compatibility": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+          "webgl": true,
+          "canvas": true,
+          "pointerLock": true,
+          "requestAnimationFrame": true,
+          "es6Support": true,
+          "localStorage": true,
+          "sessionStorage": true
+        }
+      },
+      "console": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "timestamp": "2025-10-24T05:54:38.541Z"
+        },
+        {
+          "type": "warning",
+          "text": "[GroupMarkerNotSet(crbug.com/242999)!:A0C02800EC250000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+          "timestamp": "2025-10-24T05:54:41.079Z"
+        }
+      ],
+      "network": [
+        {
+          "type": "request",
+          "url": "http://localhost:8080/simple",
+          "method": "GET",
+          "resourceType": "document",
+          "timestamp": "2025-10-24T05:54:38.531Z"
+        },
+        {
+          "type": "response",
+          "url": "http://localhost:8080/simple",
+          "status": 404,
+          "resourceType": "document",
+          "timestamp": "2025-10-24T05:54:38.537Z"
+        }
+      ],
+      "errors": []
+    }
+  },
+  "prioritization": [
+    {
+      "priority": 1,
+      "severity": "Critical",
+      "category": "Network Failure",
+      "description": "請求完全失敗: https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js",
+      "reproduction": "嘗試加載 https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js",
+      "solution": "檢查 CDN 可用性、CORS 配置、網絡連接",
+      "timestamp": "2025-10-24T05:54:35.170Z",
+      "version": "professional"
+    },
+    {
+      "priority": 2,
+      "severity": "Critical",
+      "category": "Network Failure",
+      "description": "請求完全失敗: https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js",
+      "reproduction": "嘗試加載 https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js",
+      "solution": "檢查 CDN 可用性、CORS 配置、網絡連接",
+      "timestamp": "2025-10-24T05:54:35.473Z",
+      "version": "professional"
+    },
+    {
+      "priority": 3,
+      "severity": "Critical",
+      "category": "JavaScript Exception",
+      "description": "頁面異常: THREE.OrbitControls is not a constructor",
+      "reproduction": "重現錯誤場景",
+      "solution": "修復異常: TypeError: THREE.OrbitControls is not a constructor\n    at initThreeJS (http://localhost:8080/professional:603:29)\n    at http://localhost:8080/professional:994:13",
+      "timestamp": "2025-10-24T05:54:35.527Z",
+      "version": "professional"
+    },
+    {
+      "priority": 4,
+      "severity": "Critical",
+      "category": "Rendering",
+      "description": "WebGL 上下文創建失敗",
+      "reproduction": "嘗試獲取 WebGL context",
+      "solution": "檢查瀏覽器 WebGL 支持、硬件加速設置",
+      "timestamp": "2025-10-24T05:54:38.025Z",
+      "version": "professional"
+    },
+    {
+      "priority": 5,
+      "severity": "Critical",
+      "category": "Dependencies",
+      "description": "PointerLockControls 模塊加載失敗",
+      "reproduction": "檢查 Network 面板中的 PointerLockControls 請求",
+      "solution": "檢查 import 語句、CDN URL、確保 Three.js 版本匹配",
+      "timestamp": "2025-10-24T05:54:38.029Z",
+      "version": "professional"
+    },
+    {
+      "priority": 6,
+      "severity": "Critical",
+      "category": "Test Execution",
+      "description": "測試執行失敗: page.metrics is not a function",
+      "reproduction": "運行測試套件",
+      "solution": "修復錯誤: TypeError: page.metrics is not a function\n    at testResourceUsage (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:391:30)\n    at runTests (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:722:11)\n    at runNextTicks (node:internal/process/task_queues:60:5)\n    at process.processImmediate (node:internal/timers:454:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)\n    at async C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:921:5",
+      "timestamp": "2025-10-24T05:54:38.056Z",
+      "version": "professional"
+    },
+    {
+      "priority": 7,
+      "severity": "Critical",
+      "category": "Page Load",
+      "description": "頁面返回錯誤狀態碼: 404",
+      "reproduction": "訪問 http://localhost:8080/simple",
+      "solution": "檢查服務器路由配置",
+      "timestamp": "2025-10-24T05:54:39.051Z",
+      "version": "simple"
+    },
+    {
+      "priority": 8,
+      "severity": "Critical",
+      "category": "Rendering",
+      "description": "Canvas 元素未找到或未創建",
+      "reproduction": "檢查頁面 DOM 中的 canvas 元素",
+      "solution": "確保 Canvas 元素正確創建並添加到 DOM",
+      "timestamp": "2025-10-24T05:54:41.060Z",
+      "version": "simple"
+    },
+    {
+      "priority": 9,
+      "severity": "Critical",
+      "category": "Test Execution",
+      "description": "測試執行失敗: page.metrics is not a function",
+      "reproduction": "運行測試套件",
+      "solution": "修復錯誤: TypeError: page.metrics is not a function\n    at testResourceUsage (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:391:30)\n    at runTests (C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:722:11)\n    at runNextTicks (node:internal/process/task_queues:60:5)\n    at process.processImmediate (node:internal/timers:454:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)\n    at async C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\playwright-deep-analysis.js:924:5",
+      "timestamp": "2025-10-24T05:54:41.079Z",
+      "version": "simple"
+    },
+    {
+      "priority": 10,
+      "severity": "High",
+      "category": "Rendering",
+      "description": "渲染錯誤: WebGL context 無法創建",
+      "reproduction": "執行渲染測試",
+      "solution": "修復渲染相關代碼",
+      "timestamp": "2025-10-24T05:54:38.025Z",
+      "version": "professional"
+    },
+    {
+      "priority": 11,
+      "severity": "High",
+      "category": "Network Error",
+      "description": "網絡請求失敗: http://localhost:8080/simple (HTTP 404)",
+      "reproduction": "訪問 http://localhost:8080/simple",
+      "solution": "檢查資源路徑是否正確",
+      "timestamp": "2025-10-24T05:54:38.538Z",
+      "version": "simple"
+    },
+    {
+      "priority": 12,
+      "severity": "High",
+      "category": "JavaScript Error",
+      "description": "控制台錯誤: Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "reproduction": "打開開發者工具查看控制台",
+      "solution": "檢查並修復 JavaScript 代碼錯誤",
+      "timestamp": "2025-10-24T05:54:38.541Z",
+      "version": "simple"
+    },
+    {
+      "priority": 13,
+      "severity": "High",
+      "category": "Rendering",
+      "description": "2D Canvas 上下文創建失敗",
+      "reproduction": "嘗試獲取 2D context",
+      "solution": "檢查 Canvas API 使用是否正確",
+      "timestamp": "2025-10-24T05:54:41.060Z",
+      "version": "simple"
+    },
+    {
+      "priority": 14,
+      "severity": "High",
+      "category": "Rendering",
+      "description": "渲染錯誤: 未找到 Canvas 元素",
+      "reproduction": "執行渲染測試",
+      "solution": "修復渲染相關代碼",
+      "timestamp": "2025-10-24T05:54:41.060Z",
+      "version": "simple"
+    },
+    {
+      "priority": 15,
+      "severity": "Medium",
+      "category": "UI",
+      "description": "未找到任何按鈕元素",
+      "reproduction": "檢查頁面中的按鈕",
+      "solution": "確認按鈕是否正確渲染",
+      "timestamp": "2025-10-24T05:54:41.062Z",
+      "version": "simple"
+    }
+  ]
+}

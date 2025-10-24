@@ -372,19 +372,28 @@
             }
         }
 
-        // 初始化
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('load', () => {
-            resizeCanvas();
-            console.log('✅ 簡化版本載入成功');
-        });
-
         // 動畫循環
         function animate() {
             draw();
             requestAnimationFrame(animate);
         }
-        animate();
+
+        // 初始化
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            console.log('📍 頁面開始加載...');
+
+            // 延遲確保 DOM 完全準備好
+            setTimeout(() => {
+                console.log('🔧 調整 Canvas 尺寸...');
+                resizeCanvas();
+
+                console.log(`✅ Canvas 尺寸: ${canvas.width}x${canvas.height}`);
+                console.log('🎬 啟動動畫循環...');
+                animate();
+                console.log('✅ 簡化版本載入成功');
+            }, 100);
+        });
     </script>
 </body>
 </html>

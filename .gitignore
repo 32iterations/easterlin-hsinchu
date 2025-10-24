@@ -72,7 +72,7 @@ nul
 # Development Configuration
 # ===================================
 .claude/
-
+CLAUDE.md
 # ===================================
 # HTML resource folders (too large for git)
 # ===================================

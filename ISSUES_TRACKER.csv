@@ -1,0 +1,21 @@
+ID,Version,Severity,Category,Status,Title,Description,Reproduction,Solution,Estimated_Hours,Priority
+P1,Professional,Critical,Network,Open,OrbitControls CDN 加載失敗,jsDelivr CDN 返回 ERR_BLOCKED_BY_ORB 錯誤導致 OrbitControls.js 無法加載,訪問 http://localhost:8080/professional 並檢查 Network 面板,"替換 CDN: 將 jsdelivr 改為 unpkg (https://unpkg.com/three@0.169.0/examples/js/controls/OrbitControls.js) 或本地化文件",4-8,1
+P2,Professional,Critical,Network,Open,PointerLockControls CDN 加載失敗,jsDelivr CDN 返回 ERR_BLOCKED_BY_ORB 錯誤導致 PointerLockControls.js 無法加載,訪問 http://localhost:8080/professional 並檢查 Network 面板,"替換 CDN: 將 jsdelivr 改為 unpkg (https://unpkg.com/three@0.169.0/examples/js/controls/PointerLockControls.js) 或本地化文件",4-8,2
+P3,Professional,Critical,JavaScript,Open,THREE.OrbitControls 構造函數錯誤,由於 CDN 加載失敗導致 THREE.OrbitControls is not a constructor 異常,打開開發者工具 Console 查看錯誤堆棧,修復 P1 和 P2 的 CDN 問題後將自動解決,0,3
+P4,Professional,Critical,Rendering,Open,WebGL 上下文創建失敗,在 Headless Chrome 環境下 WebGL context 創建失敗,運行 Playwright 測試或在無頭模式下測試,"添加 WebGL 檢測和降級方案，無 WebGL 時自動跳轉到簡化版",2-4,4
+P5,Professional,Critical,Dependencies,Open,PointerLockControls 模塊未加載,測試檢測到 PointerLockControls 模塊未成功加載,執行 typeof THREE.PointerLockControls 檢查,修復 P2 的 CDN 問題後將自動解決,0,5
+P6,Professional,Critical,Test,Open,測試腳本 page.metrics 錯誤,Playwright 測試腳本使用了已廢棄的 page.metrics() API,運行 node playwright-deep-analysis.js,使用 Chrome DevTools Protocol (CDP) 替代 page.metrics(),1-2,6
+P7,Simple,Critical,Page Load,Open,/simple 路由返回 404,訪問 /simple 路由時服務器返回 404 錯誤，但文件確實存在,訪問 http://localhost:8080/simple,"在 server.js 中添加詳細日誌，驗證文件路徑解析，添加錯誤處理",1-2,7
+P8,Simple,Critical,Rendering,Open,Canvas 元素未創建,由於 404 錯誤導致頁面未加載，Canvas 元素不存在,檢查頁面 DOM 結構,修復 P7 的路由問題後將自動解決,0,8
+P9,Simple,Critical,Test,Open,測試腳本錯誤 (Simple),與 P6 相同的測試腳本問題,運行測試腳本,與 P6 使用相同解決方案,0,9
+P10,Professional,High,Rendering,Open,WebGL context 無法創建,與 P4 相關的渲染錯誤,測試 WebGL 功能,與 P4 使用相同解決方案,0,10
+P11,Simple,High,Network,Open,網絡請求失敗 (404),與 P7 相關的網絡錯誤,檢查 Network 面板,與 P7 使用相同解決方案,0,11
+P12,Simple,High,JavaScript,Open,控制台錯誤 (404),與 P7 相關的控制台錯誤,打開開發者工具 Console,與 P7 使用相同解決方案,0,12
+P13,Simple,High,Rendering,Open,2D Canvas 上下文創建失敗,由於頁面未加載導致的渲染錯誤,測試 Canvas 2D 功能,與 P7 使用相同解決方案,0,13
+P14,Simple,High,Rendering,Open,渲染錯誤: Canvas 未找到,與 P8 相關的渲染錯誤,檢查 Canvas 元素,與 P7 使用相同解決方案,0,14
+P15,Simple,Medium,UI,Open,按鈕元素未渲染,由於頁面未加載導致 UI 未顯示,檢查按鈕元素,與 P7 使用相同解決方案,0,15
+E1,Professional,High,Performance,Open,頁面加載時間過長,專業版加載時間 940ms 較慢,測量頁面加載性能,"優化 CDN 緩存，壓縮資源，使用資源預加載",4-6,16
+E2,Professional,Medium,Code Quality,Open,缺少錯誤處理,缺少全局錯誤捕獲和友好錯誤提示,測試各種錯誤場景,"添加 try-catch，實現錯誤邊界，顯示用戶友好信息",3-4,17
+E3,Both,Medium,Monitoring,Open,缺少性能監控,無法追蹤生產環境的性能和錯誤,檢查監控系統,"集成 Sentry 或類似工具，添加性能追蹤",6-8,18
+E4,Both,Low,Documentation,Open,文檔不完整,缺少詳細的部署和使用文檔,查看現有文檔,"編寫部署指南、API 文檔、故障排查手冊",4-6,19
+E5,Professional,Medium,Dependencies,Open,Three.js 版本過舊,使用 r128 版本較舊，存在兼容性問題,檢查 Three.js 版本,"升級到 r169 或至少 r150，更新相關代碼",8-12,20

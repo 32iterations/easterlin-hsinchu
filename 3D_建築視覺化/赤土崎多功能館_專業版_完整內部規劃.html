@@ -479,9 +479,26 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/three@0.169.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.169.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://unpkg.com/three@0.169.0/examples/js/controls/PointerLockControls.js"></script>
+    <!-- Three.js from Local Server (No CDN) -->
+    <script src="/libs/three/three.min.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "/libs/three/three.min.js",
+            "three/addons/controls/OrbitControls.js": "/libs/three/OrbitControls.js",
+            "three/addons/controls/PointerLockControls.js": "/libs/three/PointerLockControls.js"
+        }
+    }
+    </script>
+    <script type="module">
+        // Import ES modules
+        import { OrbitControls } from '/libs/three/OrbitControls.js';
+        import { PointerLockControls } from '/libs/three/PointerLockControls.js';
+
+        // Make them globally accessible
+        window.OrbitControls = OrbitControls;
+        window.PointerLockControls = PointerLockControls;
+    </script>
     <script>
         // ==================== 全局配置 ====================
         const BUILDING_CONFIG = {
@@ -1003,21 +1020,35 @@
 
         // ==================== 初始化 ====================
         window.addEventListener('load', () => {
-            // 先檢查 Three.js 是否加載
-            if (!checkThreeJS()) {
-                console.error('❌ Three.js 加載失敗，10 秒後重試...');
-                setTimeout(() => {
+            console.log('📍 頁面載入完成，檢查 Three.js...');
+
+            // 等待 Three.js 加載（最多 5 秒）
+            let attempts = 0;
+            const maxAttempts = 50; // 50 × 100ms = 5 秒
+
+            function waitForThreeJS() {
+                attempts++;
+
+                if (typeof THREE !== 'undefined') {
+                    console.log('✅ Three.js 已加載');
+                    checkThreeJS(); // 初始化 raycaster 和 velocity
+
+                    console.log('🏗️ 初始化 Three.js 場景...');
+                    initThreeJS();
+                    updateRoomsList();
+                    updateInfoPanel();
+                    document.getElementById('obj-display').textContent = scene.children.length;
+                    console.log('✅ 初始化完成，3D 建築應該出現了');
+                } else if (attempts < maxAttempts) {
+                    console.log(`⏳ 等待 Three.js 加載... (${attempts}/${maxAttempts})`);
+                    setTimeout(waitForThreeJS, 100);
+                } else {
+                    console.error('❌ Three.js 加載超時，嘗試備選 CDN...');
                     window.location.reload();
-                }, 10000);
-                return;
+                }
             }
 
-            // Three.js 已加載，初始化場景
-            initThreeJS();
-            updateRoomsList();
-            updateInfoPanel();
-            document.getElementById('obj-display').textContent = scene.children.length;
-            console.log('✅ 初始化完成');
+            waitForThreeJS();
         });
     </script>
 </body>
