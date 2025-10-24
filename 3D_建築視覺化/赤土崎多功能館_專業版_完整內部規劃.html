@@ -479,9 +479,9 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://unpkg.com/three@0.169.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.169.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@0.169.0/examples/js/controls/PointerLockControls.js"></script>
     <script>
         // ==================== 全局配置 ====================
         const BUILDING_CONFIG = {
@@ -570,11 +570,22 @@
 
         // ==================== Three.js 場景 ====================
         let scene, renderer;
-        let orbitCamera, orbitControls;
         let building;
         let frameCount = 0, lastTime = Date.now(), fps = 0;
-        let raycaster = new THREE.Raycaster();
-        let velocity = new THREE.Vector3();
+        let raycaster, velocity;
+
+        // 確保 Three.js 已加載
+        function checkThreeJS() {
+            if (typeof THREE === 'undefined') {
+                console.error('❌ Three.js 尚未加載');
+                setTimeout(checkThreeJS, 100);
+                return false;
+            }
+            console.log('✅ Three.js 已加載');
+            raycaster = new THREE.Raycaster();
+            velocity = new THREE.Vector3();
+            return true;
+        }
 
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
@@ -992,10 +1003,21 @@
 
         // ==================== 初始化 ====================
         window.addEventListener('load', () => {
+            // 先檢查 Three.js 是否加載
+            if (!checkThreeJS()) {
+                console.error('❌ Three.js 加載失敗，10 秒後重試...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 10000);
+                return;
+            }
+
+            // Three.js 已加載，初始化場景
             initThreeJS();
             updateRoomsList();
             updateInfoPanel();
             document.getElementById('obj-display').textContent = scene.children.length;
+            console.log('✅ 初始化完成');
         });
     </script>
 </body>

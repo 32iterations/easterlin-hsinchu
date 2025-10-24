@@ -39,9 +39,30 @@ app.use((req, res, next) => {
 
 // ==================== 路由 ====================
 
-// 首頁 - 提供專業版本（完整的 FPS 實現）
+// 首頁 - 使用簡化版本（無CDN依賴，100%穩定）
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '赤土崎多功能館_專業版_完整內部規劃.html'));
+    res.sendFile(path.join(__dirname, '赤土崎多功能館_簡化版_無CDN依賴.html'));
+});
+
+// 提供簡化版本（無CDN依賴）
+app.get('/simple', (req, res) => {
+    const filePath = path.join(__dirname, '赤土崎多功能館_簡化版_無CDN依賴.html');
+    console.log(`[簡化版路由] 請求路徑: ${filePath}`);
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            console.error(`[簡化版路由] 檔案不存在: ${filePath}`);
+            res.status(404).json({ error: 'File not found', path: filePath });
+            return;
+        }
+        console.log(`[簡化版路由] 檔案存在，發送中...`);
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error(`[簡化版路由] 發送錯誤: ${err.message}`);
+            } else {
+                console.log(`[簡化版路由] 成功發送`);
+            }
+        });
+    });
 });
 
 // 提供專業版本

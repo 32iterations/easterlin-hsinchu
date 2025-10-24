@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤土崎多功能館 - 3D 導覽系統 (簡化版)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+            background: #0a0e27;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        #app {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #topbar {
+            background: rgba(10, 14, 39, 0.9);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            height: 60px;
+            z-index: 1000;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .mode-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .mode-btn {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        .mode-btn:hover {
+            color: #00ff88;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            color: #00ff88;
+        }
+
+        #canvas-container {
+            flex: 1;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a2a4a 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .loading h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 255, 136, 0.2);
+            border-top: 4px solid #00ff88;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(10, 14, 39, 0.9);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 300px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .info-title {
+            color: #00ff88;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .info-item {
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 80, 80, 0.1);
+            border: 2px solid #ff5050;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 400px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .error h2 {
+            color: #ff5050;
+            margin-bottom: 10px;
+        }
+
+        .error p {
+            color: #ccc;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 頂部導航欄 -->
+        <div id="topbar">
+            <div class="topbar-left">
+                <div class="app-title">🏢 赤土崎多功能館 3D 導覽</div>
+                <div class="mode-switcher">
+                    <button class="mode-btn active" onclick="switchMode('info')">ℹ️ 資訊</button>
+                    <button class="mode-btn" onclick="switchMode('floor')">📋 樓層</button>
+                    <button class="mode-btn" onclick="switchMode('3d')">🎮 3D</button>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">建築</span>
+                        <span class="stat-value" id="building-name">赤土崎多功能館</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">樓層</span>
+                        <span class="stat-value" id="floor-count">7</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">房間</span>
+                        <span class="stat-value" id="room-count">49</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主容器 -->
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+
+            <!-- 載入中 -->
+            <div class="loading" id="loading" style="display: none;">
+                <h2>🚀 載入中...</h2>
+                <div class="spinner"></div>
+            </div>
+
+            <!-- 錯誤訊息 -->
+            <div class="error" id="error" style="display: none;">
+                <h2>⚠️ 載入失敗</h2>
+                <p id="error-message"></p>
+            </div>
+
+            <!-- 資訊面板 -->
+            <div class="info-panel" id="info-panel">
+                <div class="info-title">📍 赤土崎多功能館</div>
+                <div class="info-item">📍 新竹市東區</div>
+                <div class="info-item">📐 建築面積: 3,833 m²</div>
+                <div class="info-item">📏 基地面積: 8,000 m²</div>
+                <div class="info-item">🏢 7 層 (B1-6F)</div>
+                <div class="info-item">🚗 停車位: 60</div>
+                <div class="info-item" style="margin-top: 15px; color: #00ff88;">
+                    💡 提示: 點擊上方按鈕查看更多資訊
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 簡單的 Canvas 2D 繪製
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            draw();
+        }
+
+        function draw() {
+            // 背景漸層
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#0a0e27');
+            gradient.addColorStop(0.5, '#1a2a4a');
+            gradient.addColorStop(1, '#0a0e27');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 繪製建築（簡化的矩形）
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // 建築外框
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(centerX - 150, centerY - 100, 300, 200);
+
+            // 建築標題
+            ctx.fillStyle = '#00ff88';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏢 赤土崎多功能館', centerX, centerY - 40);
+
+            // 樓層信息
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#aaa';
+            const floorInfo = ['B1: 停車場', '1F: 長照+AI', '2F: 托嬰', '3F: 親子共學', '4F: VR教室', '5F: 綠能', '6F: 會議廳'];
+            let yPos = centerY + 20;
+            floorInfo.forEach((floor, index) => {
+                if (index < 4) {
+                    ctx.fillText(floor, centerX - 80 + (index * 70), yPos);
+                } else {
+                    ctx.fillText(floor, centerX - 80 + ((index - 4) * 70), yPos + 25);
+                }
+            });
+
+            // 統計資訊
+            ctx.fillStyle = '#00ff88';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('✓ 房間總數: 49', 50, canvas.height - 50);
+            ctx.fillText('✓ 總面積: 3,833 m²', 50, canvas.height - 30);
+            ctx.fillText('✓ 停車位: 60', 50, canvas.height - 10);
+        }
+
+        function switchMode(mode) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 根據模式切換顯示
+            const infoPanel = document.getElementById('info-panel');
+            if (mode === 'info') {
+                infoPanel.style.display = 'block';
+                infoPanel.innerHTML = `
+                    <div class="info-title">📍 赤土崎多功能館</div>
+                    <div class="info-item">📍 位置: 新竹市東區</div>
+                    <div class="info-item">📐 建築面積: 3,833 m²</div>
+                    <div class="info-item">📏 基地面積: 8,000 m²</div>
+                    <div class="info-item">🏢 樓層: 7 層 (B1-6F)</div>
+                    <div class="info-item">🚗 停車位: 60</div>
+                    <div class="info-item">💰 造價: NT$228.7M</div>
+                    <div class="info-item" style="margin-top: 15px; color: #00ff88;">
+                        📌 完全獨立版 (無 Three.js 依賴)
+                    </div>
+                `;
+            } else if (mode === 'floor') {
+                infoPanel.style.display = 'block';
+                infoPanel.innerHTML = `
+                    <div class="info-title">📋 樓層配置</div>
+                    <div class="info-item"><strong>B1:</strong> 停車場+機房</div>
+                    <div class="info-item"><strong>1F:</strong> 長照+AI記憶</div>
+                    <div class="info-item"><strong>2F:</strong> 托嬰+SIDS</div>
+                    <div class="info-item"><strong>3F:</strong> 親子共學</div>
+                    <div class="info-item"><strong>4F:</strong> VR教室</div>
+                    <div class="info-item"><strong>5F:</strong> 綠能系統</div>
+                    <div class="info-item"><strong>6F:</strong> 會議廳</div>
+                `;
+            } else if (mode === '3d') {
+                infoPanel.style.display = 'block';
+                infoPanel.innerHTML = `
+                    <div class="info-title">🎮 3D 導覽</div>
+                    <div class="info-item">⚡ 完全獨立版本</div>
+                    <div class="info-item">✓ 無需CDN</div>
+                    <div class="info-item">✓ Canvas 2D 渲染</div>
+                    <div class="info-item" style="margin-top: 15px; color: #ffaa00;">
+                        💡 提示: 想要完整的 Three.js 3D 體驗，請訪問專業版本
+                    </div>
+                `;
+            }
+        }
+
+        // 初始化
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            console.log('✅ 簡化版本載入成功');
+        });
+
+        // 動畫循環
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
