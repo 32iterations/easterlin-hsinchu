@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤土崎多功能館 - 地理位置整合3D可視化系統</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: #000;
+        }
+
+        #map-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 45%;
+            height: 100%;
+            background: #1a1a2e;
+            border-right: 3px solid #00ff88;
+            z-index: 10;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        #canvas-container {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 55%;
+            height: 100%;
+            background: #0a0e27;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 地圖頂部信息面板 */
+        .map-info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff88;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 2px solid #00ff88;
+            font-size: 12px;
+            z-index: 400;
+            max-width: 300px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .map-info-panel h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        /* 3D視角信息面板 */
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            max-height: 80vh;
+            background: rgba(10, 20, 40, 0.95);
+            border: 2px solid #ff00ff;
+            border-radius: 12px;
+            padding: 15px;
+            color: #fff;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+        }
+
+        #info-panel h2 {
+            color: #ff00ff;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        #info-panel h3 {
+            color: #00ff88;
+            font-size: 13px;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #00ff88;
+            padding-bottom: 5px;
+        }
+
+        .floor-item {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #00ff88;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .floor-item.active {
+            background: rgba(255, 0, 255, 0.2);
+            border-left-color: #ff00ff;
+        }
+
+        /* 底部控制面板 */
+        #control-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: calc(45% - 40px);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ccff;
+            border-radius: 10px;
+            padding: 15px;
+            color: #00ccff;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 204, 255, 0.3);
+        }
+
+        .control-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .floor-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+
+        .floor-btn {
+            background: rgba(0, 204, 255, 0.2);
+            color: #00ccff;
+            border: 1px solid #00ccff;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .floor-btn:hover {
+            background: rgba(0, 204, 255, 0.4);
+        }
+
+        .floor-btn.active {
+            background: #00ccff;
+            color: #000;
+            box-shadow: 0 0 10px #00ccff;
+        }
+
+        /* 3D控制面板 */
+        #3d-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: calc(55% - 40px);
+            background: rgba(10, 20, 40, 0.95);
+            border: 2px solid #ffaa00;
+            border-radius: 10px;
+            padding: 15px;
+            color: #ffaa00;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-3d {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            border: 1px solid #ffaa00;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-3d:hover {
+            background: rgba(255, 170, 0, 0.4);
+        }
+
+        .btn-3d.active {
+            background: #ffaa00;
+            color: #000;
+            box-shadow: 0 0 10px #ffaa00;
+        }
+
+        /* 統計信息 */
+        #stats {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(10, 20, 40, 0.8);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            z-index: 50;
+        }
+
+        .stat-row {
+            padding: 2px 0;
+        }
+
+        /* Leaflet 自定義樣式 */
+        .leaflet-container {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+
+        .building-marker {
+            width: 30px;
+            height: 30px;
+            background: #ff00ff;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+        }
+
+        /* 樓層詳情 */
+        .floor-detail {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+            border-left: 3px solid #00ff88;
+            font-size: 10px;
+        }
+
+        .floor-detail-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .floor-detail-desc {
+            color: #888;
+            line-height: 1.4;
+        }
+
+        /* 樓層平面圖容器 */
+        #floorplan-container {
+            position: absolute;
+            bottom: 120px;
+            left: 20px;
+            width: calc(45% - 40px);
+            height: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 10px;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            display: none;
+            overflow: hidden;
+        }
+
+        #floorplan-container.active {
+            display: block;
+        }
+
+        .floorplan-title {
+            color: #00ff88;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px #00ff88;
+        }
+
+        #floorplan-canvas {
+            width: 100%;
+            height: calc(100% - 20px);
+            background: #1a1a2e;
+            border-radius: 4px;
+        }
+
+        /* SVG平面圖樣式 */
+        .floorplan-room {
+            fill: rgba(0, 255, 136, 0.2);
+            stroke: #00ff88;
+            stroke-width: 1;
+        }
+
+        .floorplan-room:hover {
+            fill: rgba(0, 255, 136, 0.4);
+        }
+
+        .floorplan-text {
+            font-size: 8px;
+            fill: #00ff88;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        /* 同步指示器 */
+        .sync-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Leaflet地圖容器 -->
+    <div id="map-container">
+        <div id="map"></div>
+
+        <!-- 地圖信息面板 -->
+        <div class="map-info-panel">
+            <h3>📍 赤土崎多功能館</h3>
+            <div class="info-row">
+                <span class="info-label">位置：</span>
+                <span class="info-value">新竹市東區</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">座標：</span>
+                <span class="info-value" id="coord-display">24.82°N, 120.94°E</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">地區：</span>
+                <span class="info-value">竹科園區近郊</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">基地面積：</span>
+                <span class="info-value">8,000 m²</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">建築面積：</span>
+                <span class="info-value">3,833 m²</span>
+            </div>
+        </div>
+
+        <!-- 樓層平面圖 -->
+        <div id="floorplan-container">
+            <div class="floorplan-title">📐 樓層平面圖</div>
+            <svg id="floorplan-canvas"></svg>
+        </div>
+
+        <!-- 樓層控制面板 -->
+        <div id="control-panel">
+            <div class="control-title">🎮 樓層選擇</div>
+            <div class="floor-buttons">
+                <button class="floor-btn" onclick="selectFloor('B1')">B1 停車</button>
+                <button class="floor-btn" onclick="selectFloor('1F')">1F 長照</button>
+                <button class="floor-btn" onclick="selectFloor('2F')">2F 托嬰</button>
+                <button class="floor-btn" onclick="selectFloor('3F')">3F 家庭</button>
+                <button class="floor-btn" onclick="selectFloor('4F')">4F 青少年</button>
+                <button class="floor-btn" onclick="selectFloor('5F')">5F 綠能</button>
+                <button class="floor-btn active" onclick="selectFloor('6F')">6F 會議</button>
+            </div>
+            <p style="font-size: 10px; color: #666; margin-top: 10px;">💡 點擊樓層按鈕在3D視角中查看<br><span class="sync-indicator"></span>地圖和3D同步</p>
+        </div>
+    </div>
+
+    <!-- Three.js 3D視角容器 -->
+    <div id="canvas-container"></div>
+
+    <!-- 3D信息面板 -->
+    <div id="info-panel">
+        <h2>📐 空間規劃詳情</h2>
+        <div id="floor-details"></div>
+    </div>
+
+    <!-- 統計信息 -->
+    <div id="stats">
+        <div class="stat-row">🏢 建築物</div>
+        <div class="stat-row">FPS: <span id="fps">60</span></div>
+        <div class="stat-row">Objects: <span id="obj-count">0</span></div>
+        <div class="stat-row" style="margin-top: 8px; border-top: 1px solid #00ff88; padding-top: 8px;">
+            <div>📊 當前樓層</div>
+            <div id="current-floor-info" style="font-size: 9px; color: #ff00ff;">6F - 會議廳</div>
+        </div>
+    </div>
+
+    <!-- 3D控制面板 -->
+    <div id="3d-control">
+        <div class="control-title">⚙️ 檢視模式</div>
+        <div class="btn-group">
+            <button class="btn-3d active" onclick="setViewMode('normal')">正常</button>
+            <button class="btn-3d" onclick="setViewMode('wireframe')">線框</button>
+            <button class="btn-3d" onclick="setViewMode('interior')">內部</button>
+            <button class="btn-3d" onclick="toggleAutoRotate()">自動旋轉</button>
+        </div>
+    </div>
+
+    <!-- 腳本引入 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // ==================== 全局配置 ====================
+
+        // 赤土崎多功能館坐標
+        const BUILDING_LOCATION = {
+            lat: 24.8247,  // 新竹市東區赤土崎
+            lng: 120.9456
+        };
+
+        // 樓層詳細規劃數據
+        const FLOOR_PLANS = {
+            B1: {
+                name: 'B1 - 停車場+機房',
+                color: 0x7a7a7a,
+                height: 5,
+                description: '地面停車60車位 | 空調機房 | 配電室 | UPS系統 | 給排水系統 | 區塊鏈輕量節點',
+                rooms: [
+                    { name: '停車場', area: '450 m²', equipment: '60車位、動線標線、感測停車' },
+                    { name: '空調機房', area: '50 m²', equipment: '2套150RT冷暖主機、新風系統15,000CMH' },
+                    { name: '配電室', area: '40 m²', equipment: '800A主配盤、15迴路、UPS 200kVA' },
+                    { name: '給排水', area: '30 m²', equipment: '20噸水塔、MBR膜生物反應器' },
+                    { name: '雨水回收', area: '20 m²', equipment: '300 m³儲存池、年回收1,200 m³' }
+                ]
+            },
+            '1F': {
+                name: '1F - AI記憶重生+長照日照',
+                color: 0x9a9a9a,
+                height: 4,
+                description: '失智症專區(200 m²) | 投影體驗區 | 穿戴監測 | 日照活動區(80人)',
+                rooms: [
+                    { name: '失智症專區', area: '200 m²', equipment: '4K投影(10m×3m)、互動投影×2、穿戴配置' },
+                    { name: 'AI投影播放', area: '100 m²', equipment: '3,000流明投影機、智慧手錶20個、跌倒感測15個' },
+                    { name: '復健訓練區', area: '80 m²', equipment: '跑步機×2、腳踏車×3、平衡訓練墊×5' },
+                    { name: '藝術療法區', area: '80 m²', equipment: '鋼琴鍵盤、繪畫桌×2、音樂治療系統' },
+                    { name: '認知訓練區', area: '60 m²', equipment: '平板電腦×5、Lumosity軟體、MMSE評估系統' },
+                    { name: '共用餐廳', area: '120 m²', equipment: '圓形餐桌×6(8人/桌)、檢測盤子、溫度感測' },
+                    { name: '備餐廚房', area: '40 m²', equipment: '蒸飯箱、微波爐、攪拌機、洗碗機80°C' },
+                    { name: '護理站', area: '20 m²', equipment: '多屏監控系統(4×27吋)、警報系統、冰箱儲存' }
+                ]
+            },
+            '2F': {
+                name: '2F - SIDS監測+公共托嬰',
+                color: 0x9a9a9a,
+                height: 3.5,
+                description: 'SIDS監測系統(50床) | 托嬰活動區 | 感染隔離設計 | AI健康預測',
+                rooms: [
+                    { name: 'SIDS監測系統', area: '200 m²', equipment: '紅外感測(98%)、心律感測(99%)、體溫貼片(97%)、聲紋AI(92%)' },
+                    { name: '嬰兒床區', area: '200 m²', equipment: '50張嬰兒床(30cm間距)、恆溫22-24°C、濕度45-65%' },
+                    { name: '中央監控', area: '30 m²', equipment: '50床儀表板、RGB燈信號、護理師推播系統' },
+                    { name: '嬰兒活動區', area: '50 m²', equipment: '爬行墊、黑白閃卡、感官玩具、安全鏡' },
+                    { name: '幼兒活動區', area: '50 m²', equipment: '攀爬架、滑梯、搖搖馬×3、球池、跳跳墊' },
+                    { name: 'AI故事時間', area: '20 m²', equipment: 'Full-HD投影機、120吋幕、手勢識別、語音互動' },
+                    { name: '餵食換尿區', area: '80 m²', equipment: '奶瓶消毒機×2、溫奶機×2、換尿布台×3、冰箱×2' },
+                    { name: '衛浴設施', area: '40 m²', equipment: '幼兒廁所×2、洗手台×2、浴盆×2、消毒燈×2、蒸汽消毒' }
+                ]
+            },
+            '3F': {
+                name: '3F - 親子共學+時間銀行',
+                color: 0xb0b0b0,
+                height: 3.5,
+                description: '親子共學區(60家庭) | 時間銀行管理中心 | MR互動空間 | 故事劇場',
+                rooms: [
+                    { name: '閱讀區', area: '80 m²', equipment: '書櫃×3(3,000冊)、親子座椅×8、互動投影×6' },
+                    { name: '故事劇場', area: '120 m²', equipment: '劇台×1、投影幕×1、座位×30、AI故事系統' },
+                    { name: '主題學習角', area: '100 m²', equipment: '樂高、電路板、種植盆、3D列印機、STEAM教材' },
+                    { name: '時間銀行辦公', area: '60 m²', equipment: 'Time Broker座位×3、會員諮詢區、電腦系統、檔案櫃' },
+                    { name: '導師座位區', area: '60 m²', equipment: '職涯導師座位×3、隱私布簾、4K攝像機、降噪麥克風' },
+                    { name: '月度表揚區', area: '30 m²', equipment: '證書展示、拍照區、社群分享牆' },
+                    { name: '混合現實(MR)區', area: '50 m²', equipment: 'VR頭盔×2、麥克風與語音系統、觀看席×20、大屏幕同步' }
+                ]
+            },
+            '4F': {
+                name: '4F - 元宇宙共學教室+青少年',
+                color: 0xf5f5f5,
+                height: 3.5,
+                description: 'STEM教室(200 m²) | VR沉浸教室(150 m²) | 職涯導師 | 遠距教學',
+                rooms: [
+                    { name: 'STEM教室', area: '100 m²', equipment: '電腦×15(i7+RTX4060)、伺服器×1、光纖骨幹1.2Gbps' },
+                    { name: '機器人區', area: '60 m²', equipment: 'Arduino×10、Raspberry Pi×10、3D列印機、IoT套組×10' },
+                    { name: '電子工作台', area: '40 m²', equipment: '焊接台×3、萬用表、示波器、邏輯分析儀、急救包' },
+                    { name: 'VR硬體區', area: '30 m²', equipment: 'VR頭盔×10(Meta Quest 3)、追蹤基地台×4、控制器×20' },
+                    { name: 'VR沉浸教室', area: '120 m²', equipment: '4K投影機×2、3m×2m幕×2、5G DAS系統、邊緣計算伺服器' },
+                    { name: '虛擬實驗室', area: '40 m²', equipment: '化學實驗場景、物理模擬、生物解剖、量子力學VR' },
+                    { name: '遠距導師室', area: '40 m²', equipment: '虛擬白板、Avatar化身、實時互動、成績紀錄' },
+                    { name: '職涯導師區', area: '50 m²', equipment: 'VR會議室、成就展示、數位履歷系統' }
+                ]
+            },
+            '5F': {
+                name: '5F - 綠能系統+多功能培訓',
+                color: 0xf5f5f5,
+                height: 3.5,
+                description: '太陽能50kWp | 綠屋頂250 m² | 員工培訓中心 | 研究實驗室',
+                rooms: [
+                    { name: '太陽能面板', area: '300 m²', equipment: '50kWp(120片×430W)、年發60,000kWh、年省NT$270K' },
+                    { name: '儲能電池', area: '30 m²', equipment: '100kWh鋰電池、BMS管理系統、10年壽命' },
+                    { name: '綠屋頂', area: '250 m²', equipment: '草皮與灌木、隔熱30%、PM2.5吸附、生物多樣性' },
+                    { name: '培訓教室', area: '60 m²', equipment: '投影系統、60人容納、音響設備、座椅靈活配置' },
+                    { name: '會議室', area: '40 m²', equipment: '會議桌、20人容納、視訊系統、白板' },
+                    { name: '實驗室', area: '50 m²', equipment: 'VR/AR測試、AI演算法試驗、社福創新設計' },
+                    { name: '辦公區', area: '70 m²', equipment: '座位×15、社福專業人員、資料分析團隊、營運人員' }
+                ]
+            },
+            '6F': {
+                name: '6F - 公共會議廳+露臺',
+                color: 0xf0f0f0,
+                height: 3.5,
+                description: '多功能會議廳(300人) | 屋頂露臺(200 m²) | 赤土崎公園眺望',
+                rooms: [
+                    { name: '會議廳', area: '440 m²', equipment: '300人容納、可分隔2-3廳、4K投影+120吋幕、同步翻譯(3語)' },
+                    { name: '備餐區', area: '30 m²', equipment: '小型廚房、自助餐配置、飲品機、冰箱' },
+                    { name: '衛浴設施', area: '40 m²', equipment: '廁所×12、無障礙廁所、洗手區' },
+                    { name: '舞台', area: '80 m²', equipment: '投影系統、音響系統、燈光控制、麥克風×5' },
+                    { name: '屋頂露臺', area: '200 m²', equipment: '座位與遮陽、眺望赤土崎公園與竹科園區、拍照打卡點' },
+                    { name: '儲備區', area: '50 m²', equipment: '未來系統擴展預留、結構承重預留' }
+                ]
+            }
+        };
+
+        // ==================== Leaflet地圖初始化 ====================
+        let map;
+        let buildingMarker;
+
+        function initMap() {
+            // 初始化地圖
+            map = L.map('map').setView([BUILDING_LOCATION.lat, BUILDING_LOCATION.lng], 16);
+
+            // 使用NLSC台灣地圖 (正射影像圖)
+            L.tileLayer('https://wmts.nlsc.gov.tw/wmts/ORT/default//GoogleMapsCompatible_Level{z}/{y}/{x}', {
+                minZoom: 1,
+                maxZoom: 20,
+                attribution: '國土測繪中心'
+            }).addTo(map);
+
+            // 添加建築標記
+            const markerIcon = L.divIcon({
+                html: '<div class="building-marker">🏢</div>',
+                iconSize: [30, 30],
+                className: 'custom-marker'
+            });
+
+            buildingMarker = L.marker(
+                [BUILDING_LOCATION.lat, BUILDING_LOCATION.lng],
+                { icon: markerIcon }
+            ).addTo(map);
+
+            // 建築彈窗
+            buildingMarker.bindPopup(`
+                <div style="color: #000; font-size: 12px; font-weight: bold;">
+                    <strong>赤土崎多功能館</strong><br>
+                    新竹市東區<br>
+                    24.8247°N, 120.9456°E<br>
+                    基地面積: 8,000 m²<br>
+                    建築面積: 3,833 m²<br>
+                    樓層: B1-6F
+                </div>
+            `);
+
+            // 繪製基地邊界（約8,000 m²的矩形）
+            // 計算基地邊界（估計200m × 40m）
+            const bounds = [
+                [BUILDING_LOCATION.lat - 0.0009, BUILDING_LOCATION.lng - 0.0015],
+                [BUILDING_LOCATION.lat + 0.0009, BUILDING_LOCATION.lng + 0.0015]
+            ];
+
+            const rectangle = L.rectangle(bounds, {
+                color: '#00ff88',
+                weight: 2,
+                opacity: 0.7,
+                fill: true,
+                fillColor: '#00ff88',
+                fillOpacity: 0.1
+            }).addTo(map);
+
+            // 添加圓形緩衝區(500m社區服務範圍)
+            L.circle(
+                [BUILDING_LOCATION.lat, BUILDING_LOCATION.lng],
+                500,
+                {
+                    color: '#ff00ff',
+                    weight: 1,
+                    opacity: 0.3,
+                    fill: true,
+                    fillColor: '#ff00ff',
+                    fillOpacity: 0.05
+                }
+            ).addTo(map);
+
+            // 添加圖層控制（NLSC提供的多個圖層）
+            const baseMaps = {
+                '正射影像': L.tileLayer('https://wmts.nlsc.gov.tw/wmts/ORT/default//GoogleMapsCompatible_Level{z}/{y}/{x}', {
+                    attribution: '國土測繪中心',
+                    minZoom: 1,
+                    maxZoom: 20
+                }),
+                '地形圖': L.tileLayer('https://wmts.nlsc.gov.tw/wmts/MAPNIK/default//GoogleMapsCompatible_Level{z}/{y}/{x}', {
+                    attribution: '國土測繪中心',
+                    minZoom: 1,
+                    maxZoom: 20
+                }),
+                '通用電子地圖': L.tileLayer('https://wmts.nlsc.gov.tw/wmts/CWTS/default//GoogleMapsCompatible_Level{z}/{y}/{x}', {
+                    attribution: '國土測繪中心',
+                    minZoom: 1,
+                    maxZoom: 20
+                })
+            };
+
+            L.control.layers(baseMaps).addTo(map);
+        }
+
+        // ==================== Three.js 3D建築初始化 ====================
+        let scene, camera, renderer, controls;
+        let building, floorMeshes = {};
+        let currentFloor = '6F';
+        let autoRotate = false;
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+
+            // 場景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e27);
+            scene.fog = new THREE.Fog(0x0a0e27, 200, 500);
+
+            // 相機
+            camera = new THREE.PerspectiveCamera(
+                65,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                2000
+            );
+            camera.position.set(50, 35, 50);
+            camera.lookAt(0, 15, 0);
+
+            // 渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.outputEncoding = THREE.sRGBColorSpace;
+            container.appendChild(renderer.domElement);
+
+            // 控制
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxDistance = 200;
+            controls.minDistance = 20;
+
+            // 創建建築
+            createBuilding();
+
+            // 光源
+            createLights();
+
+            // 地面
+            createGround();
+
+            // 窗口調整
+            window.addEventListener('resize', onWindowResize);
+
+            // 動畫循環
+            animate3D();
+        }
+
+        function createBuilding() {
+            building = new THREE.Group();
+            scene.add(building);
+
+            const buildingWidth = 32;
+            const buildingDepth = 20;
+
+            // 創建每一層
+            const floorOrder = ['B1', '1F', '2F', '3F', '4F', '5F', '6F'];
+            let currentHeight = 0;
+
+            floorOrder.forEach((floorKey) => {
+                const data = FLOOR_PLANS[floorKey];
+
+                const geometry = new THREE.BoxGeometry(buildingWidth, data.height, buildingDepth);
+
+                // 多材質（不同面）
+                let materials = [];
+                for (let i = 0; i < 6; i++) {
+                    const isGlass = ['3F', '4F', '5F', '6F'].includes(floorKey);
+                    const isSemiGlass = floorKey === '3F';
+
+                    let material;
+                    if (isSemiGlass && (i === 1 || i === 4)) {
+                        material = new THREE.MeshPhongMaterial({
+                            color: 0xb0b0b0,
+                            transparent: true,
+                            opacity: 0.7,
+                            emissive: 0x333333,
+                            shininess: 100
+                        });
+                    } else if (isGlass && (i === 1 || i === 4)) {
+                        material = new THREE.MeshPhongMaterial({
+                            color: 0xffffff,
+                            transparent: true,
+                            opacity: 0.8,
+                            emissive: 0x444444,
+                            shininess: 80
+                        });
+                    } else {
+                        material = new THREE.MeshPhongMaterial({
+                            color: data.color,
+                            emissive: 0x222222,
+                            shininess: 40
+                        });
+                    }
+                    materials.push(material);
+                }
+
+                const mesh = new THREE.Mesh(geometry, materials);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.position.y = currentHeight + data.height / 2;
+                mesh.userData = { floor: floorKey, data: data };
+
+                // 邊框
+                const edges = new THREE.EdgesGeometry(geometry);
+                const lineSegments = new THREE.LineSegments(
+                    edges,
+                    new THREE.LineBasicMaterial({ color: 0x444444, linewidth: 1 })
+                );
+                lineSegments.position.copy(mesh.position);
+                building.add(lineSegments);
+
+                building.add(mesh);
+                floorMeshes[floorKey] = mesh;
+
+                // 添加窗戶
+                addWindowsToFloor(mesh, floorKey, buildingWidth, buildingDepth);
+
+                currentHeight += data.height;
+            });
+
+            // 屋頂
+            createRoof(currentHeight, buildingWidth, buildingDepth);
+        }
+
+        function addWindowsToFloor(floorMesh, floorKey, width, depth) {
+            if (['4F', '5F', '6F'].includes(floorKey)) {
+                const windowSize = 2;
+                const windowSpacing = 3;
+
+                for (let x = -width / 2 + 2; x < width / 2 - 2; x += windowSpacing) {
+                    for (let z = -depth / 2 + 2; z < depth / 2 - 2; z += windowSpacing) {
+                        const windowGeometry = new THREE.PlaneGeometry(windowSize, windowSize);
+                        const windowMaterial = new THREE.MeshPhongMaterial({
+                            color: 0x87ceeb,
+                            emissive: 0x1a5c7a,
+                            shininess: 120,
+                            side: THREE.DoubleSide
+                        });
+
+                        const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                        windowMesh.position.set(x, 0, z);
+                        windowMesh.position.z -= depth / 2 + 0.1;
+                        windowMesh.position.y += floorMesh.position.y - floorMesh.geometry.parameters.height / 2 + 0.5;
+                        windowMesh.castShadow = true;
+                        building.add(windowMesh);
+                    }
+                }
+            }
+        }
+
+        function createRoof(yPos, width, depth) {
+            // 太陽能面板
+            const panelCount = 16;
+            for (let i = 0; i < panelCount; i++) {
+                const panelGeometry = new THREE.BoxGeometry(width / 5, 0.15, depth / 4);
+                const panelMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x1e90ff,
+                    emissive: 0x0066cc,
+                    shininess: 100
+                });
+                const panelMesh = new THREE.Mesh(panelGeometry, panelMaterial);
+                panelMesh.position.set(
+                    -12 + (i % 4) * 8,
+                    yPos + 0.2,
+                    -7 + Math.floor(i / 4) * 5
+                );
+                panelMesh.castShadow = true;
+                panelMesh.receiveShadow = true;
+                building.add(panelMesh);
+            }
+
+            // 綠屋頂
+            const greenGeometry = new THREE.PlaneGeometry(width * 0.7, depth * 0.7);
+            const greenMaterial = new THREE.MeshPhongMaterial({
+                color: 0x2d8659,
+                emissive: 0x1a4d31,
+                shininess: 20
+            });
+            const greenRoof = new THREE.Mesh(greenGeometry, greenMaterial);
+            greenRoof.rotation.x = -Math.PI / 2;
+            greenRoof.position.set(0, yPos + 0.3, 0);
+            greenRoof.receiveShadow = true;
+            building.add(greenRoof);
+        }
+
+        function createLights() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(80, 60, 40);
+            directionalLight.target.position.set(0, 10, 0);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.far = 500;
+            directionalLight.shadow.camera.left = -150;
+            directionalLight.shadow.camera.right = 150;
+            directionalLight.shadow.camera.top = 150;
+            directionalLight.shadow.camera.bottom = -150;
+            scene.add(directionalLight);
+
+            const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x2d5016, 0.4);
+            scene.add(hemisphereLight);
+        }
+
+        function createGround() {
+            const groundGeometry = new THREE.PlaneGeometry(300, 300);
+            const groundMaterial = new THREE.MeshPhongMaterial({
+                color: 0x2d5016,
+                side: THREE.DoubleSide
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.5;
+            ground.receiveShadow = true;
+            scene.add(ground);
+        }
+
+        // ==================== 樓層平面圖生成函數 ====================
+
+        // 定義樓層的房間位置（用於SVG繪圖）
+        const FLOORPLAN_LAYOUTS = {
+            'B1': [
+                { name: '停車場', x: 20, y: 30, w: 140, h: 100, color: '#555' },
+                { name: '空調機房', x: 20, y: 140, w: 30, h: 30, color: '#880088' },
+                { name: '配電室', x: 60, y: 140, w: 30, h: 30, color: '#0088ff' },
+                { name: '給排水', x: 100, y: 140, w: 25, h: 30, color: '#0088ff' },
+                { name: '雨水回收', x: 135, y: 140, w: 25, h: 30, color: '#00ccff' }
+            ],
+            '1F': [
+                { name: '失智症專區', x: 15, y: 20, w: 80, h: 100, color: '#ff6600' },
+                { name: 'AI投影', x: 105, y: 20, w: 55, h: 50, color: '#ff8800' },
+                { name: '復健訓練', x: 105, y: 75, w: 55, h: 45, color: '#ffaa00' },
+                { name: '藝術療法', x: 15, y: 125, w: 40, h: 40, color: '#ff00ff' },
+                { name: '認知訓練', x: 60, y: 125, w: 30, h: 40, color: '#ff0088' },
+                { name: '共用餐廳', x: 95, y: 125, w: 50, h: 40, color: '#8800ff' },
+                { name: '備餐廚房', x: 150, y: 125, w: 20, h: 40, color: '#ffff00' }
+            ],
+            '2F': [
+                { name: 'SIDS監測', x: 20, y: 25, w: 75, h: 70, color: '#00ff00' },
+                { name: '嬰兒床區', x: 20, y: 100, w: 75, h: 70, color: '#00ff88' },
+                { name: '中央監控', x: 105, y: 25, w: 35, h: 35, color: '#0088ff' },
+                { name: '嬰幼活動區', x: 105, y: 65, w: 65, h: 50, color: '#00ffff' },
+                { name: 'AI故事', x: 105, y: 120, w: 35, h: 25, color: '#88ffff' },
+                { name: '餵食換尿', x: 145, y: 65, w: 40, h: 50, color: '#ffcc00' },
+                { name: '衛浴設施', x: 145, y: 120, w: 40, h: 25, color: '#ccaa00' }
+            ],
+            '3F': [
+                { name: '閱讀區', x: 15, y: 20, w: 45, h: 50, color: '#ff0088' },
+                { name: '故事劇場', x: 65, y: 20, w: 75, h: 60, color: '#8800ff' },
+                { name: '主題學習', x: 15, y: 75, w: 125, h: 55, color: '#00ff00' },
+                { name: '時間銀行', x: 150, y: 20, w: 50, h: 40, color: '#ffff00' },
+                { name: '導師座位', x: 150, y: 65, w: 50, h: 35, color: '#ffaa00' },
+                { name: '表揚展示', x: 150, y: 105, w: 50, h: 25, color: '#00ccff' },
+                { name: 'MR區', x: 65, y: 85, w: 30, h: 45, color: '#ff00ff' }
+            ],
+            '4F': [
+                { name: 'STEM教室', x: 15, y: 20, w: 60, h: 55, color: '#ff0000' },
+                { name: '機器人區', x: 80, y: 20, w: 50, h: 55, color: '#ff4400' },
+                { name: '電子工作台', x: 135, y: 20, w: 35, h: 55, color: '#ff8800' },
+                { name: 'VR硬體', x: 15, y: 80, w: 35, h: 40, color: '#00ff00' },
+                { name: 'VR沉浸教室', x: 55, y: 80, w: 80, h: 40, color: '#00ff88' },
+                { name: '虛擬實驗室', x: 140, y: 80, w: 30, h: 40, color: '#00ffff' },
+                { name: '遠距導師', x: 15, y: 125, w: 35, h: 25, color: '#0088ff' },
+                { name: '職涯導師', x: 55, y: 125, w: 50, h: 25, color: '#0044ff' }
+            ],
+            '5F': [
+                { name: '太陽能面板', x: 15, y: 15, w: 160, h: 30, color: '#1e90ff' },
+                { name: '儲能電池', x: 15, y: 50, w: 35, h: 25, color: '#ffaa00' },
+                { name: '綠屋頂', x: 55, y: 50, w: 120, h: 80, color: '#228b22' },
+                { name: '培訓教室', x: 15, y: 130, w: 40, h: 25, color: '#ff00ff' },
+                { name: '會議室', x: 60, y: 130, w: 30, h: 25, color: '#00ffff' },
+                { name: '實驗室', x: 95, y: 130, w: 35, h: 25, color: '#00ff00' },
+                { name: '辦公區', x: 135, y: 130, w: 40, h: 25, color: '#ffff00' }
+            ],
+            '6F': [
+                { name: '會議廳', x: 15, y: 20, w: 175, h: 70, color: '#ff00ff' },
+                { name: '備餐區', x: 15, y: 95, w: 30, h: 20, color: '#ffaa00' },
+                { name: '衛浴設施', x: 50, y: 95, w: 30, h: 20, color: '#0088ff' },
+                { name: '舞台', x: 85, y: 95, w: 50, h: 20, color: '#ff0000' },
+                { name: '屋頂露臺', x: 140, y: 95, w: 50, h: 30, color: '#00ff88' },
+                { name: '儲備區', x: 195, y: 95, w: 20, h: 30, color: '#888888' }
+            ]
+        };
+
+        function renderFloorplan(floorKey) {
+            const svg = document.getElementById('floorplan-canvas');
+            svg.innerHTML = '';
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.setAttribute('viewBox', '0 0 220 160');
+
+            const layout = FLOORPLAN_LAYOUTS[floorKey];
+            if (!layout) return;
+
+            // 繪製背景
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', '220');
+            bg.setAttribute('height', '160');
+            bg.setAttribute('fill', '#1a1a2e');
+            bg.setAttribute('stroke', '#00ff88');
+            bg.setAttribute('stroke-width', '1');
+            svg.appendChild(bg);
+
+            // 繪製每個房間
+            layout.forEach(room => {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', room.x);
+                rect.setAttribute('y', room.y);
+                rect.setAttribute('width', room.w);
+                rect.setAttribute('height', room.h);
+                rect.setAttribute('fill', room.color);
+                rect.setAttribute('fill-opacity', '0.3');
+                rect.setAttribute('stroke', room.color);
+                rect.setAttribute('stroke-width', '1.5');
+                rect.setAttribute('class', 'floorplan-room');
+                rect.setAttribute('title', room.name);
+
+                // 添加房間名稱標籤
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', room.x + room.w / 2);
+                text.setAttribute('y', room.y + room.h / 2 + 2);
+                text.setAttribute('class', 'floorplan-text');
+                text.setAttribute('fill', room.color);
+                text.textContent = room.name.substring(0, 8);
+
+                svg.appendChild(rect);
+                svg.appendChild(text);
+            });
+        }
+
+        // ==================== 交互函數 ====================
+        function selectFloor(floorKey) {
+            // 更新UI按鈕
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 更新樓層信息
+            updateFloorInfo(floorKey);
+
+            // 顯示樓層平面圖
+            renderFloorplan(floorKey);
+            const container = document.getElementById('floorplan-container');
+            container.classList.add('active');
+
+            // 高亮樓層（3D視角）
+            Object.keys(floorMeshes).forEach(key => {
+                const mesh = floorMeshes[key];
+                if (key === floorKey) {
+                    mesh.material.forEach(mat => {
+                        mat.emissive.setHex(0xff00ff);
+                        mat.emissiveIntensity = 0.6;
+                    });
+                } else {
+                    mesh.material.forEach(mat => {
+                        mat.emissive.setHex(0x222222);
+                        mat.emissiveIntensity = 0.1;
+                    });
+                }
+            });
+
+            currentFloor = floorKey;
+
+            // 更新地圖標記彈窗
+            if (buildingMarker) {
+                buildingMarker.setPopupContent(`
+                    <div style="color: #000; font-size: 11px; font-weight: bold;">
+                        <strong>赤土崎多功能館</strong><br>
+                        <span style="color: #ff00ff; font-weight: bold;">當前選擇: ${FLOOR_PLANS[floorKey].name}</span><br>
+                        <br>
+                        24.8247°N, 120.9456°E<br>
+                        基地面積: 8,000 m²<br>
+                        建築面積: 3,833 m²
+                    </div>
+                `);
+            }
+        }
+
+        function updateFloorInfo(floorKey) {
+            const data = FLOOR_PLANS[floorKey];
+            const html = `
+                <h2>${data.name}</h2>
+                <p style="color: #888; margin: 8px 0; font-size: 11px;">${data.description}</p>
+                <h3>🏛️ 空間功能</h3>
+                ${data.rooms.map(room => `
+                    <div class="floor-detail">
+                        <div class="floor-detail-title">${room.name}</div>
+                        <div class="floor-detail-desc">
+                            <strong>面積:</strong> ${room.area}<br>
+                            <strong>設備:</strong> ${room.equipment}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+            document.getElementById('floor-details').innerHTML = html;
+            document.getElementById('current-floor-info').textContent = data.name;
+        }
+
+        function setViewMode(mode) {
+            document.querySelectorAll('.btn-3d').forEach(btn => {
+                if (btn.textContent === '正常' || btn.textContent === '線框' || btn.textContent === '內部') {
+                    btn.classList.remove('active');
+                }
+            });
+            event.target.classList.add('active');
+
+            if (mode === 'wireframe') {
+                Object.values(floorMeshes).forEach(mesh => {
+                    mesh.material.forEach(mat => mat.wireframe = true);
+                });
+            } else if (mode === 'normal') {
+                Object.values(floorMeshes).forEach(mesh => {
+                    mesh.material.forEach(mat => mat.wireframe = false);
+                });
+            }
+        }
+
+        function toggleAutoRotate() {
+            autoRotate = !autoRotate;
+            event.target.classList.toggle('active');
+        }
+
+        // ==================== 動畫循環 ====================
+        let frameCount = 0, lastTime = Date.now(), fps = 0;
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            // FPS計算
+            frameCount++;
+            const now = Date.now();
+            if (now >= lastTime + 1000) {
+                fps = frameCount;
+                document.getElementById('fps').textContent = fps;
+                document.getElementById('obj-count').textContent = scene.children.length;
+                frameCount = 0;
+                lastTime = now;
+            }
+
+            // 自動旋轉
+            if (autoRotate && !controls.isDragging) {
+                building.rotation.y += 0.0005;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // ==================== 初始化 ====================
+        window.addEventListener('load', () => {
+            initMap();
+            init3D();
+            updateFloorInfo('6F');
+            // 初始化樓層平面圖
+            renderFloorplan('6F');
+            document.getElementById('floorplan-container').classList.add('active');
+        });
+    </script>
+</body>
+</html>

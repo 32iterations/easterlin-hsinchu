@@ -1,0 +1,31 @@
+{
+  "name": "akatsuchizaki-3d-visualization",
+  "version": "2.0.0",
+  "description": "赤土崎多功能館 3D 地理位置整合可視化系統",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "server": "node server.js"
+  },
+  "keywords": [
+    "3d",
+    "visualization",
+    "architecture",
+    "taiwan",
+    "hsinchu",
+    "building"
+  ],
+  "author": "easterlin-hsinchu",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤土崎多功能館 - 3D建築可視化 (2028年落成)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 信息面板 */
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 350px;
+            font-size: 13px;
+            z-index: 10;
+            border: 2px solid #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        #info-panel h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #667eea;
+            text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+        }
+
+        #info-panel h2 {
+            font-size: 16px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #764ba2;
+            border-bottom: 1px solid #764ba2;
+            padding-bottom: 5px;
+        }
+
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spec-label {
+            color: #aaa;
+        }
+
+        .spec-value {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* 樓層信息 */
+        #floor-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+            font-size: 13px;
+            z-index: 10;
+            border: 2px solid #764ba2;
+            box-shadow: 0 0 20px rgba(118, 75, 162, 0.5);
+        }
+
+        #floor-info h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #764ba2;
+        }
+
+        /* 底部控制面板 */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 10;
+            border: 2px solid #667eea;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        #controls p {
+            margin: 5px 0;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .floor-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 5px 2px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .floor-button:hover {
+            background: #764ba2;
+            transform: scale(1.1);
+        }
+
+        .floor-button.active {
+            background: #00ff88;
+            color: black;
+            box-shadow: 0 0 10px #00ff88;
+        }
+
+        /* 加載動畫 */
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 統計信息 */
+        #stats {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #0f0;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="info-panel">
+        <h1>🏢 赤土崎多功能館</h1>
+        <div class="spec-row">
+            <span class="spec-label">完工時間：</span>
+            <span class="spec-value">2028年</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">建築規模：</span>
+            <span class="spec-value">3,833 m²</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">樓層：</span>
+            <span class="spec-value">6樓 (B1-6F)</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">建築高度：</span>
+            <span class="spec-value">~26.5m</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">樓層面積：</span>
+            <span class="spec-value">640 m²/層</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">建造成本：</span>
+            <span class="spec-value">NT$228.7M</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">年度營運：</span>
+            <span class="spec-value">NT$15.96M</span>
+        </div>
+
+        <h2>📐 建築設計</h2>
+        <div class="spec-row">
+            <span class="spec-label">設計哲學：</span>
+            <span class="spec-value">光影樓閣</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">無障礙設計：</span>
+            <span class="spec-value">全館無障礙</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">綠能系統：</span>
+            <span class="spec-value">太陽能50kWp</span>
+        </div>
+
+        <h2>🎯 核心功能</h2>
+        <div class="spec-row">
+            <span class="spec-label">長照日照：</span>
+            <span class="spec-value">80人/日</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">公共托嬰：</span>
+            <span class="spec-value">50人/日</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">親子共學：</span>
+            <span class="spec-value">60家庭</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">青少年活動：</span>
+            <span class="spec-value">100人</span>
+        </div>
+        <div class="spec-row">
+            <span class="spec-label">年度受惠：</span>
+            <span class="spec-value">45,000人次</span>
+        </div>
+    </div>
+
+    <div id="floor-info">
+        <h3>📍 當前樓層</h3>
+        <div id="current-floor-name" style="font-size: 16px; color: #764ba2; margin-bottom: 10px;">6F - 公共會議廳</div>
+        <div id="current-floor-desc" style="font-size: 12px; color: #aaa; line-height: 1.6;">
+            多功能會議廳（300人容納），屋頂露臺眺望赤土崎公園與竹科園區。
+        </div>
+    </div>
+
+    <div id="controls">
+        <p>🖱️ 滑鼠拖動旋轉 | 滾輪縮放 | 右鍵平移</p>
+        <div>
+            <button class="floor-button" onclick="highlightFloor('B1')">B1 停車+機房</button>
+            <button class="floor-button" onclick="highlightFloor('1F')">1F 長照</button>
+            <button class="floor-button" onclick="highlightFloor('2F')">2F 托嬰</button>
+            <button class="floor-button" onclick="highlightFloor('3F')">3F 家庭</button>
+            <button class="floor-button" onclick="highlightFloor('4F')">4F 青少年</button>
+            <button class="floor-button" onclick="highlightFloor('5F')">5F 綠能</button>
+            <button class="floor-button active" onclick="highlightFloor('6F')">6F 會議廳</button>
+        </div>
+    </div>
+
+    <div id="stats">
+        <div>FPS: <span id="fps">60</span></div>
+        <div>Objects: <span id="obj-count">0</span></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // ==================== 建築規劃數據 ====================
+        const buildingSpec = {
+            name: '赤土崎多功能館',
+            floors: {
+                B1: { name: 'B1 - 停車場+機房', height: 5, description: '地面停車60車位、空調機房、配電室、UPS、給排水系統、區塊鏈節點' },
+                '1F': { name: '1F - AI記憶重生+長照日照', height: 4, description: '失智症專區(200 m²)、投影體驗、穿戴監測、日照活動區(80人)' },
+                '2F': { name: '2F - SIDS監測+公共托嬰', height: 3.5, description: 'SIDS監測系統(50床)、托嬰活動區、感染隔離設計' },
+                '3F': { name: '3F - 親子共學+時間銀行', height: 3.5, description: '親子共學區、時間銀行管理中心、MR互動空間、故事劇場' },
+                '4F': { name: '4F - 元宇宙共學教室+青少年', height: 3.5, description: 'STEM教室、VR沉浸教室、職涯導師區、遠距教學' },
+                '5F': { name: '5F - 綠能+多功能培訓', height: 3.5, description: '太陽能50kWp、綠屋頂、員工培訓中心、研究實驗室' },
+                '6F': { name: '6F - 公共會議廳+露臺', height: 3.5, description: '多功能會議廳(300人)、屋頂露臺(200 m²)、眺望赤土崎公園' }
+            }
+        };
+
+        // ==================== Three.js 場景初始化 ====================
+        let scene, camera, renderer, controls;
+        let building, floors = {};
+        let currentFloor = '6F';
+        let frameCount = 0, lastTime = Date.now(), fps = 0;
+
+        function init() {
+            // 場景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x667eea);
+            scene.fog = new THREE.Fog(0x667eea, 100, 500);
+
+            // 相機
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                10000
+            );
+            camera.position.set(50, 40, 50);
+            camera.lookAt(0, 10, 0);
+
+            // 渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            // 控制
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.autoRotate = false;
+            controls.autoRotateSpeed = 2;
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxDistance = 200;
+            controls.minDistance = 20;
+
+            // 建築
+            createBuilding();
+
+            // 光源
+            createLights();
+
+            // 地面
+            createGround();
+
+            // 窗口調整
+            window.addEventListener('resize', onWindowResize, false);
+
+            // 隱藏加載器
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, 500);
+
+            // 動畫循環
+            animate();
+        }
+
+        // ==================== 建築創建 ====================
+        function createBuilding() {
+            building = new THREE.Group();
+            scene.add(building);
+
+            // 樓層高度計算
+            let currentHeight = 0;
+            const floorOrder = ['B1', '1F', '2F', '3F', '4F', '5F', '6F'];
+            const floorColors = {
+                B1: 0x7a7a7a,  // 深灰色（機房看不見）
+                '1F': 0x9a9a9a, // 暖灰色
+                '2F': 0x9a9a9a, // 暖灰色
+                '3F': 0xb0b0b0, // 淺灰色
+                '4F': 0xf5f5f5, // 白色
+                '5F': 0xf5f5f5, // 白色
+                '6F': 0xf0f0f0  // 白色
+            };
+
+            // 建築底座尺寸 (estimated from 3,833 m² / 6層 = 640 m²/層)
+            // 假設每層約 32m × 20m
+            const buildingWidth = 32;
+            const buildingDepth = 20;
+
+            floorOrder.forEach((floorKey, index) => {
+                const floorData = buildingSpec.floors[floorKey];
+                const floorHeight = floorData.height;
+
+                // 創建樓層盒子
+                const geometry = new THREE.BoxGeometry(buildingWidth, floorHeight, buildingDepth);
+
+                // 為不同樓層應用不同材質
+                let material;
+                if (floorKey === '3F') {
+                    // 3F：50%玻璃透明 + 50%灰色
+                    material = new THREE.MeshPhongMaterial({
+                        color: 0xb0b0b0,
+                        transparent: true,
+                        opacity: 0.7,
+                        emissive: 0x333333,
+                        shininess: 100
+                    });
+                } else if (['4F', '5F', '6F'].includes(floorKey)) {
+                    // 4F-6F：白色玻璃幕牆
+                    material = new THREE.MeshPhongMaterial({
+                        color: 0xffffff,
+                        transparent: true,
+                        opacity: 0.85,
+                        emissive: 0x444444,
+                        shininess: 80
+                    });
+                } else {
+                    // B1, 1F, 2F：暖灰色清水混凝土
+                    material = new THREE.MeshPhongMaterial({
+                        color: floorColors[floorKey],
+                        emissive: 0x333333,
+                        shininess: 60
+                    });
+                }
+
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.position.y = currentHeight + floorHeight / 2;
+                mesh.userData = { floor: floorKey };
+
+                // 添加邊框線條（象徵垂直細縫）
+                const edges = new THREE.EdgesGeometry(geometry);
+                const lineSegments = new THREE.LineSegments(
+                    edges,
+                    new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 })
+                );
+                lineSegments.position.copy(mesh.position);
+                building.add(lineSegments);
+
+                building.add(mesh);
+                floors[floorKey] = { mesh, height: floorHeight, position: mesh.position.y };
+
+                currentHeight += floorHeight;
+            });
+
+            // 屋頂設計：太陽能面板 + 綠屋頂
+            createRoof(currentHeight, buildingWidth, buildingDepth);
+
+            // 入口廣場地面
+            createEntrance(buildingWidth, buildingDepth);
+        }
+
+        function createRoof(yPosition, width, depth) {
+            // 太陽能面板（藍色梯田式）
+            const panelCount = 12;
+            for (let i = 0; i < panelCount; i++) {
+                const panelGeometry = new THREE.BoxGeometry(
+                    width / 4,
+                    0.1,
+                    depth / 3
+                );
+                const panelMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x1e90ff, // 藍色
+                    emissive: 0x0066cc,
+                    shininess: 100
+                });
+                const panelMesh = new THREE.Mesh(panelGeometry, panelMaterial);
+                panelMesh.position.set(
+                    -8 + (i % 4) * 5,
+                    yPosition + 0.1,
+                    -5 + Math.floor(i / 4) * 5
+                );
+                panelMesh.castShadow = true;
+                panelMesh.receiveShadow = true;
+                building.add(panelMesh);
+            }
+
+            // 綠屋頂（綠色）
+            const greenRoofGeometry = new THREE.PlaneGeometry(width * 0.8, depth * 0.8);
+            const greenRoofMaterial = new THREE.MeshPhongMaterial({
+                color: 0x228b22, // 森林綠
+                emissive: 0x1a6b1a,
+                shininess: 30
+            });
+            const greenRoof = new THREE.Mesh(greenRoofGeometry, greenRoofMaterial);
+            greenRoof.rotation.x = -Math.PI / 2;
+            greenRoof.position.set(0, yPosition + 0.15, 0);
+            greenRoof.receiveShadow = true;
+            building.add(greenRoof);
+
+            // 頂部遮陽棚（清水混凝土）
+            const topCanopyGeometry = new THREE.BoxGeometry(width, 0.2, depth);
+            const topCanopyMaterial = new THREE.MeshPhongMaterial({
+                color: 0x808080
+            });
+            const topCanopy = new THREE.Mesh(topCanopyGeometry, topCanopyMaterial);
+            topCanopy.position.y = yPosition + 0.3;
+            topCanopy.castShadow = true;
+            topCanopy.receiveShadow = true;
+            building.add(topCanopy);
+        }
+
+        function createEntrance(width, depth) {
+            // 入口廣場
+            const entranceGeometry = new THREE.PlaneGeometry(width * 2, depth * 1.5);
+            const entranceMaterial = new THREE.MeshPhongMaterial({
+                color: 0xcccccc, // 淺灰色混凝土
+                side: THREE.DoubleSide
+            });
+            const entrance = new THREE.Mesh(entranceGeometry, entranceMaterial);
+            entrance.rotation.x = -Math.PI / 2;
+            entrance.position.y = -0.1;
+            entrance.receiveShadow = true;
+            building.add(entrance);
+
+            // 廣場邊界
+            const boundaryGeometry = new THREE.BufferGeometry();
+            const boundaryPoints = [
+                new THREE.Vector3(-width, 0, -depth * 0.75),
+                new THREE.Vector3(width, 0, -depth * 0.75),
+                new THREE.Vector3(width, 0, depth * 0.75),
+                new THREE.Vector3(-width, 0, depth * 0.75),
+                new THREE.Vector3(-width, 0, -depth * 0.75)
+            ];
+            boundaryGeometry.setFromPoints(boundaryPoints);
+            const boundaryLine = new THREE.Line(
+                boundaryGeometry,
+                new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 2 })
+            );
+            building.add(boundaryLine);
+        }
+
+        // ==================== 光源設置 ====================
+        function createLights() {
+            // 環境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // 方向光（模擬陽光）
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(40, 60, 40);
+            directionalLight.target.position.set(0, 10, 0);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.far = 200;
+            directionalLight.shadow.camera.left = -100;
+            directionalLight.shadow.camera.right = 100;
+            directionalLight.shadow.camera.top = 100;
+            directionalLight.shadow.camera.bottom = -100;
+            scene.add(directionalLight);
+
+            // 半球光（天空光）
+            const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0xb8860b, 0.4);
+            scene.add(hemisphereLight);
+
+            // 點光源（裝飾性照明）
+            const pointLight = new THREE.PointLight(0xffaa44, 0.3);
+            pointLight.position.set(-50, 50, 50);
+            scene.add(pointLight);
+        }
+
+        // ==================== 地面 ====================
+        function createGround() {
+            const groundGeometry = new THREE.PlaneGeometry(200, 200);
+            const groundMaterial = new THREE.MeshPhongMaterial({
+                color: 0x2d5016, // 深綠色（草坪）
+                side: THREE.DoubleSide
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.5;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // 遠景（赤土崎公園參考）
+            const parkGeometry = new THREE.PlaneGeometry(300, 200);
+            const parkMaterial = new THREE.MeshPhongMaterial({
+                color: 0x2d5016,
+                side: THREE.DoubleSide
+            });
+            const park = new THREE.Mesh(parkGeometry, parkMaterial);
+            park.rotation.x = -Math.PI / 2;
+            park.position.set(0, -0.4, -100);
+            scene.add(park);
+        }
+
+        // ==================== 樓層高亮 ====================
+        function highlightFloor(floorKey) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.floor-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 更新樓層信息
+            const floorData = buildingSpec.floors[floorKey];
+            document.getElementById('current-floor-name').textContent = floorData.name;
+            document.getElementById('current-floor-desc').textContent = floorData.description;
+
+            // 高亮樓層
+            Object.keys(floors).forEach(key => {
+                const floorMesh = floors[key].mesh;
+                if (key === floorKey) {
+                    floorMesh.material.emissive.setHex(0x667eea);
+                    floorMesh.material.emissiveIntensity = 0.8;
+                } else {
+                    floorMesh.material.emissive.setHex(0x333333);
+                    floorMesh.material.emissiveIntensity = 0.2;
+                }
+            });
+
+            currentFloor = floorKey;
+
+            // 相機位置調整
+            const floorPos = floors[floorKey].position;
+            const targetY = floorPos + 15;
+            const currentPos = camera.position;
+            const duration = 1000; // ms
+            const startTime = Date.now();
+
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                camera.position.y = currentPos.y + (targetY - currentPos.y) * progress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            };
+
+            animate();
+        }
+
+        // ==================== 動畫循環 ====================
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 更新統計
+            frameCount++;
+            const now = Date.now();
+            if (now >= lastTime + 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastTime = now;
+                document.getElementById('fps').textContent = fps;
+                document.getElementById('obj-count').textContent = scene.children.length;
+            }
+
+            // 控制自動旋轉（可選）
+            if (!controls.isDragging) {
+                building.rotation.y += 0.0005;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // ==================== 窗口調整 ====================
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ==================== 初始化 ====================
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤土崎多功能館 - 3D建築可視化系統 (完全獨立版)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 左側面板 (45%) */
+        #left-panel {
+            width: 45%;
+            height: 100%;
+            background: #1a1a2e;
+            border-right: 3px solid #00ff88;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 10;
+            position: relative;
+        }
+
+        /* 右側面板 (55%) */
+        #right-panel {
+            width: 55%;
+            height: 100%;
+            background: #0a0e27;
+            position: relative;
+        }
+
+        /* 標題 */
+        h1 {
+            color: #00ff88;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        h2 {
+            color: #ff00ff;
+            font-size: 14px;
+            margin: 15px 0 10px 0;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        h3 {
+            color: #00ccff;
+            font-size: 12px;
+            margin: 10px 0 5px 0;
+        }
+
+        /* 信息框 */
+        .info-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        /* 樓層按鈕 */
+        .floor-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .floor-btn {
+            background: rgba(0, 204, 255, 0.2);
+            color: #00ccff;
+            border: 1px solid #00ccff;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .floor-btn:hover {
+            background: rgba(0, 204, 255, 0.4);
+        }
+
+        .floor-btn.active {
+            background: #00ccff;
+            color: #000;
+            box-shadow: 0 0 10px #00ccff;
+        }
+
+        /* 樓層詳情 */
+        .floor-detail {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #00ff88;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .floor-detail-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .floor-detail-desc {
+            color: #888;
+            line-height: 1.3;
+        }
+
+        /* 3D Canvas */
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 統計信息 */
+        #stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 20, 40, 0.9);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            z-index: 50;
+            line-height: 1.6;
+        }
+
+        /* 控制面板 */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 20, 40, 0.95);
+            border: 2px solid #ffaa00;
+            border-radius: 8px;
+            padding: 12px;
+            color: #ffaa00;
+            z-index: 100;
+            font-size: 10px;
+        }
+
+        .btn-3d {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            border: 1px solid #ffaa00;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            margin: 3px;
+            transition: all 0.3s;
+        }
+
+        .btn-3d:hover {
+            background: rgba(255, 170, 0, 0.4);
+        }
+
+        .btn-3d.active {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        /* 平面圖容器 */
+        #floorplan {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff88;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 15px 0;
+            min-height: 150px;
+        }
+
+        #floorplan-canvas {
+            width: 100%;
+            height: 150px;
+            background: #1a1a2e;
+            border-radius: 3px;
+        }
+
+        .status-message {
+            color: #00ff88;
+            padding: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 3px solid #00ff88;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .error-message {
+            color: #ff4444;
+            padding: 10px;
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid #ff4444;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- 左側面板 -->
+        <div id="left-panel">
+            <h1>🏢 赤土崎多功能館</h1>
+            <h3>地理位置整合3D可視化</h3>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">位置:</span>
+                    <span class="info-value">新竹市東區</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">座標:</span>
+                    <span class="info-value">24.82°N, 120.94°E</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">基地:</span>
+                    <span class="info-value">8,000 m²</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">建築:</span>
+                    <span class="info-value">3,833 m²</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">樓層:</span>
+                    <span class="info-value">B1-6F</span>
+                </div>
+            </div>
+
+            <h2>🎮 樓層選擇</h2>
+            <div class="floor-buttons">
+                <button class="floor-btn" onclick="selectFloor('B1')">B1 停車</button>
+                <button class="floor-btn" onclick="selectFloor('1F')">1F 長照</button>
+                <button class="floor-btn" onclick="selectFloor('2F')">2F 托嬰</button>
+                <button class="floor-btn" onclick="selectFloor('3F')">3F 家庭</button>
+                <button class="floor-btn" onclick="selectFloor('4F')">4F 青少年</button>
+                <button class="floor-btn" onclick="selectFloor('5F')">5F 綠能</button>
+                <button class="floor-btn active" onclick="selectFloor('6F')">6F 會議</button>
+            </div>
+
+            <h2>📐 樓層平面圖</h2>
+            <div id="floorplan">
+                <canvas id="floorplan-canvas"></canvas>
+            </div>
+
+            <div id="floor-info"></div>
+        </div>
+
+        <!-- 右側面板 (3D Canvas) -->
+        <div id="right-panel">
+            <canvas id="canvas"></canvas>
+            <div id="stats">
+                <div>🏢 3D建築</div>
+                <div>FPS: <span id="fps">0</span></div>
+                <div>Objects: <span id="obj-count">0</span></div>
+            </div>
+            <div id="controls">
+                <div>⚙️ 控制</div>
+                <button class="btn-3d active" onclick="setWireframe(false)">正常</button>
+                <button class="btn-3d" onclick="setWireframe(true)">線框</button>
+                <button class="btn-3d" onclick="toggleRotate()">自動旋轉</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== 全局數據 ==============
+        const BUILDING_LOCATION = { lat: 24.8247, lng: 120.9456 };
+
+        const FLOOR_PLANS = {
+            B1: {
+                name: 'B1 - 停車場+機房',
+                color: 0x7a7a7a,
+                height: 5,
+                description: '地面停車60車位 | 空調機房 | 配電室',
+                rooms: [
+                    { name: '停車場', area: '450 m²', equipment: '60車位、感測停車' },
+                    { name: '空調機房', area: '50 m²', equipment: '2套150RT冷暖主機' },
+                    { name: '配電室', area: '40 m²', equipment: '800A主配盤、UPS 200kVA' },
+                    { name: '給排水', area: '30 m²', equipment: '20噸水塔' }
+                ]
+            },
+            '1F': {
+                name: '1F - AI記憶重生+長照日照',
+                color: 0x9a9a9a,
+                height: 4,
+                description: '失智症專區 | 投影體驗 | AI監測',
+                rooms: [
+                    { name: '失智症專區', area: '200 m²', equipment: '4K投影、互動系統' },
+                    { name: 'AI投影區', area: '100 m²', equipment: '投影機、穿戴設備' },
+                    { name: '復健訓練', area: '80 m²', equipment: '跑步機、訓練墊' },
+                    { name: '餐廳', area: '120 m²', equipment: '自動餐桌、溫度監控' }
+                ]
+            },
+            '2F': {
+                name: '2F - SIDS監測+公共托嬰',
+                color: 0x9a9a9a,
+                height: 3.5,
+                description: 'SIDS監測50床 | 托嬰活動區',
+                rooms: [
+                    { name: 'SIDS監測', area: '200 m²', equipment: '紅外感測、心律監測' },
+                    { name: '嬰兒床區', area: '200 m²', equipment: '50張嬰兒床' },
+                    { name: '活動區', area: '100 m²', equipment: '爬行墊、玩具' }
+                ]
+            },
+            '3F': {
+                name: '3F - 親子共學+時間銀行',
+                color: 0xb0b0b0,
+                height: 3.5,
+                description: '親子共學 | 時間銀行管理中心',
+                rooms: [
+                    { name: '閱讀區', area: '80 m²', equipment: '書櫃3,000冊' },
+                    { name: '故事劇場', area: '120 m²', equipment: '投影系統、座位30' },
+                    { name: '時間銀行', area: '60 m²', equipment: 'Broker座位3' }
+                ]
+            },
+            '4F': {
+                name: '4F - VR共學教室+青少年',
+                color: 0xf5f5f5,
+                height: 3.5,
+                description: 'STEM教室 | VR沉浸教室',
+                rooms: [
+                    { name: 'STEM教室', area: '100 m²', equipment: '電腦15台' },
+                    { name: 'VR沉浸教室', area: '120 m²', equipment: 'VR頭盔10台' },
+                    { name: '機器人區', area: '60 m²', equipment: 'Arduino、3D列印機' }
+                ]
+            },
+            '5F': {
+                name: '5F - 綠能系統+多功能培訓',
+                color: 0xf5f5f5,
+                height: 3.5,
+                description: '太陽能50kWp | 綠屋頂250m²',
+                rooms: [
+                    { name: '太陽能面板', area: '300 m²', equipment: '50kWp、120片430W' },
+                    { name: '綠屋頂', area: '250 m²', equipment: '草皮、隔熱30%' },
+                    { name: '培訓教室', area: '60 m²', equipment: '投影系統' }
+                ]
+            },
+            '6F': {
+                name: '6F - 公共會議廳+露臺',
+                color: 0xf0f0f0,
+                height: 3.5,
+                description: '會議廳300人 | 屋頂露臺200m²',
+                rooms: [
+                    { name: '會議廳', area: '440 m²', equipment: '300人容納、4K投影' },
+                    { name: '舞台', area: '80 m²', equipment: '音響、燈光' },
+                    { name: '露臺', area: '200 m²', equipment: '眺望公園' }
+                ]
+            }
+        };
+
+        // ============== 簡單3D引擎 (無需Three.js) ==============
+        class SimpleCanvas3D {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.width = this.canvas.offsetWidth;
+                this.height = this.canvas.offsetHeight;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+
+                this.buildings = [];
+                this.rotationX = 0.5;
+                this.rotationY = 0.5;
+                this.autoRotate = false;
+                this.wireframe = false;
+
+                this.setupBuilding();
+                this.animate();
+            }
+
+            setupBuilding() {
+                const width = 32, depth = 20;
+                let y = 0;
+
+                Object.entries(FLOOR_PLANS).forEach(([key, data]) => {
+                    this.buildings.push({
+                        name: key,
+                        x: 0,
+                        y: y,
+                        z: 0,
+                        width: width,
+                        height: data.height,
+                        depth: depth,
+                        color: data.color,
+                        selected: key === '6F'
+                    });
+                    y += data.height;
+                });
+            }
+
+            drawBuilding() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                this.ctx.fillStyle = '#0a0e27';
+                this.ctx.fillRect(0, 0, this.width, this.height);
+
+                // 簡單投影 (等軸投影)
+                const centerX = this.width / 2;
+                const centerY = this.height / 2;
+                const scale = 2;
+
+                this.buildings.forEach(building => {
+                    const x = building.x * scale;
+                    const y = building.y * scale;
+                    const z = building.z * scale;
+                    const w = building.width * scale;
+                    const h = building.height * scale;
+                    const d = building.depth * scale;
+
+                    // 繪製簡單的立方體 (投影視圖)
+                    const x1 = centerX + (x - w / 2);
+                    const y1 = centerY - (y + h / 2);
+
+                    // 顏色處理
+                    let color = building.color.toString(16).padStart(6, '0');
+                    if (building.selected) {
+                        this.ctx.fillStyle = '#ff00ff';
+                        this.ctx.shadowColor = '#ff00ff';
+                        this.ctx.shadowBlur = 20;
+                    } else {
+                        this.ctx.fillStyle = `#${color}`;
+                        this.ctx.shadowBlur = 0;
+                    }
+
+                    this.ctx.fillRect(x1, y1, w, h);
+
+                    if (this.wireframe) {
+                        this.ctx.strokeStyle = '#00ff88';
+                        this.ctx.lineWidth = 1;
+                        this.ctx.strokeRect(x1, y1, w, h);
+                    }
+
+                    // 樓層標籤
+                    this.ctx.fillStyle = building.selected ? '#ff00ff' : '#00ff88';
+                    this.ctx.font = '10px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(building.name, x1 + w / 2, y1 + h / 2 + 4);
+                });
+
+                // 3D效果 (繪製陰影)
+                this.ctx.fillStyle = 'rgba(0, 255, 136, 0.1)';
+                this.buildings.forEach(building => {
+                    const x = building.x * scale;
+                    const y = building.y * scale;
+                    const w = building.width * scale;
+                    const h = building.height * scale;
+                    const d = building.depth * scale;
+
+                    const x1 = centerX + (x - w / 2) + 3;
+                    const y1 = centerY - (y + h / 2) + 3;
+
+                    this.ctx.fillRect(x1, y1, w, h);
+                });
+            }
+
+            animate() {
+                if (this.autoRotate) {
+                    this.rotationY += 0.01;
+                }
+                this.drawBuilding();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // ============== 樓層平面圖 ==============
+        const FLOORPLAN_LAYOUTS = {
+            B1: [
+                { name: '停車', x: 20, y: 30, w: 140, h: 100, color: '#555' },
+                { name: '空調', x: 20, y: 140, w: 30, h: 30, color: '#88f' }
+            ],
+            '1F': [
+                { name: '失智', x: 15, y: 20, w: 80, h: 100, color: '#f60' },
+                { name: '投影', x: 105, y: 20, w: 55, h: 50, color: '#f80' },
+                { name: '餐廳', x: 95, y: 125, w: 50, h: 40, color: '#8f0' }
+            ],
+            '2F': [
+                { name: 'SIDS', x: 20, y: 25, w: 75, h: 70, color: '#0f0' },
+                { name: '嬰兒', x: 20, y: 100, w: 75, h: 70, color: '#0f8' }
+            ],
+            '3F': [
+                { name: '閱讀', x: 15, y: 20, w: 45, h: 50, color: '#f08' },
+                { name: '劇場', x: 65, y: 20, w: 75, h: 60, color: '#88f' },
+                { name: '時銀', x: 150, y: 20, w: 50, h: 40, color: '#ff0' }
+            ],
+            '4F': [
+                { name: 'STEM', x: 15, y: 20, w: 60, h: 55, color: '#f00' },
+                { name: 'VR', x: 55, y: 80, w: 80, h: 40, color: '#0f8' }
+            ],
+            '5F': [
+                { name: '太陽', x: 15, y: 15, w: 160, h: 30, color: '#19f' },
+                { name: '綠屋', x: 55, y: 50, w: 120, h: 80, color: '#2b2' }
+            ],
+            '6F': [
+                { name: '會議', x: 15, y: 20, w: 175, h: 70, color: '#f0f' },
+                { name: '露臺', x: 140, y: 95, w: 50, h: 30, color: '#0f8' }
+            ]
+        };
+
+        function drawFloorplan(floorKey) {
+            const canvas = document.getElementById('floorplan-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 背景
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            const layout = FLOORPLAN_LAYOUTS[floorKey] || [];
+            const scaleX = canvas.width / 220;
+            const scaleY = canvas.height / 160;
+
+            layout.forEach(room => {
+                const x = room.x * scaleX;
+                const y = room.y * scaleY;
+                const w = room.w * scaleX;
+                const h = room.h * scaleY;
+
+                ctx.fillStyle = room.color + '66';
+                ctx.fillRect(x, y, w, h);
+                ctx.strokeStyle = room.color;
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x, y, w, h);
+
+                ctx.fillStyle = room.color;
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(room.name, x + w / 2, y + h / 2 + 4);
+            });
+        }
+
+        // ============== 交互函數 ==============
+        let canvas3D;
+        let currentFloor = '6F';
+
+        function selectFloor(floorKey) {
+            currentFloor = floorKey;
+
+            // 更新按鈕
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 更新3D
+            canvas3D.buildings.forEach(b => {
+                b.selected = b.name === floorKey;
+            });
+
+            // 更新平面圖
+            drawFloorplan(floorKey);
+
+            // 更新信息
+            const data = FLOOR_PLANS[floorKey];
+            const html = `
+                <h2>${data.name}</h2>
+                <p style="color:#888; font-size:10px; margin:5px 0;">${data.description}</p>
+                <h3>空間功能</h3>
+                ${data.rooms.map(room => `
+                    <div class="floor-detail">
+                        <div class="floor-detail-title">${room.name}</div>
+                        <div class="floor-detail-desc">
+                            <strong>面積:</strong> ${room.area}<br>
+                            <strong>設備:</strong> ${room.equipment}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+            document.getElementById('floor-info').innerHTML = html;
+        }
+
+        function setWireframe(enable) {
+            canvas3D.wireframe = enable;
+            document.querySelectorAll('.btn-3d').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function toggleRotate() {
+            canvas3D.autoRotate = !canvas3D.autoRotate;
+            event.target.classList.toggle('active');
+        }
+
+        // ============== 初始化 ==============
+        window.addEventListener('DOMContentLoaded', () => {
+            canvas3D = new SimpleCanvas3D('canvas');
+            selectFloor('6F');
+            drawFloorplan('6F');
+
+            // 統計信息
+            let frameCount = 0;
+            setInterval(() => {
+                document.getElementById('fps').textContent = frameCount;
+                document.getElementById('obj-count').textContent = FLOOR_PLANS.B1.rooms.length + 7;
+                frameCount = 0;
+            }, 1000);
+
+            // 窗口調整
+            window.addEventListener('resize', () => {
+                canvas3D.width = canvas3D.canvas.offsetWidth;
+                canvas3D.height = canvas3D.canvas.offsetHeight;
+                canvas3D.canvas.width = canvas3D.width;
+                canvas3D.canvas.height = canvas3D.height;
+            });
+        });
+    </script>
+</body>
+</html>

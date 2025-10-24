@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赤土崎多功能館 - 3D室內導覽系統 (專業版)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+            background: #0a0e27;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        /* ============== 主容器 ============== */
+        #app {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 60px 1fr;
+        }
+
+        /* ============== 頂部導航欄 ============== */
+        #topbar {
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 1000;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .mode-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .mode-btn {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        .mode-btn:hover {
+            color: #00ff88;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 10px;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        /* ============== 主內容區 ============== */
+        #main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 1px;
+            background: #0a0e27;
+        }
+
+        /* ============== 左側面板 ============== */
+        #left-panel {
+            background: rgba(10, 14, 39, 0.9);
+            border-right: 1px solid rgba(0, 255, 136, 0.2);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .floor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .floor-btn {
+            padding: 10px 12px;
+            background: rgba(0, 204, 255, 0.1);
+            border: 1px solid rgba(0, 204, 255, 0.3);
+            color: #00ccff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .floor-btn:hover {
+            background: rgba(0, 204, 255, 0.2);
+            border-color: rgba(0, 204, 255, 0.6);
+        }
+
+        .floor-btn.active {
+            background: #00ccff;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
+        }
+
+        .rooms-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .room-item {
+            padding: 8px 10px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 3px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #aaa;
+            transition: all 0.3s ease;
+        }
+
+        .room-item:hover {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .room-name {
+            font-weight: 500;
+            color: #00ff88;
+            margin-bottom: 2px;
+        }
+
+        .room-area {
+            font-size: 10px;
+            color: #666;
+        }
+
+        /* ============== 中央 3D Canvas ============== */
+        #canvas-container {
+            position: relative;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ============== 右側面板 ============== */
+        #right-panel {
+            background: rgba(10, 14, 39, 0.9);
+            border-left: 1px solid rgba(255, 0, 255, 0.2);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 0, 255, 0.05);
+            border: 1px solid rgba(255, 0, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ff00ff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .card-content {
+            font-size: 12px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 0, 255, 0.1);
+        }
+
+        .info-label {
+            color: #888;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        /* ============== 懸浮控制面板 ============== */
+        .floating-panel {
+            position: absolute;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 11px;
+            color: #ffaa00;
+            z-index: 500;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+        }
+
+        #control-panel {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .control-title {
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            font-size: 10px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .ctrl-btn {
+            padding: 6px 10px;
+            background: rgba(255, 170, 0, 0.15);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            color: #ffaa00;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255, 170, 0, 0.3);
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+        }
+
+        /* ============== 小地圖 ============== */
+        #minimap {
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 200px;
+        }
+
+        #minimap-canvas {
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 204, 255, 0.3);
+        }
+
+        /* ============== 提示系統 ============== */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #00ff88;
+            pointer-events: none;
+            z-index: 400;
+            white-space: nowrap;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        /* ============== 滾動條美化 ============== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        /* ============== 加載動畫 ============== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* ============== 響應式設計 ============== */
+        @media (max-width: 1400px) {
+            #main-container {
+                grid-template-columns: 1fr 300px;
+            }
+            #left-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            #main-container {
+                grid-template-columns: 1fr;
+            }
+            #right-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 頂部導航欄 -->
+        <div id="topbar">
+            <div class="topbar-left">
+                <div class="app-title">🏢 赤土崎多功能館 3D 導覽系統</div>
+                <div class="mode-switcher">
+                    <button class="mode-btn active" onclick="switchMode('exterior')">外部視角</button>
+                    <button class="mode-btn" onclick="switchMode('interior')">內部導覽</button>
+                    <button class="mode-btn" onclick="switchMode('fps')">第一人稱</button>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">FPS</span>
+                        <span class="stat-value" id="fps-display">60</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Objects</span>
+                        <span class="stat-value" id="obj-display">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Memory</span>
+                        <span class="stat-value" id="mem-display">0MB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主容器 -->
+        <div id="main-container">
+            <!-- 左側面板 -->
+            <div id="left-panel">
+                <div class="panel-title">樓層導航</div>
+                <div class="floor-list">
+                    <button class="floor-btn" onclick="selectFloor('B1')">B1 停車場+機房</button>
+                    <button class="floor-btn active" onclick="selectFloor('1F')">1F 長照+AI記憶</button>
+                    <button class="floor-btn" onclick="selectFloor('2F')">2F 托嬰+SIDS監測</button>
+                    <button class="floor-btn" onclick="selectFloor('3F')">3F 親子共學</button>
+                    <button class="floor-btn" onclick="selectFloor('4F')">4F VR教室</button>
+                    <button class="floor-btn" onclick="selectFloor('5F')">5F 綠能系統</button>
+                    <button class="floor-btn" onclick="selectFloor('6F')">6F 會議廳</button>
+                </div>
+
+                <div class="panel-title">房間列表</div>
+                <div class="rooms-list" id="rooms-list"></div>
+            </div>
+
+            <!-- 中央 3D Canvas -->
+            <div id="canvas-container"></div>
+
+            <!-- 右側面板 -->
+            <div id="right-panel">
+                <div id="info-panel"></div>
+            </div>
+        </div>
+
+        <!-- 小地圖 -->
+        <div class="floating-panel" id="minimap">
+            <div class="control-title">樓層平面圖</div>
+            <canvas id="minimap-canvas"></canvas>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="floating-panel" id="control-panel">
+            <div class="control-title">⚙️ 控制</div>
+            <div class="control-buttons">
+                <button class="ctrl-btn" onclick="toggleWireframe()">線框</button>
+                <button class="ctrl-btn" onclick="toggleAutoRotate()">自動旋轉</button>
+                <button class="ctrl-btn" onclick="resetView()">重置視角</button>
+                <button class="ctrl-btn" onclick="toggleHelp()">幫助</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/PointerLockControls.js"></script>
+    <script>
+        // ==================== 全局配置 ====================
+        const BUILDING_CONFIG = {
+            width: 32,
+            depth: 20,
+            floors: ['B1', '1F', '2F', '3F', '4F', '5F', '6F'],
+            floorHeights: [5, 4, 3.5, 3.5, 3.5, 3.5, 3.5]
+        };
+
+        // FPS 控制相關變數
+        let fpsCamera, orbitCamera;
+        let fpsControls, pointerLockControls;
+        let isPointerLocked = false;
+        let currentMode = 'exterior';
+        let moveVector = { forward: false, backward: false, left: false, right: false };
+        let currentFloor = '1F';
+        const FPS_SPEED = 0.15;
+        const FPS_HEIGHT = 1.6; // 人眼高度
+
+        // ==================== 房間數據 (完整的43個房間) ====================
+        const ROOM_DATA = {
+            'B1': [
+                { id: 'B1-01', name: '停車場', x: 0, z: 0, w: 28, d: 16, area: 448, type: 'facility', equipment: ['停車位×60', '感測系統'] },
+                { id: 'B1-02', name: '空調機房', x: 12, z: -8, w: 4, d: 3, area: 12, type: 'technical', equipment: ['冷暖主機×2'] },
+                { id: 'B1-03', name: '配電室', x: 12, z: -5, w: 3, d: 3, area: 9, type: 'technical', equipment: ['主配盤', 'UPS系統'] },
+                { id: 'B1-04', name: '給排水', x: 10, z: -8, w: 2, d: 2, area: 4, type: 'technical', equipment: ['水塔×1'] },
+                { id: 'B1-05', name: '雨水回收', x: 8, z: -8, w: 2, d: 2, area: 4, type: 'technical', equipment: ['儲存池'] }
+            ],
+            '1F': [
+                { id: '1F-01', name: '失智症專區', x: -8, z: 0, w: 14, d: 14, area: 196, type: 'healthcare', equipment: ['投影系統', '互動裝置'] },
+                { id: '1F-02', name: 'AI投影播放', x: 4, z: -5, w: 8, d: 7, area: 56, type: 'healthcare', equipment: ['投影機', '智慧監測'] },
+                { id: '1F-03', name: '復健訓練區', x: 4, z: 5, w: 8, d: 7, area: 56, type: 'healthcare', equipment: ['器材×5'] },
+                { id: '1F-04', name: '藝術療法區', x: -10, z: -8, w: 6, d: 5, area: 30, type: 'healthcare', equipment: ['畫具', '樂器'] },
+                { id: '1F-05', name: '認知訓練區', x: -2, z: -8, w: 5, d: 5, area: 25, type: 'healthcare', equipment: ['平板×5'] },
+                { id: '1F-06', name: '共用餐廳', x: 8, z: 8, w: 10, d: 6, area: 60, type: 'dining', equipment: ['桌椅×20'] },
+                { id: '1F-07', name: '備餐廚房', x: 10, z: -1, w: 4, d: 3, area: 12, type: 'dining', equipment: ['爐灶×3'] },
+                { id: '1F-08', name: '護理站', x: -12, z: 8, w: 3, d: 3, area: 9, type: 'technical', equipment: ['監控系統'] }
+            ],
+            '2F': [
+                { id: '2F-01', name: 'SIDS監測系統', x: -8, z: 0, w: 12, d: 10, area: 120, type: 'healthcare', equipment: ['感測器×50'] },
+                { id: '2F-02', name: '嬰兒床區', x: -8, z: 11, w: 12, d: 8, area: 96, type: 'healthcare', equipment: ['嬰兒床×50'] },
+                { id: '2F-03', name: '中央監控', x: 6, z: 0, w: 4, d: 4, area: 16, type: 'technical', equipment: ['監控螢幕×4'] },
+                { id: '2F-04', name: '嬰兒活動區', x: 6, z: 8, w: 5, d: 5, area: 25, type: 'activity', equipment: ['爬行墊', '玩具'] },
+                { id: '2F-05', name: '幼兒活動區', x: 12, z: 8, w: 6, d: 6, area: 36, type: 'activity', equipment: ['滑梯', '攀爬架'] },
+                { id: '2F-06', name: 'AI故事時間', x: 6, z: -8, w: 4, d: 3, area: 12, type: 'activity', equipment: ['投影機'] },
+                { id: '2F-07', name: '餵食換尿區', x: 12, z: -2, w: 6, d: 5, area: 30, type: 'facility', equipment: ['換尿台×3'] },
+                { id: '2F-08', name: '衛浴設施', x: 14, z: 8, w: 4, d: 4, area: 16, type: 'facility', equipment: ['廁所×2', '浴盆'] }
+            ],
+            '3F': [
+                { id: '3F-01', name: '閱讀區', x: -12, z: 0, w: 6, d: 8, area: 48, type: 'education', equipment: ['書架×3', '座椅×8'] },
+                { id: '3F-02', name: '故事劇場', x: -4, z: 4, w: 10, d: 8, area: 80, type: 'education', equipment: ['舞台', '投影幕'] },
+                { id: '3F-03', name: '主題學習角', x: 8, z: 4, w: 10, d: 8, area: 80, type: 'education', equipment: ['STEAM教材'] },
+                { id: '3F-04', name: '時間銀行辦公', x: -12, z: -8, w: 6, d: 6, area: 36, type: 'administrative', equipment: ['辦公桌×3'] },
+                { id: '3F-05', name: '導師座位區', x: -4, z: -8, w: 6, d: 6, area: 36, type: 'education', equipment: ['座位×3'] },
+                { id: '3F-06', name: '月度表揚區', x: 4, z: -8, w: 4, d: 4, area: 16, type: 'activity', equipment: ['展示牆'] },
+                { id: '3F-07', name: 'MR互動區', x: 14, z: 0, w: 5, d: 6, area: 30, type: 'technology', equipment: ['VR頭盔×2'] }
+            ],
+            '4F': [
+                { id: '4F-01', name: 'STEM教室', x: -12, z: 0, w: 10, d: 8, area: 80, type: 'education', equipment: ['電腦×15'] },
+                { id: '4F-02', name: '機器人區', x: 0, z: 0, w: 8, d: 7, area: 56, type: 'technology', equipment: ['Arduino×10', 'Raspberry Pi×10'] },
+                { id: '4F-03', name: '電子工作台', x: 0, z: -8, w: 5, d: 6, area: 30, type: 'technology', equipment: ['焊接台×3'] },
+                { id: '4F-04', name: 'VR硬體區', x: -12, z: -8, w: 5, d: 5, area: 25, type: 'technology', equipment: ['VR頭盔×10'] },
+                { id: '4F-05', name: 'VR沉浸教室', x: 6, z: 2, w: 12, d: 8, area: 96, type: 'technology', equipment: ['投影機×2', '追蹤系統'] },
+                { id: '4F-06', name: '虛擬實驗室', x: 10, z: -8, w: 5, d: 6, area: 30, type: 'technology', equipment: ['VR場景'] },
+                { id: '4F-07', name: '遠距導師室', x: -4, z: -8, w: 5, d: 4, area: 20, type: 'education', equipment: ['視訊系統'] },
+                { id: '4F-08', name: '職涯導師區', x: 12, z: -8, w: 6, d: 5, area: 30, type: 'education', equipment: ['會議桌'] }
+            ],
+            '5F': [
+                { id: '5F-01', name: '太陽能面板', x: 0, z: 0, w: 20, d: 14, area: 280, type: 'energy', equipment: ['太陽能板×120'] },
+                { id: '5F-02', name: '儲能電池', x: -8, z: -8, w: 4, d: 4, area: 16, type: 'energy', equipment: ['鋰電池組'] },
+                { id: '5F-03', name: '綠屋頂', x: 8, z: -8, w: 12, d: 10, area: 120, type: 'environment', equipment: ['植被'] },
+                { id: '5F-04', name: '培訓教室', x: -12, z: 8, w: 6, d: 5, area: 30, type: 'education', equipment: ['座椅×60'] },
+                { id: '5F-05', name: '會議室', x: -4, z: 8, w: 5, d: 4, area: 20, type: 'administrative', equipment: ['會議桌'] },
+                { id: '5F-06', name: '實驗室', x: 4, z: 8, w: 6, d: 5, area: 30, type: 'research', equipment: ['VR/AR設備'] },
+                { id: '5F-07', name: '辦公區', x: 12, z: 8, w: 8, d: 6, area: 48, type: 'administrative', equipment: ['座位×15'] }
+            ],
+            '6F': [
+                { id: '6F-01', name: '會議廳', x: -2, z: 0, w: 20, d: 12, area: 240, type: 'event', equipment: ['座位×300', '投影幕'] },
+                { id: '6F-02', name: '備餐區', x: -12, z: 8, w: 4, d: 3, area: 12, type: 'dining', equipment: ['料理台'] },
+                { id: '6F-03', name: '衛浴設施', x: -6, z: 8, w: 4, d: 4, area: 16, type: 'facility', equipment: ['廁所×12'] },
+                { id: '6F-04', name: '舞台', x: 10, z: 6, w: 8, d: 5, area: 40, type: 'event', equipment: ['投影系統', '音響'] },
+                { id: '6F-05', name: '屋頂露臺', x: 8, z: -10, w: 10, d: 8, area: 80, type: 'outdoor', equipment: ['座位', '遮陽'] },
+                { id: '6F-06', name: '儲備區', x: 14, z: 8, w: 4, d: 5, area: 20, type: 'facility', equipment: ['預留空間'] }
+            ]
+        };
+
+        // ==================== Three.js 場景 ====================
+        let scene, renderer;
+        let orbitCamera, orbitControls;
+        let building;
+        let frameCount = 0, lastTime = Date.now(), fps = 0;
+        let raycaster = new THREE.Raycaster();
+        let velocity = new THREE.Vector3();
+
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+
+            // 場景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e27);
+            scene.fog = new THREE.Fog(0x0a0e27, 100, 500);
+
+            // 外部視角相機（軌道控制）
+            orbitCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            orbitCamera.position.set(80, 60, 80);
+
+            // 第一人稱視角相機（FPS）
+            fpsCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            fpsCamera.position.set(0, FPS_HEIGHT, 10);
+
+            // 渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // 軌道控制器（外部視角）
+            orbitControls = new THREE.OrbitControls(orbitCamera, renderer.domElement);
+            orbitControls.enableDamping = true;
+            orbitControls.dampingFactor = 0.05;
+            orbitControls.autoRotate = true;
+            orbitControls.autoRotateSpeed = 2;
+
+            // FPS 控制器（第一人稱）
+            pointerLockControls = new THREE.PointerLockControls(fpsCamera, renderer.domElement);
+            scene.add(pointerLockControls.getObject());
+
+            // 光照
+            setupLighting();
+
+            // 建築
+            building = createBuilding();
+            scene.add(building);
+
+            // 地面
+            const groundGeometry = new THREE.PlaneGeometry(200, 200);
+            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x1a3a2a, side: THREE.DoubleSide });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.5;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // 鍵盤事件監聽
+            window.addEventListener('keydown', onKeyDown);
+            window.addEventListener('keyup', onKeyUp);
+
+            // Pointer Lock 事件
+            renderer.domElement.addEventListener('click', () => {
+                if (currentMode === 'fps') {
+                    pointerLockControls.lock();
+                }
+            });
+
+            // 調整窗口大小
+            window.addEventListener('resize', onWindowResize);
+
+            // 動畫循環
+            animate();
+        }
+
+        function setupLighting() {
+            // 環境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            // 太陽光
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            sunLight.position.set(100, 100, 50);
+            sunLight.castShadow = true;
+            sunLight.shadow.camera.left = -100;
+            sunLight.shadow.camera.right = 100;
+            sunLight.shadow.camera.top = 100;
+            sunLight.shadow.camera.bottom = -100;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            scene.add(sunLight);
+
+            // 半球光
+            const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x2d5016, 0.3);
+            scene.add(hemiLight);
+        }
+
+        function createBuilding() {
+            const group = new THREE.Group();
+
+            let yOffset = 0;
+            const colors = [0x7a7a7a, 0x9a9a9a, 0x9a9a9a, 0xb0b0b0, 0xf5f5f5, 0xf5f5f5, 0xf0f0f0];
+
+            BUILDING_CONFIG.floors.forEach((floorKey, index) => {
+                const height = BUILDING_CONFIG.floorHeights[index];
+                const material = new THREE.MeshStandardMaterial({
+                    color: colors[index],
+                    metalness: 0.2,
+                    roughness: 0.8
+                });
+
+                // 四面牆
+                const walls = [
+                    { pos: [0, yOffset + height/2, BUILDING_CONFIG.depth/2], size: [BUILDING_CONFIG.width, height, 0.3] },
+                    { pos: [0, yOffset + height/2, -BUILDING_CONFIG.depth/2], size: [BUILDING_CONFIG.width, height, 0.3] },
+                    { pos: [-BUILDING_CONFIG.width/2, yOffset + height/2, 0], size: [BUILDING_CONFIG.depth, height, 0.3] },
+                    { pos: [BUILDING_CONFIG.width/2, yOffset + height/2, 0], size: [BUILDING_CONFIG.depth, height, 0.3] }
+                ];
+
+                walls.forEach(wall => {
+                    const geometry = new THREE.BoxGeometry(...wall.size);
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.set(...wall.pos);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    mesh.userData = { floor: floorKey };
+                    group.add(mesh);
+                });
+
+                // 地板
+                const floorGeometry = new THREE.PlaneGeometry(BUILDING_CONFIG.width, BUILDING_CONFIG.depth);
+                const floorMesh = new THREE.Mesh(floorGeometry, material);
+                floorMesh.rotation.x = -Math.PI / 2;
+                floorMesh.position.y = yOffset;
+                floorMesh.receiveShadow = true;
+                group.add(floorMesh);
+
+                // 房間標記
+                const rooms = ROOM_DATA[floorKey] || [];
+                rooms.forEach(room => {
+                    const roomGeometry = new THREE.BoxGeometry(room.w, height * 0.8, room.d);
+                    const roomMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x3a3a4a,
+                        metalness: 0.1,
+                        roughness: 0.9,
+                        transparent: true,
+                        opacity: 0.1
+                    });
+                    const roomMesh = new THREE.Mesh(roomGeometry, roomMaterial);
+                    roomMesh.position.set(room.x, yOffset + height / 2, room.z);
+                    roomMesh.userData = { ...room, floor: floorKey };
+                    roomMesh.castShadow = true;
+                    roomMesh.receiveShadow = true;
+                    group.add(roomMesh);
+                });
+
+                yOffset += height;
+            });
+
+            return group;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            frameCount++;
+            const now = Date.now();
+            if (now >= lastTime + 1000) {
+                fps = frameCount;
+                document.getElementById('fps-display').textContent = fps;
+                frameCount = 0;
+                lastTime = now;
+            }
+
+            // 根據當前模式更新控制和相機
+            if (currentMode === 'exterior') {
+                orbitControls.update();
+                renderer.render(scene, orbitCamera);
+            } else if (currentMode === 'interior') {
+                // 內部軌道視角
+                orbitControls.object = fpsCamera;
+                orbitControls.update();
+                renderer.render(scene, fpsCamera);
+            } else if (currentMode === 'fps') {
+                // FPS 控制和移動
+                updateFPSMovement();
+                pointerLockControls.update();
+                renderer.render(scene, fpsCamera);
+            }
+        }
+
+        // FPS 移動控制
+        function updateFPSMovement() {
+            const direction = new THREE.Vector3();
+            const rotation = new THREE.Euler(0, pointerLockControls.getObject().rotation.y, 0, 'YXZ');
+
+            if (moveVector.forward) {
+                direction.z -= 1;
+            }
+            if (moveVector.backward) {
+                direction.z += 1;
+            }
+            if (moveVector.left) {
+                direction.x -= 1;
+            }
+            if (moveVector.right) {
+                direction.x += 1;
+            }
+
+            if (direction.length() > 0) {
+                direction.normalize();
+                direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
+
+                // 碰撞檢測
+                const checkDistance = 0.5;
+                const rayStart = pointerLockControls.getObject().position.clone();
+                rayStart.y = FPS_HEIGHT;
+
+                const moveVector = direction.clone().multiplyScalar(FPS_SPEED);
+                raycaster.set(rayStart, moveVector.normalize());
+                const intersects = raycaster.intersectObjects(scene.children, true);
+
+                // 如果沒有碰撞，移動相機
+                if (intersects.length === 0 || intersects[0].distance > checkDistance) {
+                    pointerLockControls.getObject().position.add(moveVector);
+                }
+            }
+        }
+
+        // ==================== UI 控制 ====================
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 根據模式設置相機和控制器
+            if (mode === 'exterior') {
+                // 外部視角
+                orbitControls.object = orbitCamera;
+                orbitControls.autoRotate = true;
+                orbitCamera.position.set(80, 60, 80);
+                orbitControls.target.set(0, 15, 0);
+                orbitControls.update();
+            } else if (mode === 'interior') {
+                // 內部軌道視角
+                orbitControls.object = fpsCamera;
+                orbitControls.autoRotate = false;
+                fpsCamera.position.set(0, FPS_HEIGHT, 10);
+                orbitControls.target.set(0, FPS_HEIGHT, 0);
+                orbitControls.update();
+                // 釋放 Pointer Lock
+                if (document.pointerLockElement) {
+                    document.exitPointerLock();
+                }
+            } else if (mode === 'fps') {
+                // 第一人稱視角
+                orbitControls.autoRotate = false;
+                fpsCamera.position.set(0, FPS_HEIGHT, 10);
+            }
+        }
+
+        // 鍵盤事件處理器
+        function onKeyDown(event) {
+            switch (event.key.toLowerCase()) {
+                case 'w': moveVector.forward = true; break;
+                case 's': moveVector.backward = true; break;
+                case 'a': moveVector.left = true; break;
+                case 'd': moveVector.right = true; break;
+            }
+        }
+
+        function onKeyUp(event) {
+            switch (event.key.toLowerCase()) {
+                case 'w': moveVector.forward = false; break;
+                case 's': moveVector.backward = false; break;
+                case 'a': moveVector.left = false; break;
+                case 'd': moveVector.right = false; break;
+            }
+        }
+
+        function selectFloor(floor) {
+            currentFloor = floor;
+            document.querySelectorAll('.floor-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            updateRoomsList();
+            updateInfoPanel();
+        }
+
+        function updateRoomsList() {
+            const rooms = ROOM_DATA[currentFloor] || [];
+            const html = rooms.map(room => `
+                <div class="room-item" onclick="selectRoom('${room.id}')">
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-area">${room.area} m² • ${room.equipment[0]}</div>
+                </div>
+            `).join('');
+            document.getElementById('rooms-list').innerHTML = html;
+        }
+
+        function selectRoom(roomId) {
+            const room = ROOM_DATA[currentFloor].find(r => r.id === roomId);
+            if (room) updateInfoPanel(room);
+        }
+
+        function updateInfoPanel(room = null) {
+            const panel = document.getElementById('info-panel');
+            if (!room) {
+                const floorRooms = ROOM_DATA[currentFloor] || [];
+                const totalArea = floorRooms.reduce((sum, r) => sum + r.area, 0);
+                panel.innerHTML = `
+                    <div class="info-card">
+                        <div class="card-title">樓層統計</div>
+                        <div class="card-content">
+                            <div class="info-row">
+                                <span class="info-label">樓層</span>
+                                <span class="info-value">${currentFloor}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">房間數</span>
+                                <span class="info-value">${floorRooms.length}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">總面積</span>
+                                <span class="info-value">${totalArea} m²</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                panel.innerHTML = `
+                    <div class="info-card">
+                        <div class="card-title">${room.name}</div>
+                        <div class="card-content">
+                            <div class="info-row">
+                                <span class="info-label">房間 ID</span>
+                                <span class="info-value">${room.id}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">面積</span>
+                                <span class="info-value">${room.area} m²</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">類型</span>
+                                <span class="info-value">${room.type}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">設備</span>
+                            </div>
+                            ${room.equipment.map(eq => `
+                                <div style="color: #888; font-size: 11px; padding: 4px 0; padding-left: 10px;">• ${eq}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleWireframe() {
+            scene.traverse(obj => {
+                if (obj.material && obj.material.wireframe !== undefined) {
+                    obj.material.wireframe = !obj.material.wireframe;
+                }
+            });
+        }
+
+        function toggleAutoRotate() {
+            orbitControls.autoRotate = !orbitControls.autoRotate;
+        }
+
+        function resetView() {
+            camera.position.set(80, 60, 80);
+            orbitControls.target.set(0, 15, 0);
+            orbitControls.update();
+        }
+
+        function toggleHelp() {
+            const helpText = `
+🎮 三種視角模式:
+
+【外部視角】
+• 滑鼠左鍵拖動: 旋轉視角
+• 滑鼠滾輪: 放大/縮小
+• 滑鼠右鍵拖動: 平移視角
+
+【內部導覽】
+• 滑鼠左鍵拖動: 旋轉視角
+• 滑鼠滾輪: 放大/縮小
+• 點擊樓層/房間查看詳情
+
+【第一人稱視角】
+• W/A/S/D: 移動 (前/左/後/右)
+• 滑鼠移動: 轉身/看向
+• 點擊畫面: 鎖定滑鼠(Pointer Lock)
+• 按 ESC: 釋放滑鼠
+
+其他:
+• 線框: 切換線框顯示
+• 自動旋轉: 開啟自動旋轉
+• 重置視角: 回到初始視角
+            `;
+            alert(helpText.trim());
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const aspect = width / height;
+
+            // 更新兩個相機
+            orbitCamera.aspect = aspect;
+            orbitCamera.updateProjectionMatrix();
+            fpsCamera.aspect = aspect;
+            fpsCamera.updateProjectionMatrix();
+
+            renderer.setSize(width, height);
+        }
+
+        // ==================== 初始化 ====================
+        window.addEventListener('load', () => {
+            initThreeJS();
+            updateRoomsList();
+            updateInfoPanel();
+            document.getElementById('obj-display').textContent = scene.children.length;
+        });
+    </script>
+</body>
+</html>
