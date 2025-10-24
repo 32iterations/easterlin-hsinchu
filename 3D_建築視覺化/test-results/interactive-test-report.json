@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-10-24T10:28:17.600Z",
+  "baseUrl": "http://localhost:8080",
+  "tests": {
+    "initialState": {
+      "hasSelectFloor": true,
+      "hasCurrentFloor": true,
+      "hasRoomData": true,
+      "currentFloorValue": "1F",
+      "roomsListHTML": 1779,
+      "activeButton": "1F 長照+AI記憶"
+    },
+    "interactiveTests": {
+      "floorButtonClick": "已执行",
+      "roomItemClick": "已执行",
+      "modeButtonClick": "已执行",
+      "controlPanelClick": "已执行"
+    }
+  }
+}

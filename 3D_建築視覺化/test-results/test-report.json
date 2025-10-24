@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-10-24T10:08:29.180Z",
+  "baseUrl": "http://localhost:8080",
+  "tests": {
+    "3D建築視覺化": {
+      "sceneExists": true,
+      "rendererExists": true,
+      "cameraExists": true,
+      "buildingExists": true,
+      "sceneChildren": 6,
+      "canvasSize": {
+        "width": 1318,
+        "height": 1020
+      },
+      "fpsCurrent": "119",
+      "objectCount": "6",
+      "backgroundColor": "0a0e27"
+    },
+    "房間交互系統": {
+      "初始楼层": {
+        "roomCount": 8,
+        "activeFloorBtn": "1F 長照+AI記憶",
+        "roomNames": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "楼层切换": {
+        "roomCount": 8,
+        "activeFloorBtn": "2F 托嬰+SIDS監測"
+      }
+    },
+    "第一人稱導覽": "FPS mode initialized and tested"
+  },
+  "allTestsPassed": true,
+  "screenshots": [
+    "C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\3D_建築視覺化\\test-results\\1-3D-rendering-initial.png",
+    "C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\3D_建築視覺化\\test-results\\2-room-interaction-floor-switch.png",
+    "C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\3D_建築視覺化\\test-results\\3-room-interaction-details.png",
+    "C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\3D_建築視覺化\\test-results\\4-fps-mode.png",
+    "C:\\Users\\thc1006\\Desktop\\dev\\easterlin-hsinchu\\3D_建築視覺化\\test-results\\5-fps-movement.png"
+  ]
+}

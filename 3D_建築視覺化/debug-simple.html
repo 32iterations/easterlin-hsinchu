@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 建築可視化 - 調試版本</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: Arial, sans-serif; }
+        #container { display: flex; flex-direction: column; height: 100%; }
+        #topbar { background: #333; color: #fff; padding: 20px; }
+        #canvas-container { flex: 1; background: #0a0e27; }
+        #debug { background: #222; color: #0f0; font-family: monospace; padding: 20px; height: 200px; overflow-y: auto; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="topbar">
+            <h1>赤土崎多功能館 3D 可視化 - 調試版本</h1>
+            <p id="status">初始化中...</p>
+        </div>
+        <canvas id="canvas-container"></canvas>
+        <div id="debug"></div>
+    </div>
+
+    <script>
+        const debugLog = [];
+        const MAX_LOGS = 50;
+
+        function log(msg, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const fullMsg = `[${timestamp}] ${msg}`;
+            debugLog.push(fullMsg);
+            if (debugLog.length > MAX_LOGS) debugLog.shift();
+            updateDebugDisplay();
+            console.log(msg);
+        }
+
+        function updateDebugDisplay() {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML = debugLog.map(m => {
+                if (m.includes('❌') || m.includes('Error')) return `<div class="error">${m}</div>`;
+                if (m.includes('✅')) return `<div class="success">${m}</div>`;
+                return `<div class="info">${m}</div>`;
+            }).join('');
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+
+        log('開始加載 Three.js...', 'info');
+
+        // 直接加载 three.js（不用 importmap）
+        const script1 = document.createElement('script');
+        script1.src = '/libs/three/three.module.js';
+        script1.type = 'module';
+        script1.onload = () => log('✅ Three.js 模塊加載成功', 'success');
+        script1.onerror = () => log('❌ Three.js 加載失敗', 'error');
+        document.head.appendChild(script1);
+
+        // 等待 Three.js 加载
+        let attempts = 0;
+        function checkTHREE() {
+            attempts++;
+            log(`檢查 THREE... (${attempts})`);
+            if (typeof THREE !== 'undefined') {
+                log('✅ THREE 對象已定義', 'success');
+                initScene();
+            } else if (attempts < 50) {
+                setTimeout(checkTHREE, 100);
+            } else {
+                log('❌ Three.js 加載超時', 'error');
+                document.getElementById('status').innerHTML = '<span style="color: red;">❌ Three.js 加載失敗</span>';
+            }
+        }
+
+        function initScene() {
+            try {
+                log('🏗️ 開始初始化 Three.js 場景...', 'info');
+
+                const canvas = document.getElementById('canvas-container');
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x0a0e27);
+                log('✅ Scene 創建成功', 'success');
+
+                const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+                camera.position.set(50, 40, 50);
+                log('✅ Camera 創建成功', 'success');
+
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+                renderer.setClearColor(0x0a0e27);
+                log('✅ Renderer 創建成功', 'success');
+
+                // 添加光線
+                const light1 = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(light1);
+                const light2 = new THREE.DirectionalLight(0xffffff, 0.7);
+                light2.position.set(100, 100, 100);
+                scene.add(light2);
+                log('✅ 光線添加成功', 'success');
+
+                // 添加簡單的建築
+                const geometry = new THREE.BoxGeometry(32, 15, 20);
+                const material = new THREE.MeshPhongMaterial({ color: 0x888888 });
+                const building = new THREE.Mesh(geometry, material);
+                building.position.y = 7.5;
+                scene.add(building);
+                log('✅ 建築物添加成功', 'success');
+
+                // 添加地面
+                const groundGeo = new THREE.PlaneGeometry(200, 200);
+                const groundMat = new THREE.MeshPhongMaterial({ color: 0x2d5016 });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                scene.add(ground);
+                log('✅ 地面添加成功', 'success');
+
+                // 动画循环
+                function animate() {
+                    requestAnimationFrame(animate);
+                    building.rotation.y += 0.001;
+                    renderer.render(scene, camera);
+                }
+                animate();
+                log('✅ 動畫循環開始', 'success');
+
+                document.getElementById('status').innerHTML = '<span style="color: #0f0;">✅ 場景已加載，建築物應該在旋轉</span>';
+            } catch (err) {
+                log(`❌ 初始化錯誤: ${err.message}`, 'error');
+                document.getElementById('status').innerHTML = `<span style="color: red;">❌ 初始化失敗: ${err.message}</span>`;
+            }
+        }
+
+        // 开始检查 THREE
+        setTimeout(checkTHREE, 500);
+
+        // 监听窗口大小变化
+        window.addEventListener('resize', () => {
+            log('📏 窗口大小改變', 'info');
+        });
+    </script>
+</body>
+</html>

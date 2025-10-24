@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Module Loading</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #222; color: #0f0; }
+        .log { background: #1a1a1a; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+    </style>
+</head>
+<body>
+    <h1>Module Loading Test</h1>
+    <div id="output"></div>
+
+    <!-- Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "/libs/three/three.module.js"
+        }
+    }
+    </script>
+
+    <script type="module">
+        const output = document.getElementById('output');
+        const log = (msg, isPass = true) => {
+            const div = document.createElement('div');
+            div.className = 'log ' + (isPass ? 'pass' : 'fail');
+            div.textContent = msg;
+            output.appendChild(div);
+            console.log(msg);
+        };
+
+        async function testModules() {
+            try {
+                log('Starting module tests...');
+
+                // Test 1: Load Three.js
+                log('Test 1: Loading Three.js module...');
+                const THREE = await import('/libs/three/three.module.js');
+                log('✅ Three.js loaded: ' + (THREE.Scene ? 'HAS Scene' : 'NO Scene'), !!THREE.Scene);
+                log('✅ Three.js loaded: ' + (THREE.WebGLRenderer ? 'HAS WebGLRenderer' : 'NO WebGLRenderer'), !!THREE.WebGLRenderer);
+
+                // Test 2: Load OrbitControls
+                log('Test 2: Loading OrbitControls module...');
+                const { OrbitControls } = await import('/libs/three/OrbitControls.js');
+                log('✅ OrbitControls loaded: ' + (OrbitControls ? 'SUCCESS' : 'FAILED'), !!OrbitControls);
+
+                // Test 3: Load PointerLockControls
+                log('Test 3: Loading PointerLockControls module...');
+                const { PointerLockControls } = await import('/libs/three/PointerLockControls.js');
+                log('✅ PointerLockControls loaded: ' + (PointerLockControls ? 'SUCCESS' : 'FAILED'), !!PointerLockControls);
+
+                // Test 4: Try creating objects
+                log('Test 4: Creating Three.js objects...');
+                try {
+                    const scene = new THREE.Scene();
+                    log('✅ Created Scene', true);
+                    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+                    log('✅ Created PerspectiveCamera', true);
+                    const renderer = new THREE.WebGLRenderer();
+                    log('✅ Created WebGLRenderer', true);
+                } catch (e) {
+                    log('❌ Failed to create objects: ' + e.message, false);
+                }
+
+                log('✅ All tests passed!', true);
+                window.modulesLoaded = true;
+
+            } catch (err) {
+                log('❌ Error: ' + err.message, false);
+                console.error(err);
+            }
+        }
+
+        testModules();
+    </script>
+</body>
+</html>

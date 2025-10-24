@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 
 // ==================== 路由 ====================
 
-// 首頁 - 提供完整專業版本（3D FPS 完整實現）
+// 首頁 - 提供原始專業版本（已修復加載問題）
 app.get('/', (req, res) => {
     const filePath = path.join(__dirname, '赤土崎多功能館_專業版_完整內部規劃.html');
     console.log(`[首頁路由] 發送: ${filePath}`);
@@ -85,6 +85,11 @@ app.get('/original', (req, res) => {
 // 提供完全獨立版本
 app.get('/standalone', (req, res) => {
     res.sendFile(path.join(__dirname, '赤土崎多功能館_完全獨立版.html'));
+});
+
+// 提供調試版本
+app.get('/debug', (req, res) => {
+    res.sendFile(path.join(__dirname, 'debug-simple.html'));
 });
 
 // API: 獲取樓層信息
@@ -153,7 +158,7 @@ app.use((req, res) => {
 
 // ==================== 啟動伺服器 ====================
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     const url = `http://${HOST}:${PORT}`;
     console.log('\n');
     console.log('╔════════════════════════════════════════════════════════════╗');

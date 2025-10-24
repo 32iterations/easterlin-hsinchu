@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Three.js Renderer</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #canvas { width: 100vw; height: 100vh; display: block; }
+        #log { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: #0f0; padding: 10px; font-family: monospace; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div id="log"></div>
+
+    <!-- Import Map 用於解析 Three.js 模組依賴 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "/libs/three/three.module.js"
+        }
+    }
+    </script>
+
+    <script type="module">
+        const logEl = document.getElementById('log');
+        const log = (msg) => {
+            console.log(msg);
+            logEl.innerHTML += msg + '<br>';
+        };
+
+        async function init() {
+            try {
+                log('📦 加載 Three.js...');
+                const THREE = await import('/libs/three/three.module.js');
+                window.THREE = THREE;
+                log('✅ Three.js 加載成功');
+
+                log('🎨 初始化場景...');
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000033);
+
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 5;
+
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                document.body.appendChild(renderer.domElement);
+                log('✅ 渲染器已創建並添加到 DOM');
+
+                // 創建測試立方體
+                const geometry = new THREE.BoxGeometry();
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
+                log('✅ 立方體已添加到場景');
+
+                // 渲染循環
+                function animate() {
+                    requestAnimationFrame(animate);
+                    cube.rotation.x += 0.01;
+                    cube.rotation.y += 0.01;
+                    renderer.render(scene, camera);
+                }
+                animate();
+                log('✅ 動畫循環已啟動 - 應該看到旋轉的綠色立方體');
+
+            } catch (err) {
+                log('❌ 錯誤: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -130,6 +130,7 @@
             border-right: 1px solid rgba(0, 255, 136, 0.2);
             overflow-y: auto;
             padding: 20px;
+            z-index: 501;
         }
 
         .panel-title {
@@ -212,6 +213,8 @@
         /* ============== 中央 3D Canvas ============== */
         #canvas-container {
             position: relative;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
         }
 
@@ -325,6 +328,10 @@
             left: 20px;
             width: 200px;
             height: 200px;
+            z-index: 505;
+            pointer-events: auto;
+            overflow: hidden;
+            border-radius: 8px;
         }
 
         #minimap-canvas {
@@ -333,6 +340,8 @@
             background: #1a1a2e;
             border-radius: 6px;
             border: 1px solid rgba(0, 204, 255, 0.3);
+            display: block;
+            overflow: hidden;
         }
 
         /* ============== 提示系統 ============== */
@@ -404,6 +413,9 @@
     </style>
 </head>
 <body>
+    <!-- 調試日誌 -->
+    <div id="debug-log" style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.95); color: #0f0; padding: 10px; font-family: monospace; font-size: 10px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 502; border: 1px solid #0f0; white-space: pre-wrap; word-wrap: break-word; border-radius: 4px;"><span style="color: #ff0;">📋 LOADING LOG</span></div>
+
     <div id="app">
         <!-- 頂部導航欄 -->
         <div id="topbar">
@@ -443,9 +455,7 @@
                     <button class="floor-btn active" onclick="selectFloor('1F')">1F 長照+AI記憶</button>
                     <button class="floor-btn" onclick="selectFloor('2F')">2F 托嬰+SIDS監測</button>
                     <button class="floor-btn" onclick="selectFloor('3F')">3F 親子共學</button>
-                    <button class="floor-btn" onclick="selectFloor('4F')">4F VR教室</button>
-                    <button class="floor-btn" onclick="selectFloor('5F')">5F 綠能系統</button>
-                    <button class="floor-btn" onclick="selectFloor('6F')">6F 會議廳</button>
+                    <button class="floor-btn" onclick="selectFloor('4F')">4F STEM教室</button>
                 </div>
 
                 <div class="panel-title">房間列表</div>
@@ -479,34 +489,61 @@
         </div>
     </div>
 
-    <!-- Three.js ES Modules from Local Server (No CDN) -->
+    <!-- Import Map 用於解析 Three.js 模組依賴 -->
     <script type="importmap">
     {
         "imports": {
-            "three": "/libs/three/three.module.js",
-            "three/addons/controls/OrbitControls.js": "/libs/three/OrbitControls.js",
-            "three/addons/controls/PointerLockControls.js": "/libs/three/PointerLockControls.js"
+            "three": "/libs/three/three.module.js"
         }
     }
     </script>
-    <script type="module">
-        // Import Three.js and controls
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        // Make them globally accessible for non-module scripts
-        window.THREE = THREE;
-        window.OrbitControls = OrbitControls;
-        window.PointerLockControls = PointerLockControls;
+    <!-- 異步加載 Three.js 庫和控制器（修復加載阻塞問題） -->
+    <script type="module">
+        // 調試日誌函式
+        function debugLog(msg) {
+            const log = document.getElementById('debug-log');
+            if (log) {
+                log.innerHTML += '\n' + msg;
+                log.scrollTop = log.scrollHeight;
+            }
+            console.log(msg);
+        }
+
+        // 使用 dynamic import 加載 Three.js 和控制器
+        async function loadLibraries() {
+            try {
+                debugLog('⏳ 加載 Three.js...');
+                const THREE = await import('/libs/three/three.module.js');
+                window.THREE = THREE;
+                debugLog('✅ Three.js 已加載 (Scene: ' + (THREE.Scene ? '✓' : '✗') + ')');
+
+                debugLog('⏳ 加載 OrbitControls...');
+                const { OrbitControls } = await import('/libs/three/OrbitControls.js');
+                window.OrbitControls = OrbitControls;
+                debugLog('✅ OrbitControls 已加載 (' + (OrbitControls ? '✓' : '✗') + ')');
+
+                debugLog('⏳ 加載 PointerLockControls...');
+                const { PointerLockControls } = await import('/libs/three/PointerLockControls.js');
+                window.PointerLockControls = PointerLockControls;
+                debugLog('✅ PointerLockControls 已加載 (' + (PointerLockControls ? '✓' : '✗') + ')');
+
+                debugLog('✅ 所有模組加載完成');
+            } catch (err) {
+                debugLog('❌ 庫加載錯誤: ' + err.message);
+                console.error('❌ 庫加載錯誤:', err);
+            }
+        }
+
+        loadLibraries();
     </script>
     <script>
         // ==================== 全局配置 ====================
         const BUILDING_CONFIG = {
             width: 32,
             depth: 20,
-            floors: ['B1', '1F', '2F', '3F', '4F', '5F', '6F'],
-            floorHeights: [5, 4, 3.5, 3.5, 3.5, 3.5, 3.5]
+            floors: ['B1', '1F', '2F', '3F', '4F', '5F', '6F', '7F'],  // Stage 4合規：7層建築
+            floorHeights: [5, 4, 4, 4, 4, 4, 4, 3.5]
         };
 
         // FPS 控制相關變數
@@ -519,7 +556,248 @@
         const FPS_SPEED = 0.15;
         const FPS_HEIGHT = 1.6; // 人眼高度
 
-        // ==================== 房間數據 (完整的43個房間) ====================
+        // ==================== 街景導航系統 (Google Maps Street View 風格) ====================
+        const streetViewNav = {
+            enabled: false,
+            waypoints: [],  // 當前樓層的導航點
+            currentWaypoint: null,
+            currentRoom: null,  // 當前所在房間
+            isTransitioning: false,
+            transitionSpeed: 0.05,  // 相機轉移速度
+            navigationMarkers: []  // 視覺導航標記
+        };
+        window.streetViewNav = streetViewNav;
+
+        // 生成街景導航點
+        function generateWaypoints(floor) {
+            streetViewNav.waypoints = [];
+            const rooms = ROOM_DATA[floor] || [];
+
+            rooms.forEach(room => {
+                // 在每個房間中心和四個角落添加導航點
+                const points = [
+                    { x: room.x, z: room.z, label: room.name + ' (中心)' },  // 中心
+                    { x: room.x - room.w/3, z: room.z - room.d/3, label: room.name + ' (左前)' },  // 左前
+                    { x: room.x + room.w/3, z: room.z - room.d/3, label: room.name + ' (右前)' },  // 右前
+                ];
+
+                points.forEach(pt => {
+                    streetViewNav.waypoints.push({
+                        position: new THREE.Vector3(pt.x, FPS_HEIGHT, pt.z),
+                        room: room,
+                        label: pt.label
+                    });
+                });
+            });
+        }
+
+        // 創建導航標記視覺化
+        function createNavigationMarkers() {
+            // 清除舊標記
+            streetViewNav.navigationMarkers.forEach(marker => {
+                if (marker.parent) {
+                    marker.parent.remove(marker);
+                }
+            });
+            streetViewNav.navigationMarkers = [];
+
+            if (!streetViewNav.enabled) return;
+
+            const markerGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+            const markerMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00ff00,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.7
+            });
+
+            streetViewNav.waypoints.forEach(waypoint => {
+                const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                marker.position.copy(waypoint.position);
+                marker.userData = { waypoint: waypoint, isNavigationMarker: true };
+                scene.add(marker);
+                streetViewNav.navigationMarkers.push(marker);
+            });
+        }
+
+        // 平滑轉移到導航點
+        function moveToWaypoint(waypoint) {
+            if (streetViewNav.isTransitioning) return;
+
+            streetViewNav.isTransitioning = true;
+            const startPos = fpsCamera.position.clone();
+            const endPos = waypoint.position.clone();
+            const duration = 1.5;  // 1.5秒轉移
+            let elapsed = 0;
+
+            function transitionFrame() {
+                elapsed += 0.016;  // 假設60fps
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = progress < 0.5
+                    ? 2 * progress * progress
+                    : -1 + (4 - 2 * progress) * progress;  // 緩入緩出
+
+                fpsCamera.position.lerpVectors(startPos, endPos, easeProgress);
+
+                if (progress < 1) {
+                    requestAnimationFrame(transitionFrame);
+                } else {
+                    fpsCamera.position.copy(endPos);
+                    streetViewNav.currentWaypoint = waypoint;
+                    streetViewNav.isTransitioning = false;
+                }
+            }
+
+            transitionFrame();
+        }
+
+        // 進入房間函數（FPS視角進入房間）
+        function enterRoom(roomId) {
+            if (streetViewNav.isTransitioning) return;
+
+            // 從ROOM_DATA中尋找該房間
+            let selectedRoom = null;
+            let floorKey = null;
+
+            for (const floor in ROOM_DATA) {
+                const room = ROOM_DATA[floor].find(r => r.id === roomId);
+                if (room) {
+                    selectedRoom = room;
+                    floorKey = floor;
+                    break;
+                }
+            }
+
+            if (!selectedRoom) {
+                console.warn('房間未找到:', roomId);
+                return;
+            }
+
+            // 檢查是否需要切換樓層
+            if (floorKey !== currentFloor) {
+                selectFloor(floorKey);
+            }
+
+            // 計算房間中心位置
+            const roomCenterX = selectedRoom.x + selectedRoom.w / 2;
+            const roomCenterZ = selectedRoom.z + selectedRoom.d / 2;
+
+            // 計算該樓層高度
+            const floorIndex = Object.keys(BUILDING_CONFIG.floors).indexOf(floorKey);
+            let floorHeight = 0;
+            if (floorIndex >= 0) {
+                for (let i = 0; i <= floorIndex; i++) {
+                    floorHeight += BUILDING_CONFIG.floorHeights[i] || 3.5;
+                }
+            }
+
+            // 相機進入房間（在房間中心高度略低的位置）
+            const entryHeight = floorHeight - 2;
+
+            // 平滑轉移到房間
+            streetViewNav.isTransitioning = true;
+            const startPos = fpsCamera.position.clone();
+            const endPos = new THREE.Vector3(roomCenterX, entryHeight, roomCenterZ);
+            const duration = 1.5;  // 1.5秒轉移
+            let elapsed = 0;
+
+            function transitionToRoomFrame() {
+                elapsed += 0.016;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = progress < 0.5
+                    ? 2 * progress * progress
+                    : -1 + (4 - 2 * progress) * progress;
+
+                fpsCamera.position.lerpVectors(startPos, endPos, easeProgress);
+                fpsCamera.lookAt(roomCenterX, entryHeight, roomCenterZ);
+
+                if (progress < 1) {
+                    requestAnimationFrame(transitionToRoomFrame);
+                } else {
+                    fpsCamera.position.copy(endPos);
+                    streetViewNav.currentRoom = selectedRoom;
+                    streetViewNav.isTransitioning = false;
+                    updateInfoPanel(selectedRoom);
+                    console.log('✅ 已進入房間:', selectedRoom.name);
+                }
+            }
+
+            transitionToRoomFrame();
+        }
+
+        // 點擊地面導航函數（Google Maps街景風格）
+        function navigateToPoint(targetPoint) {
+            if (streetViewNav.isTransitioning) return;
+
+            // 保持相同的Y座標（樓層高度）
+            const startPos = fpsCamera.position.clone();
+            const endPos = new THREE.Vector3(targetPoint.x, startPos.y, targetPoint.z);
+
+            // 基本碰撞檢測：檢查目標點是否在房間內
+            const buildingGroup = scene.children[4];
+            if (buildingGroup) {
+                raycaster.setFromCamera(new THREE.Vector2(0, 0), fpsCamera);
+                const intersects = raycaster.intersectObjects(buildingGroup.children, true);
+
+                // 檢查是否點擊了牆體或房間邊界，如果是則微調目標位置
+                for (let intersect of intersects) {
+                    if (intersect.object.userData && intersect.object.userData.id) {
+                        // 確保不走入房間牆體，向後退一點
+                        const direction = endPos.clone().sub(startPos).normalize();
+                        endPos.copy(endPos.sub(direction.multiplyScalar(0.5)));
+                        break;
+                    }
+                }
+            }
+
+            // 計算距離以決定轉移時間（更遠的距離 = 更長的時間）
+            const distance = startPos.distanceTo(endPos);
+            const duration = Math.max(0.5, Math.min(distance / 5, 5));  // 0.5-5秒，增加最大時間
+
+            streetViewNav.isTransitioning = true;
+            let elapsed = 0;
+
+            function transitionToPointFrame() {
+                elapsed += 0.016;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // 使用緩動函數使運動更自然
+                const easeProgress = progress < 0.5
+                    ? 2 * progress * progress
+                    : -1 + (4 - 2 * progress) * progress;
+
+                fpsCamera.position.lerpVectors(startPos, endPos, easeProgress);
+
+                // 相機看向目標方向
+                const direction = endPos.clone().sub(startPos).normalize();
+                const lookAtPoint = fpsCamera.position.clone().add(direction);
+                fpsCamera.lookAt(lookAtPoint);
+
+                if (progress < 1) {
+                    requestAnimationFrame(transitionToPointFrame);
+                } else {
+                    fpsCamera.position.copy(endPos);
+                    streetViewNav.isTransitioning = false;
+                    console.log('✅ 已導航到位置:', {x: endPos.x.toFixed(2), z: endPos.z.toFixed(2)});
+                }
+            }
+
+            transitionToPointFrame();
+        }
+
+        // Minecraft 風格的相機控制
+        const minecraftControls = {
+            pitch: 0,           // 上下看（-π/2 到 π/2）
+            yaw: 0,             // 左右看
+            mouseSensitivity: 0.003,  // 鼠標靈敏度
+            isDragging: false,
+            lastX: 0,
+            lastY: 0
+        };
+        window.minecraftControls = minecraftControls;  // 暴露到全局作用域
+
+        // ==================== 房間數據 (Stage3合規：5層, 16個功能區) ====================
         const ROOM_DATA = {
             'B1': [
                 { id: 'B1-01', name: '停車場', x: 0, z: 0, w: 28, d: 16, area: 448, type: 'facility', equipment: ['停車位×60', '感測系統'] },
@@ -529,60 +807,58 @@
                 { id: 'B1-05', name: '雨水回收', x: 8, z: -8, w: 2, d: 2, area: 4, type: 'technical', equipment: ['儲存池'] }
             ],
             '1F': [
-                { id: '1F-01', name: '失智症專區', x: -8, z: 0, w: 14, d: 14, area: 196, type: 'healthcare', equipment: ['投影系統', '互動裝置'] },
-                { id: '1F-02', name: 'AI投影播放', x: 4, z: -5, w: 8, d: 7, area: 56, type: 'healthcare', equipment: ['投影機', '智慧監測'] },
-                { id: '1F-03', name: '復健訓練區', x: 4, z: 5, w: 8, d: 7, area: 56, type: 'healthcare', equipment: ['器材×5'] },
-                { id: '1F-04', name: '藝術療法區', x: -10, z: -8, w: 6, d: 5, area: 30, type: 'healthcare', equipment: ['畫具', '樂器'] },
-                { id: '1F-05', name: '認知訓練區', x: -2, z: -8, w: 5, d: 5, area: 25, type: 'healthcare', equipment: ['平板×5'] },
-                { id: '1F-06', name: '共用餐廳', x: 8, z: 8, w: 10, d: 6, area: 60, type: 'dining', equipment: ['桌椅×20'] },
-                { id: '1F-07', name: '備餐廚房', x: 10, z: -1, w: 4, d: 3, area: 12, type: 'dining', equipment: ['爐灶×3'] },
-                { id: '1F-08', name: '護理站', x: -12, z: 8, w: 3, d: 3, area: 9, type: 'technical', equipment: ['監控系統'] }
+                // Stage3規範：1F = 失智專區(200m²) + 一般日照區(300m²) + 共享空間(220m²)
+                { id: '1F-01', name: '失智症專區', x: -10, z: 0, w: 14, d: 14.3, area: 200, type: 'healthcare', equipment: ['感測設備', '互動投影', '活動室', '無障礙衛浴'], subzones: ['感測區', '投影區', '活動室', '衛浴'] },
+                { id: '1F-02', name: '一般日照區', x: 6, z: 0, w: 18, d: 16.7, area: 300, type: 'healthcare', equipment: ['復健器材', '藝術美術', '認知訓練'], subzones: ['復健訓練', '藝術療法', '認知訓練'] },
+                { id: '1F-03', name: '共享空間', x: 0, z: 9, w: 20, d: 11, area: 220, type: 'dining', equipment: ['餐廳×120人', '廚房設備', '護理站監控'], subzones: ['用餐區', '廚房', '護理站'] }
             ],
             '2F': [
-                { id: '2F-01', name: 'SIDS監測系統', x: -8, z: 0, w: 12, d: 10, area: 120, type: 'healthcare', equipment: ['感測器×50'] },
-                { id: '2F-02', name: '嬰兒床區', x: -8, z: 11, w: 12, d: 8, area: 96, type: 'healthcare', equipment: ['嬰兒床×50'] },
-                { id: '2F-03', name: '中央監控', x: 6, z: 0, w: 4, d: 4, area: 16, type: 'technical', equipment: ['監控螢幕×4'] },
-                { id: '2F-04', name: '嬰兒活動區', x: 6, z: 8, w: 5, d: 5, area: 25, type: 'activity', equipment: ['爬行墊', '玩具'] },
-                { id: '2F-05', name: '幼兒活動區', x: 12, z: 8, w: 6, d: 6, area: 36, type: 'activity', equipment: ['滑梯', '攀爬架'] },
-                { id: '2F-06', name: 'AI故事時間', x: 6, z: -8, w: 4, d: 3, area: 12, type: 'activity', equipment: ['投影機'] },
-                { id: '2F-07', name: '餵食換尿區', x: 12, z: -2, w: 6, d: 5, area: 30, type: 'facility', equipment: ['換尿台×3'] },
-                { id: '2F-08', name: '衛浴設施', x: 14, z: 8, w: 4, d: 4, area: 16, type: 'facility', equipment: ['廁所×2', '浴盆'] }
+                // Stage 3規範 + Stage 4完整規格：2F = 嬰兒室(200m²) + 幼兒室(150m²) + 支援設施
+                { id: '2F-01', name: '0-2歲嬰兒教室', x: -9, z: 2, w: 14, d: 14.3, area: 200, type: 'healthcare', equipment: ['SIDS監測×50', '嬰兒床×50', '爬行墊', '玩具架', '餵食台', '衛浴設施'], subzones: ['睡眠區', '活動區', '餵食區', '衛浴'] },
+                { id: '2F-02', name: '2-3歲幼兒教室', x: 7, z: 2, w: 16, d: 9.4, area: 150, type: 'activity', equipment: ['攀爬架', '滑梯', '球池', '故事投影', '午睡床×15', '自理訓練台'], subzones: ['遊戲區', '故事時間', '主題活動', '午睡區', '自理訓練'] },
+                { id: '2F-03', name: '副食品準備室', x: 0, z: 0, w: 8, d: 6, area: 48, type: 'facility', equipment: ['烹飪台', '冰箱', '消毒櫃', '工作台'], subzones: ['烹廚區', '消毒區'] },
+                { id: '2F-04', name: '睡眠室', x: 10, z: 2, w: 8, d: 8, area: 64, type: 'healthcare', equipment: ['嬰兒床×12', '恆溫濕度控制', '靜音音樂系統'], subzones: ['睡眠區'] },
+                { id: '2F-05', name: '親子共讀區', x: -8, z: -8, w: 12, d: 7, area: 84, type: 'education', equipment: ['書架×3', '舒適座位×8', '軟墊×6'], subzones: ['閱讀區', '軟墊區'] },
+                { id: '2F-06', name: '支援設施', x: 8, z: -8, w: 10, d: 7, area: 70, type: 'facility', equipment: ['中央監控系統', '消毒室', '儲藏室'], subzones: ['監控區', '消毒區', '儲藏'] }
             ],
             '3F': [
-                { id: '3F-01', name: '閱讀區', x: -12, z: 0, w: 6, d: 8, area: 48, type: 'education', equipment: ['書架×3', '座椅×8'] },
-                { id: '3F-02', name: '故事劇場', x: -4, z: 4, w: 10, d: 8, area: 80, type: 'education', equipment: ['舞台', '投影幕'] },
-                { id: '3F-03', name: '主題學習角', x: 8, z: 4, w: 10, d: 8, area: 80, type: 'education', equipment: ['STEAM教材'] },
-                { id: '3F-04', name: '時間銀行辦公', x: -12, z: -8, w: 6, d: 6, area: 36, type: 'administrative', equipment: ['辦公桌×3'] },
-                { id: '3F-05', name: '導師座位區', x: -4, z: -8, w: 6, d: 6, area: 36, type: 'education', equipment: ['座位×3'] },
-                { id: '3F-06', name: '月度表揚區', x: 4, z: -8, w: 4, d: 4, area: 16, type: 'activity', equipment: ['展示牆'] },
-                { id: '3F-07', name: 'MR互動區', x: 14, z: 0, w: 5, d: 6, area: 30, type: 'technology', equipment: ['VR頭盔×2'] }
+                // Stage 4規範 - 長照日照中心
+                { id: '3F-01', name: '棋牌活動室', x: -12, z: 2, w: 14, d: 10, area: 140, type: 'activity', equipment: ['棋牌桌×8', '座位×32', '象棋', '麻將', '撲克牌組'], subzones: ['棋牌區'] },
+                { id: '3F-02', name: '手工藝活動室', x: 0, z: 2, w: 14, d: 10, area: 140, type: 'activity', equipment: ['工作台×4', '手工藝工具', '材料儲存', '展示架'], subzones: ['工作區', '展示區'] },
+                { id: '3F-03', name: '復健活動室', x: 10, z: 2, w: 12, d: 10, area: 120, type: 'activity', equipment: ['復健設備', '瑜珈墊×15', '拉筋牆', '平衡訓練器'], subzones: ['復健區', '瑜珈區'] },
+                { id: '3F-04', name: '用餐區', x: -12, z: -8, w: 14, d: 8, area: 112, type: 'dining', equipment: ['圓形餐桌×8', '座位×32', '餐具服務台'], subzones: ['餐飲區'] },
+                { id: '3F-05', name: '護理室', x: 2, z: -8, w: 10, d: 8, area: 80, type: 'healthcare', equipment: ['檢查床×2', '醫療設備', '藥物櫃', '輪椅×2'], subzones: ['護理區', '用藥區'] },
+                { id: '3F-06', name: '失智友善室', x: 10, z: -8, w: 10, d: 8, area: 80, type: 'healthcare', equipment: ['家居家具', '記憶物品展示', '安全扶手×3'], subzones: ['客廳區', '記憶區'] },
+                { id: '3F-07', name: '跨代互動室', x: 0, z: 6, w: 12, d: 6, area: 72, type: 'education', equipment: ['工作台×3', '座位×12', '藝術用品'], subzones: ['互動區'] }
             ],
             '4F': [
-                { id: '4F-01', name: 'STEM教室', x: -12, z: 0, w: 10, d: 8, area: 80, type: 'education', equipment: ['電腦×15'] },
-                { id: '4F-02', name: '機器人區', x: 0, z: 0, w: 8, d: 7, area: 56, type: 'technology', equipment: ['Arduino×10', 'Raspberry Pi×10'] },
-                { id: '4F-03', name: '電子工作台', x: 0, z: -8, w: 5, d: 6, area: 30, type: 'technology', equipment: ['焊接台×3'] },
-                { id: '4F-04', name: 'VR硬體區', x: -12, z: -8, w: 5, d: 5, area: 25, type: 'technology', equipment: ['VR頭盔×10'] },
-                { id: '4F-05', name: 'VR沉浸教室', x: 6, z: 2, w: 12, d: 8, area: 96, type: 'technology', equipment: ['投影機×2', '追蹤系統'] },
-                { id: '4F-06', name: '虛擬實驗室', x: 10, z: -8, w: 5, d: 6, area: 30, type: 'technology', equipment: ['VR場景'] },
-                { id: '4F-07', name: '遠距導師室', x: -4, z: -8, w: 5, d: 4, area: 20, type: 'education', equipment: ['視訊系統'] },
-                { id: '4F-08', name: '職涯導師區', x: 12, z: -8, w: 6, d: 5, area: 30, type: 'education', equipment: ['會議桌'] }
+                // Stage 3 + Stage 4規範：4F = STEM教室(200m²) + 投影與展示區(150m²) + 職涯發展區(150m²)
+                { id: '4F-01', name: 'STEM教室', x: -10, z: 2, w: 16, d: 12.5, area: 200, type: 'education', equipment: ['電腦×15', 'Arduino×10', 'Raspberry Pi×10', '3D列印機×2', '機器人套件×10'], subzones: ['電腦教室', '機器人區', '電子工作台', '3D列印區'] },
+                { id: '4F-02', name: '投影與展示區', x: 8, z: 2, w: 16, d: 9.4, area: 150, type: 'technology', equipment: ['投影機×8', 'VR頭盔×10', '編輯工作站×4', '4K攝影棚背景', '綠幕系統'], subzones: ['4K投影區', 'VR體驗區', '錄製編輯室'] },
+                { id: '4F-03', name: '職涯發展區', x: 0, z: -9, w: 20, d: 7.5, area: 150, type: 'education', equipment: ['導師座位×3', '視訊會議系統', '履歷檔案區', '職業模擬工作站'], subzones: ['導師座位', '遠距連線', '模擬工作室'] },
+                { id: '4F-04', name: '文創工坊', x: -12, z: -8, w: 12, d: 7, area: 84, type: 'activity', equipment: ['烘焙區', '手工藝台×4', '材料儲存', '展示架×3'], subzones: ['烘焙區', '手工藝區', '展示區'] },
+                { id: '4F-05', name: '課輔自習區', x: 4, z: -8, w: 12, d: 7, area: 84, type: 'education', equipment: ['課桌×30', '討論小組圓桌×6', '講師台'], subzones: ['自習區', '討論組', '講師區'] },
+                { id: '4F-06', name: '休閒娛樂區', x: 14, z: -8, w: 8, d: 7, area: 56, type: 'activity', equipment: ['電競遊戲機×3', '籃球機', '健身器材×5'], subzones: ['遊戲區', '運動區'] },
+                { id: '4F-07', name: '青少年交誼廳', x: 0, z: 5, w: 18, d: 8, area: 144, type: 'activity', equipment: ['沙發區', '茶几×4', '輕食台', '電視牆'], subzones: ['休閒區', '用餐區'] },
+                { id: '4F-08', name: '長輩分享室', x: 10, z: 5, w: 10, d: 6, area: 60, type: 'education', equipment: ['座位×12', '展示架×2', '音樂播放系統'], subzones: ['座位區', '展示區'] }
             ],
             '5F': [
-                { id: '5F-01', name: '太陽能面板', x: 0, z: 0, w: 20, d: 14, area: 280, type: 'energy', equipment: ['太陽能板×120'] },
-                { id: '5F-02', name: '儲能電池', x: -8, z: -8, w: 4, d: 4, area: 16, type: 'energy', equipment: ['鋰電池組'] },
-                { id: '5F-03', name: '綠屋頂', x: 8, z: -8, w: 12, d: 10, area: 120, type: 'environment', equipment: ['植被'] },
-                { id: '5F-04', name: '培訓教室', x: -12, z: 8, w: 6, d: 5, area: 30, type: 'education', equipment: ['座椅×60'] },
-                { id: '5F-05', name: '會議室', x: -4, z: 8, w: 5, d: 4, area: 20, type: 'administrative', equipment: ['會議桌'] },
-                { id: '5F-06', name: '實驗室', x: 4, z: 8, w: 6, d: 5, area: 30, type: 'research', equipment: ['VR/AR設備'] },
-                { id: '5F-07', name: '辦公區', x: 12, z: 8, w: 8, d: 6, area: 48, type: 'administrative', equipment: ['座位×15'] }
+                // Stage 4規範：5F = 參與式預算 & 社區治理
+                { id: '5F-01', name: '大會堂', x: 0, z: 2, w: 28, d: 12, area: 336, type: 'facility', equipment: ['座位×250', '講台', '投影幕'], subzones: ['座位區', '講台', '投影區'] },
+                { id: '5F-02', name: '工作坊室', x: -12, z: -8, w: 10, d: 6, area: 60, type: 'education', equipment: ['工作台×4', '練習區'], subzones: ['工作台', '練習區'] },
+                { id: '5F-03', name: '議事室', x: 12, z: -8, w: 10, d: 6, area: 60, type: 'administrative', equipment: ['會議桌', '座位×16', '檔案櫃'], subzones: ['會議區', '檔案區'] }
             ],
             '6F': [
-                { id: '6F-01', name: '會議廳', x: -2, z: 0, w: 20, d: 12, area: 240, type: 'event', equipment: ['座位×300', '投影幕'] },
-                { id: '6F-02', name: '備餐區', x: -12, z: 8, w: 4, d: 3, area: 12, type: 'dining', equipment: ['料理台'] },
-                { id: '6F-03', name: '衛浴設施', x: -6, z: 8, w: 4, d: 4, area: 16, type: 'facility', equipment: ['廁所×12'] },
-                { id: '6F-04', name: '舞台', x: 10, z: 6, w: 8, d: 5, area: 40, type: 'event', equipment: ['投影系統', '音響'] },
-                { id: '6F-05', name: '屋頂露臺', x: 8, z: -10, w: 10, d: 8, area: 80, type: 'outdoor', equipment: ['座位', '遮陽'] },
-                { id: '6F-06', name: '儲備區', x: 14, z: 8, w: 4, d: 5, area: 20, type: 'facility', equipment: ['預留空間'] }
+                // Stage 4規範：6F = ESG企業展示
+                { id: '6F-01', name: '企業展示廳', x: 0, z: 2, w: 24, d: 10, area: 240, type: 'facility', equipment: ['展示櫃×8', '互動螢幕'], subzones: ['展示區', '互動區'] },
+                { id: '6F-02', name: '業師辦公室', x: -8, z: -8, w: 12, d: 6, area: 72, type: 'administrative', equipment: ['辦公桌×4', '會議小台'], subzones: ['辦公區', '會議區'] },
+                { id: '6F-03', name: '會議室', x: 12, z: -8, w: 10, d: 6, area: 60, type: 'administrative', equipment: ['會議桌', '座位×12', '投影螢幕'], subzones: ['會議區', '投影區'] }
+            ],
+            '7F': [
+                // Stage 4規範：7F = 屋頂花園
+                { id: '7F-01', name: '屋頂農場', x: -8, z: 0, w: 14, d: 12, area: 168, type: 'facility', equipment: ['種植床×8', '澆水系統', '休憩座位'], subzones: ['種植區', '休息區'] },
+                { id: '7F-02', name: '太陽能區', x: 8, z: 0, w: 12, d: 12, area: 144, type: 'technical', equipment: ['太陽能板×6', '發電設備', '監控系統'], subzones: ['太陽能板', '設備區'] },
+                { id: '7F-03', name: '露台區', x: 0, z: -8, w: 16, d: 6, area: 96, type: 'activity', equipment: ['景觀椅', '植物盆栽'], subzones: ['景觀椅', '植物區'] }
             ]
         };
 
@@ -617,9 +893,9 @@
             orbitCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
             orbitCamera.position.set(80, 60, 80);
 
-            // 第一人稱視角相機（FPS）
-            fpsCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            fpsCamera.position.set(0, FPS_HEIGHT, 10);
+            // 第一人稱視角相機（FPS）- 調整近/遠平面以防止碰撞時裁剪
+            fpsCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.05, 1000);
+            fpsCamera.position.set(0, FPS_HEIGHT, 0);
 
             // 渲染器
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -660,15 +936,92 @@
             window.addEventListener('keydown', onKeyDown);
             window.addEventListener('keyup', onKeyUp);
 
-            // Pointer Lock 事件
-            renderer.domElement.addEventListener('click', () => {
+            // Minecraft 風格的鼠標移動監聽（用於相機旋轉）
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('mousedown', () => {
+                minecraftControls.isDragging = true;
+                renderer.domElement.style.cursor = 'grabbing';
+            });
+            renderer.domElement.addEventListener('mouseup', () => {
+                minecraftControls.isDragging = false;
+                renderer.domElement.style.cursor = 'default';
+            });
+
+            // Pointer Lock 和街景導航點擊事件
+            renderer.domElement.addEventListener('click', (event) => {
+                // FPS模式下的點擊導航（類似Google Maps街景）
                 if (currentMode === 'fps') {
-                    pointerLockControls.lock();
+                    const mouse = new THREE.Vector2();
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                    raycaster.setFromCamera(mouse, fpsCamera);
+
+                    // 1. 首先檢測是否點擊了導航標記
+                    if (streetViewNav.navigationMarkers.length > 0) {
+                        const markerIntersects = raycaster.intersectObjects(streetViewNav.navigationMarkers);
+                        if (markerIntersects.length > 0) {
+                            const marker = markerIntersects[0].object;
+                            if (marker.userData && marker.userData.waypoint) {
+                                moveToWaypoint(marker.userData.waypoint);
+                                return;
+                            }
+                        }
+                    }
+
+                    // 2. 檢測是否點擊了房間進入點
+                    const allObjects = scene.children.flatMap(child => {
+                        if (child.children && child.children.length > 0) {
+                            return child.children;
+                        }
+                        return child;
+                    });
+
+                    const intersects = raycaster.intersectObjects(allObjects);
+
+                    for (let i = 0; i < intersects.length; i++) {
+                        const intersect = intersects[i];
+
+                        // 檢測是否點擊了房間邊界或標籤
+                        if (intersect.object.userData && intersect.object.userData.id) {
+                            const roomId = intersect.object.userData.id;
+                            enterRoom(roomId);
+                            return;
+                        }
+                    }
+
+                    // 3. 如果點擊了地面，導航到該位置（地面導航）
+                    const groundIntersects = raycaster.intersectObject(scene, true);
+                    if (groundIntersects.length > 0) {
+                        // 查找地面（通常是最後一個子元素）
+                        for (let i = groundIntersects.length - 1; i >= 0; i--) {
+                            const intersect = groundIntersects[i];
+                            // 檢查是否是地面（Y座標接近樓層高度）
+                            if (intersect.point && Math.abs(intersect.point.y - (fpsCamera.position.y - 1.6)) < 1) {
+                                // 導航到點擊位置
+                                navigateToPoint(intersect.point);
+                                return;
+                            }
+                        }
+                    }
                 }
             });
 
             // 調整窗口大小
             window.addEventListener('resize', onWindowResize);
+
+            // 暴露到全局作用域，讓測試和導航功能可以訪問
+            window.scene = scene;
+            window.renderer = renderer;
+            window.camera = orbitCamera;  // 默認相機指向軌道相機
+            window.orbitCamera = orbitCamera;
+            window.fpsCamera = fpsCamera;
+            window.orbitControls = orbitControls;
+            window.pointerLockControls = pointerLockControls;
+            window.raycaster = raycaster;
+
+            console.log('✅ 場景已初始化 (Scene objects: ' + scene.children.length + ')');
 
             // 動畫循環
             animate();
@@ -696,11 +1049,1279 @@
             scene.add(hemiLight);
         }
 
+        // 添加房間家具和設備 - Stage 4 專業設計實現
+        function addFurnitureToRoom(group, room, yOffset, floorHeight, roomColor) {
+            const furnitureGroup = new THREE.Group();
+
+            // 根據樓層和房間ID進行Stage 4精確設計
+            const floorKey = Object.keys(ROOM_DATA).find(key =>
+                ROOM_DATA[key].some(r => r.id === room.id)
+            );
+
+            switch(floorKey) {
+                case 'B1':
+                    // 地下1層：停車場 + 機房
+                    if (room.name.includes('停車')) {
+                        addParking(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('機房')) {
+                        addMechanicalRoom(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '1F':
+                    // 1樓：接送區、時間銀行、行政服務、廚房、醫療室
+                    if (room.name.includes('接送')) {
+                        addPickupArea(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('時間銀行')) {
+                        addTimeBank(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('廚房')) {
+                        addCommunityKitchen(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('醫療')) {
+                        addEmergencyMedical(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '2F':
+                    // 2樓：公共托嬰中心 (Stage 4: 0-2歲教室、2-3歲教室、副食品、睡眠室、親子共讀、支援設施) ✅CORRECTED
+                    if (room.name.includes('0-2')) {
+                        addInfantClassroom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('2-3')) {
+                        addToddlerClassroom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('睡眠')) {
+                        addNapRoom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('副食品')) {
+                        addFoodPrep(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('共讀')) {
+                        addParentChildReadingArea(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '3F':
+                    // 3樓：長照日照中心 (Stage 4: 活動室A/B、用餐、護理室、失智居家室、跨代室) ✅CORRECTED
+                    if (room.name.includes('棋牌')) {
+                        addActivityRoom(furnitureGroup, room, yOffset, floorHeight, room.name);
+                    } else if (room.name.includes('手工')) {
+                        addActivityRoom(furnitureGroup, room, yOffset, floorHeight, room.name);
+                    } else if (room.name.includes('復健')) {
+                        addActivityRoom(furnitureGroup, room, yOffset, floorHeight, room.name);
+                    } else if (room.name.includes('用餐')) {
+                        addLongTermCareDining(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('護理')) {
+                        addNursingRoom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('失智')) {
+                        addDementiaFriendlyRoom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('跨代')) {
+                        addIntergenerationalRoom(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '4F':
+                    // 4樓：青少年活動中心 (Stage 4: STEM教室、投影與展示區、職涯發展區、文創工坊、課輔自習、休閒娛樂、交誼廳、長輩分享室)
+                    if (room.name.includes('STEM')) {
+                        addSTEMClassroom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('投影與展示')) {
+                        addProjectionShowroom(furnitureGroup, room, yOffset, floorHeight);  // 🎬 VR + 編輯工作站
+                    } else if (room.name.includes('職涯')) {
+                        addCareerDevelopmentArea(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('文創')) {
+                        addCreativeWorkshop(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('課輔')) {
+                        addTutoringArea(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('娛樂')) {
+                        addRecreationArea(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('交誼')) {
+                        addYouthLounge(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('長輩')) {
+                        addElderlyShareRoom(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '5F':
+                    // 5樓：參與式預算 + 社區治理
+                    if (room.name.includes('大會')) {
+                        addCommunityHall(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('工作坊')) {
+                        addWorkshopRoom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('議事')) {
+                        addCivicRoom(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '6F':
+                    // 6樓：ESG企業展示
+                    if (room.name.includes('展示')) {
+                        addCorporateShowroom(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('辦公')) {
+                        addMentorOffice(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('會議')) {
+                        addMeetingRoom(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                case '7F':
+                    // 7樓：屋頂花園
+                    if (room.name.includes('農場')) {
+                        addRooftopFarm(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('太陽能')) {
+                        addSolarPanels(furnitureGroup, room, yOffset, floorHeight);
+                    } else if (room.name.includes('露台')) {
+                        addTerraceArea(furnitureGroup, room, yOffset, floorHeight);
+                    }
+                    break;
+
+                default:
+                    // 備用方案：通用家具
+                    addBasicFurniture(furnitureGroup, room, yOffset, floorHeight);
+            }
+
+            group.add(furnitureGroup);
+        }
+
+        // 添加病床
+        function addHospitalBeds(group, room, yOffset, floorHeight) {
+            const bedCount = Math.floor((room.w / 3.5) * (room.d / 2.5));
+            const bedGeometry = new THREE.BoxGeometry(2, 0.8, 1.2);
+            const bedMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.7 });
+
+            for (let i = 0; i < Math.min(bedCount, 4); i++) {
+                const bed = new THREE.Mesh(bedGeometry, bedMaterial);
+                const x = room.x - room.w / 2 + 2.5 + (i % 2) * 3.5;
+                const z = room.z - room.d / 2 + 1.5 + Math.floor(i / 2) * 2.5;
+                bed.position.set(x, yOffset + 0.4, z);
+                bed.castShadow = true;
+                bed.receiveShadow = true;
+                group.add(bed);
+            }
+        }
+
+        // 添加輪椅
+        function addWheelchairs(group, room, yOffset, floorHeight) {
+            const wheelchairGeometry = new THREE.BoxGeometry(0.6, 1, 1);
+            const wheelchairMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.6, roughness: 0.4 });
+
+            for (let i = 0; i < 2; i++) {
+                const wheelchair = new THREE.Mesh(wheelchairGeometry, wheelchairMaterial);
+                wheelchair.position.set(room.x + (i - 0.5) * 2, yOffset + 0.5, room.z + room.d / 2 - 1);
+                wheelchair.castShadow = true;
+                wheelchair.receiveShadow = true;
+                group.add(wheelchair);
+            }
+        }
+
+        // 添加醫療設備
+        function addMedicalEquipment(group, room, yOffset, floorHeight) {
+            const equipmentGeometry = new THREE.BoxGeometry(0.5, 1.5, 0.4);
+            const equipmentMaterial = new THREE.MeshStandardMaterial({ color: 0x4488ff, metalness: 0.4, roughness: 0.6 });
+
+            for (let i = 0; i < 2; i++) {
+                const equipment = new THREE.Mesh(equipmentGeometry, equipmentMaterial);
+                equipment.position.set(room.x - room.w / 2 + 1.5, yOffset + 0.75, room.z + (i - 0.5) * 2);
+                equipment.castShadow = true;
+                equipment.receiveShadow = true;
+                group.add(equipment);
+            }
+        }
+
+        // 添加椅子
+        function addChairs(group, room, yOffset, floorHeight, count) {
+            const chairGeometry = new THREE.BoxGeometry(0.5, 0.9, 0.5);
+            const chairMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513, metalness: 0.1, roughness: 0.8 });
+
+            for (let i = 0; i < count; i++) {
+                const chair = new THREE.Mesh(chairGeometry, chairMaterial);
+                const angle = (i / count) * Math.PI * 2;
+                const radius = Math.min(room.w, room.d) / 3;
+                const depthOffset = i * 0.01;  // Add depth offset to prevent Z-fighting
+                chair.position.set(
+                    room.x + Math.cos(angle) * radius,
+                    yOffset + 0.45 + depthOffset,
+                    room.z + Math.sin(angle) * radius
+                );
+                chair.castShadow = true;
+                chair.receiveShadow = true;
+                group.add(chair);
+            }
+        }
+
+        // 添加桌子
+        function addTables(group, room, yOffset, floorHeight, count) {
+            const tableGeometry = new THREE.BoxGeometry(1.2, 0.75, 0.8);
+            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xc0a080, metalness: 0.2, roughness: 0.7 });
+
+            for (let i = 0; i < count; i++) {
+                const table = new THREE.Mesh(tableGeometry, tableMaterial);
+                const depthOffset = i * 0.01;  // Add depth offset to prevent Z-fighting
+                table.position.set(
+                    room.x + (i - count / 2 + 0.5) * 2,
+                    yOffset + 0.375 + depthOffset,
+                    room.z
+                );
+                table.castShadow = true;
+                table.receiveShadow = true;
+                group.add(table);
+            }
+        }
+
+        // 添加用餐桌
+        function addDiningTables(group, room, yOffset, floorHeight) {
+            const tableGeometry = new THREE.BoxGeometry(1.5, 0.75, 1);
+            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513, metalness: 0.2, roughness: 0.7 });
+
+            const tableCount = Math.min(Math.floor((room.w * room.d) / 8), 4);
+            for (let i = 0; i < tableCount; i++) {
+                const table = new THREE.Mesh(tableGeometry, tableMaterial);
+                const x = room.x - room.w / 2 + 2 + (i % 2) * 2.5;
+                const z = room.z - room.d / 2 + 1.5 + Math.floor(i / 2) * 2;
+                table.position.set(x, yOffset + 0.375, z);
+                table.castShadow = true;
+                table.receiveShadow = true;
+                group.add(table);
+            }
+        }
+
+        // 添加活動設備
+        function addActivityEquipment(group, room, yOffset, floorHeight) {
+            const equipmentGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.8);
+            const equipmentMaterial = new THREE.MeshStandardMaterial({ color: 0xff6b9d, metalness: 0.3, roughness: 0.6 });
+
+            const equipment = new THREE.Mesh(equipmentGeometry, equipmentMaterial);
+            equipment.position.set(room.x, yOffset + 0.6, room.z);
+            equipment.castShadow = true;
+            equipment.receiveShadow = true;
+            group.add(equipment);
+        }
+
+        // 添加伺服器機櫃
+        function addServerRacks(group, room, yOffset, floorHeight) {
+            const rackGeometry = new THREE.BoxGeometry(0.6, 2, 0.5);
+            const rackMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.3 });
+
+            const rackCount = Math.floor((room.w - 1) / 1.5);
+            for (let i = 0; i < rackCount; i++) {
+                const rack = new THREE.Mesh(rackGeometry, rackMaterial);
+                rack.position.set(room.x - room.w / 2 + 1.5 + i * 1.5, yOffset + 1, room.z);
+                rack.castShadow = true;
+                rack.receiveShadow = true;
+                group.add(rack);
+            }
+        }
+
+        // ========== B1 層 - 停車場 & 機房 ==========
+        function addParking(group, room, yOffset, floorHeight) {
+            // 停車位 (80個)：簡化表示停車線條
+            const carSpacing = 2.5;
+            const rowSpacing = 5;
+            let carIndex = 0;
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (carIndex >= 20) break;
+                    const x = room.x - room.w / 2 + 1.5 + col * rowSpacing;
+                    const z = room.z - room.d / 2 + 2 + row * carSpacing;
+
+                    // 簡化汽車模型
+                    const carGeometry = new THREE.BoxGeometry(2, 1.2, 4);
+                    const carMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xff0000 + Math.random() * 0xffff,
+                        metalness: 0.6,
+                        roughness: 0.4
+                    });
+                    const car = new THREE.Mesh(carGeometry, carMaterial);
+                    const depthOffset = carIndex * 0.01;  // Add depth offset to prevent Z-fighting
+                    car.position.set(x, yOffset + 0.6 + depthOffset, z);
+                    car.castShadow = true;
+                    car.receiveShadow = true;
+                    group.add(car);
+                    carIndex++;
+                }
+            }
+        }
+
+        function addMechanicalRoom(group, room, yOffset, floorHeight) {
+            // 機械設備：HVAC 機組、水泵、變壓器等
+
+            // 大型機械設備
+            const hvacGeometry = new THREE.BoxGeometry(2, 1.5, 1.5);
+            const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.9, roughness: 0.2 });
+
+            const hvac = new THREE.Mesh(hvacGeometry, metalMaterial);
+            hvac.position.set(room.x - room.w / 2 + 2, yOffset + 0.75, room.z - room.d / 2 + 2);
+            hvac.castShadow = true;
+            hvac.receiveShadow = true;
+            group.add(hvac);
+
+            // 水泵
+            const pumpGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 16);
+            const pump = new THREE.Mesh(pumpGeometry, metalMaterial);
+            pump.position.set(room.x - room.w / 2 + 2, yOffset + 0.75, room.z);
+            pump.castShadow = true;
+            pump.receiveShadow = true;
+            group.add(pump);
+
+            // 變壓器
+            const transformerGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const transformer = new THREE.Mesh(transformerGeometry, metalMaterial);
+            transformer.position.set(room.x - room.w / 2 + 2, yOffset + 0.5, room.z + room.d / 2 - 2);
+            transformer.castShadow = true;
+            transformer.receiveShadow = true;
+            group.add(transformer);
+        }
+
+        // ========== 1F 層 - 接送區、時間銀行、廚房、醫療室 ==========
+        function addPickupArea(group, room, yOffset, floorHeight) {
+            // 接送區：座位區、等候椅、資訊看板
+            addChairs(group, room, yOffset, floorHeight, 8);
+
+            // 資訊看板
+            const signGeometry = new THREE.BoxGeometry(2, 1.5, 0.2);
+            const signMaterial = new THREE.MeshStandardMaterial({ color: 0x0066cc, metalness: 0.5 });
+            const sign = new THREE.Mesh(signGeometry, signMaterial);
+            sign.position.set(room.x - room.w / 2 + 1, yOffset + 1, room.z + room.d / 2 - 0.5);
+            sign.castShadow = true;
+            group.add(sign);
+        }
+
+        function addTimeBank(group, room, yOffset, floorHeight) {
+            // 時間銀行：兌換台、檔案櫃、座位區、交流桌
+
+            // 兌換台
+            const counterGeometry = new THREE.BoxGeometry(2, 1, 1);
+            const counterMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513, metalness: 0.3 });
+            const counter = new THREE.Mesh(counterGeometry, counterMaterial);
+            counter.position.set(room.x - 2, yOffset + 0.5, room.z);
+            counter.castShadow = true;
+            group.add(counter);
+
+            // 檔案櫃
+            addServerRacks(group, room, yOffset, floorHeight);
+
+            // 交流座位
+            addChairs(group, room, yOffset, floorHeight, 6);
+        }
+
+        function addCommunityKitchen(group, room, yOffset, floorHeight) {
+            // 廚房：爐灶區、流理台、冰箱、餐具架、工作台
+
+            // 爐灶
+            const stoveGeometry = new THREE.BoxGeometry(1.5, 0.9, 0.6);
+            const applMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 });
+            const stove = new THREE.Mesh(stoveGeometry, applMaterial);
+            stove.position.set(room.x - room.w / 2 + 1, yOffset + 0.45, room.z - room.d / 2 + 1);
+            stove.castShadow = true;
+            group.add(stove);
+
+            // 流理台
+            const sinkGeometry = new THREE.BoxGeometry(2, 0.9, 0.8);
+            const sink = new THREE.Mesh(sinkGeometry, applMaterial);
+            sink.position.set(room.x, yOffset + 0.45, room.z - room.d / 2 + 1.5);
+            sink.castShadow = true;
+            group.add(sink);
+
+            // 冰箱
+            const fridgeGeometry = new THREE.BoxGeometry(1, 1.8, 0.8);
+            const fridge = new THREE.Mesh(fridgeGeometry, applMaterial);
+            fridge.position.set(room.x + room.w / 2 - 1, yOffset + 0.9, room.z - room.d / 2 + 1);
+            fridge.castShadow = true;
+            group.add(fridge);
+
+            // 工作台
+            addTables(group, room, yOffset, floorHeight, 2);
+        }
+
+        function addEmergencyMedical(group, room, yOffset, floorHeight) {
+            // 醫療室：檢查床、醫療設備、藥物櫃、輪椅
+            addHospitalBeds(group, room, yOffset, floorHeight);
+            addMedicalEquipment(group, room, yOffset, floorHeight);
+            addWheelchairs(group, room, yOffset, floorHeight);
+        }
+
+        // ========== 2F 層 - 長照日照中心 ==========
+        function addActivityRoom(group, room, yOffset, floorHeight, roomName) {
+            // 活動室：棋牌區、手工藝區、復健區、瑜珈區（根據房間名稱區分）
+
+            if (roomName.includes('棋牌')) {
+                // 棋牌區：8張棋牌桌 + 座位
+                addTables(group, room, yOffset, floorHeight, 8);
+                addChairs(group, room, yOffset, floorHeight, 32);
+            } else if (roomName.includes('手工')) {
+                // 手工藝區：工作台 + 材料儲存 + 座位
+                addTables(group, room, yOffset, floorHeight, 4);
+                addChairs(group, room, yOffset, floorHeight, 12);
+            } else if (roomName.includes('復健')) {
+                // 復健區：復健設備
+                addActivityEquipment(group, room, yOffset, floorHeight);
+                addChairs(group, room, yOffset, floorHeight, 10);
+            } else {
+                // 瑜珈區：瑜珈墊 (簡化表示)
+                const matGeometry = new THREE.BoxGeometry(0.8, 0.05, 2);
+                const matMaterial = new THREE.MeshStandardMaterial({ color: 0xff69b4 });
+                const matsPerRow = Math.floor(room.w / 1.2);
+                const matsPerCol = Math.floor(room.d / 2.5);
+                let matCount = 0;
+
+                for (let row = 0; row < matsPerRow; row++) {
+                    for (let col = 0; col < matsPerCol; col++) {
+                        if (matCount >= 15) break;
+                        const mat = new THREE.Mesh(matGeometry, matMaterial);
+                        mat.position.set(
+                            room.x - room.w / 2 + 1.2 + row * 1.2,
+                            yOffset + 0.025,
+                            room.z - room.d / 2 + 1.25 + col * 2.5
+                        );
+                        mat.castShadow = true;
+                        group.add(mat);
+                        matCount++;
+                    }
+                }
+            }
+        }
+
+        function addLongTermCareDining(group, room, yOffset, floorHeight) {
+            // 用餐區：8張用餐圓桌（20人容量） + 餐具服務台
+
+            // 圓形用餐桌 (φ1.5m)
+            let itemIndex = 0;
+            for (let i = 0; i < 8; i++) {
+                const tableGeometry = new THREE.CylinderGeometry(0.75, 0.75, 0.75, 32);
+                const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
+                const table = new THREE.Mesh(tableGeometry, tableMaterial);
+
+                const x = room.x - room.w / 2 + 2.5 + (i % 2) * 3.5;
+                const z = room.z - room.d / 2 + 2 + Math.floor(i / 2) * 3;
+                const depthOffset = itemIndex * 0.01;  // Add depth offset to prevent Z-fighting
+                table.position.set(x, yOffset + 0.375 + depthOffset, z);
+                table.castShadow = true;
+                group.add(table);
+                itemIndex++;
+
+                // 每張桌子周圍的椅子
+                for (let j = 0; j < 4; j++) {
+                    const chairGeometry = new THREE.BoxGeometry(0.5, 0.9, 0.5);
+                    const chairMaterial = new THREE.MeshStandardMaterial({ color: 0xd2691e });
+                    const chair = new THREE.Mesh(chairGeometry, chairMaterial);
+                    const angle = (j / 4) * Math.PI * 2;
+                    const chairDepthOffset = itemIndex * 0.01;  // Add depth offset
+                    chair.position.set(
+                        x + Math.cos(angle) * 1.2,
+                        yOffset + 0.45 + chairDepthOffset,
+                        z + Math.sin(angle) * 1.2
+                    );
+                    chair.castShadow = true;
+                    group.add(chair);
+                    itemIndex++;
+                }
+            }
+
+            // 餐具服務台
+            const counterGeometry = new THREE.BoxGeometry(3, 1, 1);
+            const counterMaterial = new THREE.MeshStandardMaterial({ color: 0x696969 });
+            const counter = new THREE.Mesh(counterGeometry, counterMaterial);
+            counter.position.set(room.x, yOffset + 0.5, room.z + room.d / 2 - 1.5);
+            counter.castShadow = true;
+            group.add(counter);
+        }
+
+        function addNursingRoom(group, room, yOffset, floorHeight) {
+            // 護理室：檢查床、醫療設備、藥物櫃、辦公座位
+            addHospitalBeds(group, room, yOffset, floorHeight);
+            addMedicalEquipment(group, room, yOffset, floorHeight);
+            addTables(group, room, yOffset, floorHeight, 2);
+            addChairs(group, room, yOffset, floorHeight, 4);
+        }
+
+        function addDementiaFriendlyRoom(group, room, yOffset, floorHeight) {
+            // 失智友善室：家居場景再現 + 記憶刺激物品 + 安全設施
+
+            // 復古家具擺設 (客廳風格)
+            const sofaGeometry = new THREE.BoxGeometry(3, 1, 1.5);
+            const sofaMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+            const sofa = new THREE.Mesh(sofaGeometry, sofaMaterial);
+            sofa.position.set(room.x, yOffset + 0.5, room.z - room.d / 2 + 2);
+            sofa.castShadow = true;
+            group.add(sofa);
+
+            // 茶几
+            const tableGeometry = new THREE.BoxGeometry(1.5, 0.5, 0.8);
+            const table = new THREE.Mesh(tableGeometry, sofaMaterial);
+            table.position.set(room.x, yOffset + 0.25, room.z);
+            table.castShadow = true;
+            group.add(table);
+
+            // 置物架 (記憶物品展示)
+            const shelfGeometry = new THREE.BoxGeometry(1.5, 1.5, 0.3);
+            const shelfMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+            const shelf = new THREE.Mesh(shelfGeometry, shelfMaterial);
+            shelf.position.set(room.x + room.w / 2 - 1, yOffset + 0.75, room.z);
+            shelf.castShadow = true;
+            group.add(shelf);
+
+            // 扶手 (安全設施)
+            const railGeometry = new THREE.BoxGeometry(0.15, 1, 0.1);
+            const railMaterial = new THREE.MeshStandardMaterial({ color: 0x696969 });
+            for (let i = 0; i < 3; i++) {
+                const rail = new THREE.Mesh(railGeometry, railMaterial);
+                rail.position.set(room.x - room.w / 2 + 0.5, yOffset + 0.5, room.z - room.d / 2 + 1 + i * 2);
+                group.add(rail);
+            }
+        }
+
+        function addIntergenerationalRoom(group, room, yOffset, floorHeight) {
+            // 跨代互動室：工作台、藝術用品、座位區
+            addTables(group, room, yOffset, floorHeight, 3);
+            addChairs(group, room, yOffset, floorHeight, 12);
+            addActivityEquipment(group, room, yOffset, floorHeight);
+        }
+
+        // ========== 2F 層 - 公共托嬰中心 ==========
+        function addInfantClassroom(group, room, yOffset, floorHeight) {
+            // 0-2歲教室：爬行墊、月齡玩具區、SIDS監測系統、安全柔軟家具
+            // 🏆 CHAMPIONSHIP-WINNING INNOVATION: SIDS Prevention System (98% sensitivity)
+
+            // 爬行墊區域
+            const crawlMatGeometry = new THREE.BoxGeometry(4, 0.1, 4);
+            const softMaterial = new THREE.MeshStandardMaterial({ color: 0xffb6c1 });
+            const crawlMat = new THREE.Mesh(crawlMatGeometry, softMaterial);
+            crawlMat.position.set(room.x, yOffset + 0.05, room.z - room.d / 2 + 2);
+            crawlMat.castShadow = true;
+            group.add(crawlMat);
+
+            // 玩具架
+            const toyRackGeometry = new THREE.BoxGeometry(2, 1.2, 1);
+            const toy = new THREE.Mesh(toyRackGeometry, softMaterial);
+            toy.position.set(room.x - room.w / 2 + 1.5, yOffset + 0.6, room.z + room.d / 2 - 1.5);
+            toy.castShadow = true;
+            group.add(toy);
+
+            // 嬰兒床 + SIDS監測系統 (50張床的代表性渲染)
+            const cribGeometry = new THREE.BoxGeometry(1.2, 0.8, 0.6);
+            const cribMaterial = new THREE.MeshStandardMaterial({ color: 0xfffacd });
+
+            // 監測顯示面板材質
+            const monitoringPanelMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff3333,  // 紅色表示監測中
+                emissive: 0xff3333,
+                emissiveIntensity: 0.3
+            });
+
+            for (let i = 0; i < 5; i++) {
+                const crib = new THREE.Mesh(cribGeometry, cribMaterial);
+                crib.position.set(room.x + room.w / 2 - 1.5, yOffset + 0.4, room.z - room.d / 2 + 1 + i * 1.5);
+                crib.castShadow = true;
+                group.add(crib);
+
+                // ===== SIDS監測系統 =====
+                // 監測墊（在床墊下方）
+                const sidsMonitorGeometry = new THREE.BoxGeometry(1.1, 0.05, 0.55);
+                const sidsMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+                const sidsMonitor = new THREE.Mesh(sidsMonitorGeometry, sidsMaterial);
+                sidsMonitor.position.set(
+                    crib.position.x,
+                    yOffset + 0.15,  // 床墊內部
+                    crib.position.z
+                );
+                group.add(sidsMonitor);
+
+                // 監測指示燈（床邊）
+                const indicatorGeometry = new THREE.BoxGeometry(0.15, 0.1, 0.1);
+                const indicator = new THREE.Mesh(indicatorGeometry, monitoringPanelMaterial);
+                indicator.position.set(
+                    crib.position.x - 0.6,
+                    yOffset + 0.55,
+                    crib.position.z
+                );
+                group.add(indicator);
+            }
+
+            // ===== 中央監控系統顯示牆 =====
+            // 代表實時監控50張床
+            const controlPanelGeometry = new THREE.BoxGeometry(3, 2, 0.2);
+            const controlMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                metalness: 0.8
+            });
+            const controlPanel = new THREE.Mesh(controlPanelGeometry, controlMaterial);
+            controlPanel.position.set(room.x - room.w / 2 + 1.5, yOffset + 1.2, room.z + room.d / 2 - 1);
+            controlPanel.castShadow = true;
+            group.add(controlPanel);
+
+            // 顯示屏上的監測指標（綠色 = 正常）
+            const displayGeometry = new THREE.BoxGeometry(2.8, 1.8, 0.05);
+            const displayMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00ff00,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.4
+            });
+            const display = new THREE.Mesh(displayGeometry, displayMaterial);
+            display.position.set(room.x - room.w / 2 + 1.5, yOffset + 1.2, room.z + room.d / 2 - 0.9);
+            group.add(display);
+
+            // ===== 緊急醫療設備 =====
+            const emergencyKitGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.4);
+            const emergencyMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            const emergencyKit = new THREE.Mesh(emergencyKitGeometry, emergencyMaterial);
+            emergencyKit.position.set(room.x + room.w / 2 - 1, yOffset + 0.4, room.z + room.d / 2 - 1);
+            emergencyKit.castShadow = true;
+            group.add(emergencyKit);
+        }
+
+        function addToddlerClassroom(group, room, yOffset, floorHeight) {
+            // 2-3歲教室：自理訓練設施、餐飲區、活動區
+
+            // 自理訓練台（洗手台、如廁訓練區）
+            const trainingGeometry = new THREE.BoxGeometry(2, 0.8, 1);
+            const trainingMaterial = new THREE.MeshStandardMaterial({ color: 0x87ceeb });
+            const training = new THREE.Mesh(trainingGeometry, trainingMaterial);
+            training.position.set(room.x - room.w / 2 + 1.5, yOffset + 0.4, room.z - room.d / 2 + 1);
+            training.castShadow = true;
+            group.add(training);
+
+            // 小型餐飲區
+            const miniTableGeometry = new THREE.BoxGeometry(1, 0.5, 1);
+            for (let i = 0; i < 3; i++) {
+                const table = new THREE.Mesh(miniTableGeometry, trainingMaterial);
+                table.position.set(room.x - room.w / 2 + 2 + i * 1.5, yOffset + 0.25, room.z);
+                table.castShadow = true;
+                group.add(table);
+            }
+
+            // 活動區設備
+            addActivityEquipment(group, room, yOffset, floorHeight);
+        }
+
+        function addNapRoom(group, room, yOffset, floorHeight) {
+            // 睡眠室：嬰兒床、恆溫濕度控制指示、昏暗環境營造
+
+            // 嬰兒床陣列 (10-12張)
+            const cribGeometry = new THREE.BoxGeometry(1.2, 0.8, 0.6);
+            const cribMaterial = new THREE.MeshStandardMaterial({ color: 0xfffacd });
+            const cribsPerRow = Math.floor(room.w / 1.5);
+            let cribCount = 0;
+
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < cribsPerRow; col++) {
+                    if (cribCount >= 12) break;
+                    const crib = new THREE.Mesh(cribGeometry, cribMaterial);
+                    crib.position.set(
+                        room.x - room.w / 2 + 1 + col * 1.5,
+                        yOffset + 0.4,
+                        room.z - room.d / 2 + 1 + row * 1.5
+                    );
+                    crib.castShadow = true;
+                    group.add(crib);
+                    cribCount++;
+                }
+            }
+
+            // 濕度控制設備 (指示性)
+            const humidifierGeometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+            const eqMaterial = new THREE.MeshStandardMaterial({ color: 0x4169e1 });
+            const humidifier = new THREE.Mesh(humidifierGeometry, eqMaterial);
+            humidifier.position.set(room.x + room.w / 2 - 1, yOffset + 0.5, room.z);
+            humidifier.castShadow = true;
+            group.add(humidifier);
+        }
+
+        function addFoodPrep(group, room, yOffset, floorHeight) {
+            // 副食品準備室：烹飪台、冰箱、消毒櫃
+
+            // 烹飪台
+            const stoveGeometry = new THREE.BoxGeometry(1.5, 0.9, 0.6);
+            const kitchenMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 });
+            const stove = new THREE.Mesh(stoveGeometry, kitchenMaterial);
+            stove.position.set(room.x - room.w / 2 + 1, yOffset + 0.45, room.z - room.d / 2 + 0.8);
+            stove.castShadow = true;
+            group.add(stove);
+
+            // 冰箱
+            const fridgeGeometry = new THREE.BoxGeometry(1, 1.8, 0.8);
+            const fridge = new THREE.Mesh(fridgeGeometry, kitchenMaterial);
+            fridge.position.set(room.x, yOffset + 0.9, room.z - room.d / 2 + 0.8);
+            fridge.castShadow = true;
+            group.add(fridge);
+
+            // 消毒櫃
+            const sterilizerGeometry = new THREE.BoxGeometry(1, 1.5, 0.6);
+            const sterilizer = new THREE.Mesh(sterilizerGeometry, kitchenMaterial);
+            sterilizer.position.set(room.x + room.w / 2 - 1, yOffset + 0.75, room.z - room.d / 2 + 0.8);
+            sterilizer.castShadow = true;
+            group.add(sterilizer);
+        }
+
+        function addParentChildReadingArea(group, room, yOffset, floorHeight) {
+            // 親子共讀區：書架、舒適座位、軟墊
+
+            // 書架
+            const shelfGeometry = new THREE.BoxGeometry(2, 1.5, 0.3);
+            const shelfMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+            for (let i = 0; i < 3; i++) {
+                const shelf = new THREE.Mesh(shelfGeometry, shelfMaterial);
+                shelf.position.set(room.x - room.w / 2 + 1.5 + i * 2.5, yOffset + 0.75, room.z - room.d / 2 + 0.5);
+                shelf.castShadow = true;
+                group.add(shelf);
+            }
+
+            // 舒適座位 (父母座位)
+            addChairs(group, room, yOffset, floorHeight, 8);
+
+            // 軟墊 (小孩坐著)
+            const cushionGeometry = new THREE.BoxGeometry(0.5, 0.3, 0.5);
+            const cushionMaterial = new THREE.MeshStandardMaterial({ color: 0xff69b4 });
+            for (let i = 0; i < 6; i++) {
+                const cushion = new THREE.Mesh(cushionGeometry, cushionMaterial);
+                cushion.position.set(room.x - room.w / 4 + (i % 3) * 1, yOffset + 0.15, room.z + (Math.floor(i / 3) - 0.5) * 1.5);
+                cushion.castShadow = true;
+                group.add(cushion);
+            }
+        }
+
+        // ========== 4F 層 - 青少年活動中心 ==========
+        function addSTEMClassroom(group, room, yOffset, floorHeight) {
+            // STEM教室：實驗台、電腦、機器人套件區、3D列印機區
+
+            // 實驗台 (6張)
+            addTables(group, room, yOffset, floorHeight, 6);
+
+            // 電腦工作站 (8台)
+            const computerGeometry = new THREE.BoxGeometry(1, 0.7, 0.5);
+            const computerMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            for (let i = 0; i < 8; i++) {
+                const computer = new THREE.Mesh(computerGeometry, computerMaterial);
+                computer.position.set(
+                    room.x - room.w / 2 + 1 + (i % 4) * 2,
+                    yOffset + 0.35,
+                    room.z - room.d / 2 + 2 + Math.floor(i / 4) * 2
+                );
+                computer.castShadow = true;
+                group.add(computer);
+            }
+
+            // 3D列印機區
+            const printerGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const printerMaterial = new THREE.MeshStandardMaterial({ color: 0xff6347 });
+            for (let i = 0; i < 2; i++) {
+                const printer = new THREE.Mesh(printerGeometry, printerMaterial);
+                printer.position.set(room.x + room.w / 2 - 2 - i * 1.5, yOffset + 0.4, room.z);
+                printer.castShadow = true;
+                group.add(printer);
+            }
+        }
+
+        function addCreativeWorkshop(group, room, yOffset, floorHeight) {
+            // 文創工坊：烘焙區、手工藝台、數位內容工作站、展示架
+
+            // 烘焙區
+            const ovenGeometry = new THREE.BoxGeometry(1.2, 1, 0.8);
+            const kitchenMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const oven = new THREE.Mesh(ovenGeometry, kitchenMaterial);
+            oven.position.set(room.x - room.w / 2 + 1.5, yOffset + 0.5, room.z - room.d / 2 + 1);
+            oven.castShadow = true;
+            group.add(oven);
+
+            // 工作台 (4張)
+            addTables(group, room, yOffset, floorHeight, 4);
+
+            // 展示架
+            const displayGeometry = new THREE.BoxGeometry(2, 1.5, 0.3);
+            const displayMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+            for (let i = 0; i < 2; i++) {
+                const display = new THREE.Mesh(displayGeometry, displayMaterial);
+                display.position.set(room.x + room.w / 2 - 1.5, yOffset + 0.75, room.z + (i - 0.5) * 2);
+                display.castShadow = true;
+                group.add(display);
+            }
+        }
+
+        function addTutoringArea(group, room, yOffset, floorHeight) {
+            // 課輔自習區：30座位 + 6個討論小組區 + 講師台
+
+            // 自習座位 (6 rows × 5 seats)
+            addChairs(group, room, yOffset, floorHeight, 30);
+            addTables(group, room, yOffset, floorHeight, 15);
+
+            // 小組討論區 (6個)
+            for (let i = 0; i < 6; i++) {
+                const tableGeometry = new THREE.CylinderGeometry(1, 1, 0.75, 32);
+                const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
+                const table = new THREE.Mesh(tableGeometry, tableMaterial);
+                table.position.set(
+                    room.x + (i % 2) * 4 - 2,
+                    yOffset + 0.375,
+                    room.z + Math.floor(i / 2) * 3 - 2
+                );
+                table.castShadow = true;
+                group.add(table);
+            }
+
+            // 講師台
+            const podiumGeometry = new THREE.BoxGeometry(2, 1.2, 1.5);
+            const podiumMaterial = new THREE.MeshStandardMaterial({ color: 0x696969 });
+            const podium = new THREE.Mesh(podiumGeometry, podiumMaterial);
+            podium.position.set(room.x - room.w / 2 + 2, yOffset + 0.6, room.z + room.d / 2 - 1.5);
+            podium.castShadow = true;
+            group.add(podium);
+        }
+
+        function addRecreationArea(group, room, yOffset, floorHeight) {
+            // 休閒娛樂區：電競遊戲機、籃球機、健身器材
+
+            // 電競遊戲機 (3台)
+            const arcadeGeometry = new THREE.BoxGeometry(0.8, 2, 0.8);
+            const arcadeMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            for (let i = 0; i < 3; i++) {
+                const arcade = new THREE.Mesh(arcadeGeometry, arcadeMaterial);
+                arcade.position.set(room.x - room.w / 2 + 2 + i * 1.5, yOffset + 1, room.z - room.d / 2 + 2);
+                arcade.castShadow = true;
+                group.add(arcade);
+            }
+
+            // 籃球機
+            const basketballGeometry = new THREE.BoxGeometry(1, 2, 1);
+            const basketball = new THREE.Mesh(basketballGeometry, arcadeMaterial);
+            basketball.position.set(room.x, yOffset + 1, room.z - room.d / 2 + 2);
+            basketball.castShadow = true;
+            group.add(basketball);
+
+            // 健身器材
+            addActivityEquipment(group, room, yOffset, floorHeight);
+        }
+
+        function addYouthLounge(group, room, yOffset, floorHeight) {
+            // 青少年交誼廳：沙發、茶几、電視、輕食區
+
+            // 沙發區
+            const sofaGeometry = new THREE.BoxGeometry(3, 1, 1.5);
+            const sofaMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+            const sofa = new THREE.Mesh(sofaGeometry, sofaMaterial);
+            sofa.position.set(room.x, yOffset + 0.5, room.z - room.d / 2 + 2);
+            sofa.castShadow = true;
+            group.add(sofa);
+
+            // 茶几
+            const tableGeometry = new THREE.BoxGeometry(2, 0.5, 1);
+            const table = new THREE.Mesh(tableGeometry, sofaMaterial);
+            table.position.set(room.x, yOffset + 0.25, room.z);
+            table.castShadow = true;
+            group.add(table);
+
+            // 輕食區台
+            const counterGeometry = new THREE.BoxGeometry(2.5, 1, 1);
+            const counterMaterial = new THREE.MeshStandardMaterial({ color: 0x696969 });
+            const counter = new THREE.Mesh(counterGeometry, counterMaterial);
+            counter.position.set(room.x + room.w / 2 - 1.5, yOffset + 0.5, room.z + room.d / 2 - 1);
+            counter.castShadow = true;
+            group.add(counter);
+        }
+
+        function addElderlyShareRoom(group, room, yOffset, floorHeight) {
+            // 長輩分享室：舒適座位、茶几、溝通輔助工具
+
+            // 座位區
+            addChairs(group, room, yOffset, floorHeight, 12);
+            addTables(group, room, yOffset, floorHeight, 3);
+
+            // 多用途展示架
+            const displayGeometry = new THREE.BoxGeometry(2, 1.2, 0.3);
+            const displayMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+            const display = new THREE.Mesh(displayGeometry, displayMaterial);
+            display.position.set(room.x - room.w / 2 + 1, yOffset + 0.6, room.z + room.d / 2 - 0.5);
+            display.castShadow = true;
+            group.add(display);
+        }
+
+        // ========== 4F 層 - 投影與展示區 (創新亮點：VR體驗 + 4K編輯) ==========
+        function addProjectionShowroom(group, room, yOffset, floorHeight) {
+            // 投影與展示區：投影機×8、VR頭盔×10、編輯工作站×4、4K攝影棚背景、綠幕系統
+
+            // ===== 投影機區 (8台投影機) =====
+            const projectorGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.6);
+            const projectorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.9 });
+            for (let i = 0; i < 8; i++) {
+                const projector = new THREE.Mesh(projectorGeometry, projectorMaterial);
+                // 天花板上方
+                projector.position.set(
+                    room.x - room.w / 2 + 1 + (i % 4) * 2,
+                    yOffset + floorHeight - 0.5,  // 接近天花板
+                    room.z - room.d / 2 + 2 + Math.floor(i / 4) * 3
+                );
+                projector.castShadow = true;
+                group.add(projector);
+            }
+
+            // ===== VR頭盔體驗區 (10台VR頭盔) =====
+            const vrHeadsetGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+            const vrMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00ccff,
+                emissive: 0x00ccff,
+                emissiveIntensity: 0.4,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            for (let i = 0; i < 10; i++) {
+                const vrHeadset = new THREE.Mesh(vrHeadsetGeometry, vrMaterial);
+                const angle = (i / 10) * Math.PI * 2;
+                const radius = 4;
+                vrHeadset.position.set(
+                    room.x + Math.cos(angle) * radius,
+                    yOffset + 1,  // 頭部高度
+                    room.z + Math.sin(angle) * radius
+                );
+                vrHeadset.castShadow = true;
+                group.add(vrHeadset);
+
+                // VR座位
+                const vrSeatGeometry = new THREE.BoxGeometry(0.6, 0.5, 0.6);
+                const seatMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+                const vrSeat = new THREE.Mesh(vrSeatGeometry, seatMaterial);
+                vrSeat.position.set(
+                    room.x + Math.cos(angle) * radius,
+                    yOffset + 0.25,
+                    room.z + Math.sin(angle) * radius
+                );
+                vrSeat.castShadow = true;
+                group.add(vrSeat);
+            }
+
+            // ===== 編輯工作站 (4台) =====
+            const workstationGeometry = new THREE.BoxGeometry(1.5, 0.75, 0.8);
+            const deskMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
+            for (let i = 0; i < 4; i++) {
+                const desk = new THREE.Mesh(workstationGeometry, deskMaterial);
+                desk.position.set(
+                    room.x - room.w / 2 + 2 + (i % 2) * 3,
+                    yOffset + 0.375,
+                    room.z + room.d / 2 - 2 - Math.floor(i / 2) * 2.5
+                );
+                desk.castShadow = true;
+                group.add(desk);
+
+                // 工作站螢幕 (編輯用)
+                const monitorGeometry = new THREE.BoxGeometry(0.8, 0.6, 0.1);
+                const screenMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+                const monitor = new THREE.Mesh(monitorGeometry, screenMaterial);
+                monitor.position.set(
+                    desk.position.x,
+                    yOffset + 0.75 + 0.3,
+                    desk.position.z
+                );
+                monitor.castShadow = true;
+                group.add(monitor);
+            }
+
+            // ===== 4K攝影棚背景 =====
+            const studioBackgroundGeometry = new THREE.BoxGeometry(8, 3, 0.3);
+            const studioMaterial = new THREE.MeshStandardMaterial({
+                color: 0xcccccc,
+                metalness: 0.3,
+                roughness: 0.6
+            });
+            const background = new THREE.Mesh(studioBackgroundGeometry, studioMaterial);
+            background.position.set(room.x, yOffset + 1.5, room.z - room.d / 2 + 0.5);
+            background.castShadow = true;
+            group.add(background);
+
+            // ===== 綠幕系統 =====
+            const greenScreenGeometry = new THREE.BoxGeometry(6, 2.5, 0.2);
+            const greenMaterial = new THREE.MeshStandardMaterial({
+                color: 0x00aa00,
+                emissive: 0x00aa00,
+                emissiveIntensity: 0.2
+            });
+            const greenScreen = new THREE.Mesh(greenScreenGeometry, greenMaterial);
+            greenScreen.position.set(room.x + room.w / 2 - 1, yOffset + 1.25, room.z);
+            greenScreen.castShadow = true;
+            group.add(greenScreen);
+
+            // 照明設備
+            const lightingGeometry = new THREE.BoxGeometry(0.5, 0.3, 0.5);
+            const lightMaterial = new THREE.MeshStandardMaterial({ color: 0xffff99, emissive: 0xffff99, emissiveIntensity: 0.3 });
+            for (let i = 0; i < 4; i++) {
+                const light = new THREE.Mesh(lightingGeometry, lightMaterial);
+                light.position.set(
+                    room.x - 2 + i * 2,
+                    yOffset + floorHeight - 0.5,
+                    room.z + room.d / 2 - 1
+                );
+                light.castShadow = true;
+                group.add(light);
+            }
+        }
+
+        // ===== 4F 職涯發展區 =====
+        function addCareerDevelopmentArea(group, room, yOffset, floorHeight) {
+            // 職涯發展區：導師座位×3、視訊會議系統、履歷檔案區、職業模擬工作站
+
+            // 導師座位區 (3張辦公桌)
+            addTables(group, room, yOffset, floorHeight, 3);
+            addChairs(group, room, yOffset, floorHeight, 3);
+
+            // 視訊會議螢幕
+            const screenGeometry = new THREE.BoxGeometry(2, 1.5, 0.2);
+            const screenMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.set(room.x + room.w / 2 - 1, yOffset + 1, room.z - room.d / 2 + 2);
+            screen.castShadow = true;
+            group.add(screen);
+
+            // 履歷檔案櫃 (4個)
+            for (let i = 0; i < 4; i++) {
+                const cabinetGeometry = new THREE.BoxGeometry(0.8, 1.8, 0.4);
+                const cabinetMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+                const cabinet = new THREE.Mesh(cabinetGeometry, cabinetMaterial);
+                cabinet.position.set(
+                    room.x - room.w / 2 + 1 + i * 1.2,
+                    yOffset + 0.9,
+                    room.z
+                );
+                cabinet.castShadow = true;
+                group.add(cabinet);
+            }
+
+            // 職業模擬工作站 (3個)
+            const stationGeometry = new THREE.BoxGeometry(1.2, 0.75, 1);
+            const stationMaterial = new THREE.MeshStandardMaterial({ color: 0xc0a080 });
+            for (let i = 0; i < 3; i++) {
+                const station = new THREE.Mesh(stationGeometry, stationMaterial);
+                station.position.set(
+                    room.x + (i - 1) * 2,
+                    yOffset + 0.375,
+                    room.z + room.d / 2 - 2
+                );
+                station.castShadow = true;
+                group.add(station);
+            }
+        }
+
+        // ========== 5F 層 - 參與式預算 & 社區治理 ==========
+        function addCommunityHall(group, room, yOffset, floorHeight) {
+            // 大會堂：座位 (250人)、講台、投影設備
+
+            // 座位 (簡化為座位區域指示)
+            const rowCount = 15;
+            const seatsPerRow = 17;
+            addChairs(group, room, yOffset, floorHeight, Math.min(rowCount * seatsPerRow, 250));
+
+            // 講台
+            const podiumGeometry = new THREE.BoxGeometry(5, 1.5, 2);
+            const podiumMaterial = new THREE.MeshStandardMaterial({ color: 0x696969 });
+            const podium = new THREE.Mesh(podiumGeometry, podiumMaterial);
+            podium.position.set(room.x, yOffset + 0.75, room.z + room.d / 2 - 2);
+            podium.castShadow = true;
+            group.add(podium);
+
+            // 投影幕布架
+            const screenGeometry = new THREE.BoxGeometry(6, 4, 0.2);
+            const screenMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.set(room.x, yOffset + 2.5, room.z + room.d / 2 - 1);
+            screen.castShadow = true;
+            group.add(screen);
+        }
+
+        function addWorkshopRoom(group, room, yOffset, floorHeight) {
+            // 工作坊室：工作台、座位、練習區
+
+            // 工作台 (4張)
+            addTables(group, room, yOffset, floorHeight, 4);
+
+            // 練習區
+            const practiceGeometry = new THREE.BoxGeometry(3, 0.5, 3);
+            const practiceMaterial = new THREE.MeshStandardMaterial({ color: 0xd3d3d3 });
+            const practice = new THREE.Mesh(practiceGeometry, practiceMaterial);
+            practice.position.set(room.x + room.w / 2 - 2, yOffset + 0.25, room.z);
+            practice.castShadow = true;
+            group.add(practice);
+        }
+
+        function addCivicRoom(group, room, yOffset, floorHeight) {
+            // 議事室：會議桌、投票設施、檔案櫃
+
+            // 大會議桌
+            const tableGeometry = new THREE.BoxGeometry(4, 0.75, 2);
+            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
+            const table = new THREE.Mesh(tableGeometry, tableMaterial);
+            table.position.set(room.x, yOffset + 0.375, room.z);
+            table.castShadow = true;
+            group.add(table);
+
+            // 會議座位
+            addChairs(group, room, yOffset, floorHeight, 16);
+
+            // 檔案櫃
+            for (let i = 0; i < 4; i++) {
+                const cabinetGeometry = new THREE.BoxGeometry(1, 1.8, 0.5);
+                const cabinetMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+                const cabinet = new THREE.Mesh(cabinetGeometry, cabinetMaterial);
+                cabinet.position.set(room.x - room.w / 2 + 0.8 + i * 1.2, yOffset + 0.9, room.z + room.d / 2 - 1);
+                cabinet.castShadow = true;
+                group.add(cabinet);
+            }
+        }
+
+        // ========== 6F 層 - ESG企業展示 ==========
+        function addCorporateShowroom(group, room, yOffset, floorHeight) {
+            // 企業展示廳：展示櫃、互動螢幕、企業布景
+
+            // 展示櫃 (8個)
+            for (let i = 0; i < 8; i++) {
+                const cabinetGeometry = new THREE.BoxGeometry(1.5, 2, 1);
+                const cabinetMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.6 });
+                const cabinet = new THREE.Mesh(cabinetGeometry, cabinetMaterial);
+                cabinet.position.set(
+                    room.x - room.w / 2 + 2 + (i % 4) * 2.5,
+                    yOffset + 1,
+                    room.z - room.d / 2 + 1.5 + Math.floor(i / 4) * 3
+                );
+                cabinet.castShadow = true;
+                group.add(cabinet);
+            }
+
+            // 互動螢幕
+            const screenGeometry = new THREE.BoxGeometry(3, 2, 0.2);
+            const screenMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.set(room.x + room.w / 2 - 1.5, yOffset + 1.2, room.z);
+            screen.castShadow = true;
+            group.add(screen);
+        }
+
+        function addMentorOffice(group, room, yOffset, floorHeight) {
+            // 業師辦公室：辦公桌、會議台、茶水間
+
+            // 辦公桌 (4張)
+            addTables(group, room, yOffset, floorHeight, 4);
+            addChairs(group, room, yOffset, floorHeight, 4);
+
+            // 會議小台
+            const meetingGeometry = new THREE.BoxGeometry(2, 0.75, 1.5);
+            const meetingMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
+            const meeting = new THREE.Mesh(meetingGeometry, meetingMaterial);
+            meeting.position.set(room.x + room.w / 2 - 2, yOffset + 0.375, room.z);
+            meeting.castShadow = true;
+            group.add(meeting);
+        }
+
+        function addMeetingRoom(group, room, yOffset, floorHeight) {
+            // 會議室：大會議桌、投影螢幕、座位
+
+            // 會議桌
+            const tableGeometry = new THREE.BoxGeometry(4, 0.75, 2);
+            const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
+            const table = new THREE.Mesh(tableGeometry, tableMaterial);
+            table.position.set(room.x, yOffset + 0.375, room.z);
+            table.castShadow = true;
+            group.add(table);
+
+            // 會議座位
+            addChairs(group, room, yOffset, floorHeight, 12);
+
+            // 投影螢幕
+            const screenGeometry = new THREE.BoxGeometry(3, 2.5, 0.2);
+            const screenMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.set(room.x - room.w / 2 + 0.5, yOffset + 1.5, room.z + room.d / 2 - 0.5);
+            screen.castShadow = true;
+            group.add(screen);
+        }
+
+        // ========== 7F 層 - 屋頂花園 ==========
+        function addRooftopFarm(group, room, yOffset, floorHeight) {
+            // 屋頂農場：種植床 (6-8個)、澆水系統、休憩座位
+
+            // 種植床
+            for (let i = 0; i < 8; i++) {
+                const bedGeometry = new THREE.BoxGeometry(2, 0.5, 1);
+                const bedMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+                const bed = new THREE.Mesh(bedGeometry, bedMaterial);
+                bed.position.set(
+                    room.x - room.w / 2 + 2 + (i % 4) * 2.5,
+                    yOffset + 0.25,
+                    room.z - room.d / 2 + 1 + Math.floor(i / 4) * 2.5
+                );
+                bed.castShadow = true;
+                group.add(bed);
+            }
+
+            // 休憩座位
+            addChairs(group, room, yOffset, floorHeight, 8);
+        }
+
+        function addSolarPanels(group, room, yOffset, floorHeight) {
+            // 太陽能板區：太陽能板陣列、發電設備、監控系統
+
+            // 太陽能板 (簡化表示)
+            for (let i = 0; i < 6; i++) {
+                const panelGeometry = new THREE.BoxGeometry(3, 0.2, 2);
+                const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x000080, metalness: 0.9 });
+                const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                panel.rotation.x = Math.PI / 6;  // 傾斜角度
+                panel.position.set(
+                    room.x - room.w / 2 + 2 + i * 4,
+                    yOffset + 1.5,
+                    room.z
+                );
+                panel.castShadow = true;
+                group.add(panel);
+            }
+        }
+
+        function addTerraceArea(group, room, yOffset, floorHeight) {
+            // 露台區：景觀椅、休息區、植物盆栽
+
+            // 景觀椅
+            addChairs(group, room, yOffset, floorHeight, 10);
+
+            // 植物盆栽
+            for (let i = 0; i < 12; i++) {
+                const potGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.8, 16);
+                const potMaterial = new THREE.MeshStandardMaterial({ color: 0xcd853f });
+                const pot = new THREE.Mesh(potGeometry, potMaterial);
+                pot.position.set(
+                    room.x - room.w / 2 + 1 + (i % 4) * 2,
+                    yOffset + 0.4,
+                    room.z - room.d / 2 + 1 + Math.floor(i / 4) * 2.5
+                );
+                pot.castShadow = true;
+                group.add(pot);
+            }
+        }
+
+        // ========== 備用方案 - 通用家具 ==========
+        function addBasicFurniture(group, room, yOffset, floorHeight) {
+            // 通用家具備用方案
+            addChairs(group, room, yOffset, floorHeight, 8);
+            addTables(group, room, yOffset, floorHeight, 4);
+            addActivityEquipment(group, room, yOffset, floorHeight);
+        }
+
         function createBuilding() {
             const group = new THREE.Group();
 
             let yOffset = 0;
-            const colors = [0x7a7a7a, 0x9a9a9a, 0x9a9a9a, 0xb0b0b0, 0xf5f5f5, 0xf5f5f5, 0xf0f0f0];
+            const colors = [0x7a7a7a, 0x9a9a9a, 0x9a9a9a, 0xb0b0b0, 0xf5f5f5, 0xf5f5f5, 0xf0f0f0, 0xe8e8e8];
+
+            // 輔助函數：檢查相鄰房間
+            function isRoomAdjacent(rooms, currentRoom, direction) {
+                const tolerance = 0.5;
+                return rooms.some(other => {
+                    if (other.id === currentRoom.id) return false;
+
+                    switch(direction) {
+                        case 'north': // 檢查後面是否有房間
+                            return Math.abs(other.z - (currentRoom.z - currentRoom.d/2 - other.d/2)) < tolerance &&
+                                   Math.abs(other.x - currentRoom.x) < tolerance + Math.max(other.w, currentRoom.w)/2;
+                        case 'south': // 檢查前面
+                            return Math.abs(other.z - (currentRoom.z + currentRoom.d/2 + other.d/2)) < tolerance &&
+                                   Math.abs(other.x - currentRoom.x) < tolerance + Math.max(other.w, currentRoom.w)/2;
+                        case 'east': // 檢查右邊
+                            return Math.abs(other.x - (currentRoom.x + currentRoom.w/2 + other.w/2)) < tolerance &&
+                                   Math.abs(other.z - currentRoom.z) < tolerance + Math.max(other.d, currentRoom.d)/2;
+                        case 'west': // 檢查左邊
+                            return Math.abs(other.x - (currentRoom.x - currentRoom.w/2 - other.w/2)) < tolerance &&
+                                   Math.abs(other.z - currentRoom.z) < tolerance + Math.max(other.d, currentRoom.d)/2;
+                    }
+                    return false;
+                });
+            }
 
             BUILDING_CONFIG.floors.forEach((floorKey, index) => {
                 const height = BUILDING_CONFIG.floorHeights[index];
@@ -728,24 +2349,60 @@
                     group.add(mesh);
                 });
 
-                // 地板
-                const floorGeometry = new THREE.PlaneGeometry(BUILDING_CONFIG.width, BUILDING_CONFIG.depth);
+                // 地板 (3D 厚度，避免穿透)
+                const floorThickness = 0.3;
+                const floorGeometry = new THREE.BoxGeometry(BUILDING_CONFIG.width, floorThickness, BUILDING_CONFIG.depth);
                 const floorMesh = new THREE.Mesh(floorGeometry, material);
-                floorMesh.rotation.x = -Math.PI / 2;
-                floorMesh.position.y = yOffset;
+                floorMesh.position.y = yOffset + floorThickness / 2;  // 地板上表面位置
+                floorMesh.castShadow = true;
                 floorMesh.receiveShadow = true;
+                floorMesh.userData = { floor: floorKey, type: 'floor' };
                 group.add(floorMesh);
+
+                // 天花板 (位於樓層頂部)
+                const ceilingGeometry = new THREE.BoxGeometry(BUILDING_CONFIG.width, floorThickness, BUILDING_CONFIG.depth);
+                const ceilingMesh = new THREE.Mesh(ceilingGeometry, material);
+                ceilingMesh.position.y = yOffset + height - floorThickness / 2;  // 天花板下表面位置
+                ceilingMesh.castShadow = true;
+                ceilingMesh.receiveShadow = true;
+                ceilingMesh.userData = { floor: floorKey, type: 'ceiling' };
+                group.add(ceilingMesh);
 
                 // 房間標記
                 const rooms = ROOM_DATA[floorKey] || [];
                 rooms.forEach(room => {
                     const roomGeometry = new THREE.BoxGeometry(room.w, height * 0.8, room.d);
+
+                    // 根據房間類型設置顏色
+                    let roomColor = 0x3a3a4a;
+                    let opacity = 0.2;
+                    switch (room.type) {
+                        case 'healthcare':
+                            roomColor = 0x00ff88;
+                            opacity = 0.15;
+                            break;
+                        case 'activity':
+                            roomColor = 0x00ccff;
+                            opacity = 0.15;
+                            break;
+                        case 'dining':
+                            roomColor = 0xffaa00;
+                            opacity = 0.15;
+                            break;
+                        case 'technical':
+                            roomColor = 0xff007f;
+                            opacity = 0.1;
+                            break;
+                    }
+
                     const roomMaterial = new THREE.MeshStandardMaterial({
-                        color: 0x3a3a4a,
-                        metalness: 0.1,
-                        roughness: 0.9,
+                        color: roomColor,
+                        metalness: 0.2,
+                        roughness: 0.7,
                         transparent: true,
-                        opacity: 0.1
+                        opacity: opacity,
+                        emissive: roomColor,
+                        emissiveIntensity: 0.2
                     });
                     const roomMesh = new THREE.Mesh(roomGeometry, roomMaterial);
                     roomMesh.position.set(room.x, yOffset + height / 2, room.z);
@@ -753,6 +2410,87 @@
                     roomMesh.castShadow = true;
                     roomMesh.receiveShadow = true;
                     group.add(roomMesh);
+
+                    // 添加房間邊框（線框）以改進內部導覽的清晰度
+                    const edges = new THREE.EdgesGeometry(roomGeometry);
+                    const lineSegments = new THREE.LineSegments(
+                        edges,
+                        new THREE.LineBasicMaterial({
+                            color: roomColor,
+                            transparent: true,
+                            opacity: 0.6,
+                            linewidth: 1
+                        })
+                    );
+                    lineSegments.position.copy(roomMesh.position);
+                    lineSegments.userData = { floor: floorKey };
+                    group.add(lineSegments);
+
+                    // 添加房間家具和設備
+                    addFurnitureToRoom(group, room, yOffset, height, roomColor);
+                });
+
+                // 建造房間之間的內部分隔牆
+                const wallMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xd3d3d3,
+                    metalness: 0.1,
+                    roughness: 0.9
+                });
+
+                // 為每個房間創建邊界牆（使用前面已定義的 rooms 陣列）
+                rooms.forEach(room => {
+                    const wallThickness = 0.2;
+                    const wallHeight = height * 0.9;
+
+                    // 房間的邊界
+                    const left = room.x - room.w / 2;
+                    const right = room.x + room.w / 2;
+                    const front = room.z - room.d / 2;
+                    const back = room.z + room.d / 2;
+
+                    // 北牆（後面）
+                    if (!isRoomAdjacent(rooms, room, 'north')) {
+                        const northWall = new THREE.BoxGeometry(room.w + wallThickness * 2, wallHeight, wallThickness);
+                        const northMesh = new THREE.Mesh(northWall, wallMaterial);
+                        northMesh.position.set(room.x, yOffset + height / 2, back + wallThickness / 2);
+                        northMesh.castShadow = true;
+                        northMesh.receiveShadow = true;
+                        northMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        group.add(northMesh);
+                    }
+
+                    // 南牆（前面）
+                    if (!isRoomAdjacent(rooms, room, 'south')) {
+                        const southWall = new THREE.BoxGeometry(room.w + wallThickness * 2, wallHeight, wallThickness);
+                        const southMesh = new THREE.Mesh(southWall, wallMaterial);
+                        southMesh.position.set(room.x, yOffset + height / 2, front - wallThickness / 2);
+                        southMesh.castShadow = true;
+                        southMesh.receiveShadow = true;
+                        southMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        group.add(southMesh);
+                    }
+
+                    // 東牆（右邊）
+                    if (!isRoomAdjacent(rooms, room, 'east')) {
+                        const eastWall = new THREE.BoxGeometry(wallThickness, wallHeight, room.d);
+                        const eastMesh = new THREE.Mesh(eastWall, wallMaterial);
+                        eastMesh.position.set(right + wallThickness / 2, yOffset + height / 2, room.z);
+                        eastMesh.castShadow = true;
+                        eastMesh.receiveShadow = true;
+                        eastMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        group.add(eastMesh);
+                    }
+
+                    // 西牆（左邊）
+                    if (!isRoomAdjacent(rooms, room, 'west')) {
+                        const westWall = new THREE.BoxGeometry(wallThickness, wallHeight, room.d);
+                        const westMesh = new THREE.Mesh(westWall, wallMaterial);
+                        westMesh.position.set(left - wallThickness / 2, yOffset + height / 2, room.z);
+                        westMesh.castShadow = true;
+                        westMesh.receiveShadow = true;
+                        westMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        group.add(westMesh);
+                    }
                 });
 
                 yOffset += height;
@@ -778,86 +2516,221 @@
                 orbitControls.update();
                 renderer.render(scene, orbitCamera);
             } else if (currentMode === 'interior') {
-                // 內部軌道視角
-                orbitControls.object = fpsCamera;
-                orbitControls.update();
+                // 內部導覽 - 使用 Minecraft 風格的相機控制（支援 WASD + 滑鼠看）
+                updateFPSMovement();  // 同時處理移動和相機旋轉
                 renderer.render(scene, fpsCamera);
             } else if (currentMode === 'fps') {
-                // FPS 控制和移動
+                // 第一人稱視角 - 使用 Minecraft 風格的相機控制
                 updateFPSMovement();
-                pointerLockControls.update();
                 renderer.render(scene, fpsCamera);
             }
         }
 
-        // FPS 移動控制
+        // Minecraft 風格的 FPS 移動控制
         function updateFPSMovement() {
-            const direction = new THREE.Vector3();
-            const rotation = new THREE.Euler(0, pointerLockControls.getObject().rotation.y, 0, 'YXZ');
+            // 街景導航模式下禁用 WASD 移動
+            if (streetViewNav.enabled && currentMode === 'fps') {
+                // 只保留相機旋轉，禁用 WASD 移動
+                const maxPitch = Math.PI / 2 * 0.99;
+                minecraftControls.pitch = Math.max(-maxPitch, Math.min(maxPitch, minecraftControls.pitch));
+                fpsCamera.rotation.order = 'YXZ';
+                fpsCamera.rotation.y = minecraftControls.yaw;
+                fpsCamera.rotation.x = minecraftControls.pitch;
+                return;  // 跳過 WASD 移動邏輯
+            }
 
+            const direction = new THREE.Vector3();
+
+            // 基於相機旋轉計算移動方向（相對於相機朝向）
+            // yaw 是左右看，pitch 是上下看
+            const forward = new THREE.Vector3(
+                Math.sin(minecraftControls.yaw),
+                0,
+                Math.cos(minecraftControls.yaw)
+            );
+
+            const right = new THREE.Vector3(
+                Math.sin(minecraftControls.yaw + Math.PI / 2),
+                0,
+                Math.cos(minecraftControls.yaw + Math.PI / 2)
+            );
+
+            // 根據按鍵狀態設置移動方向（相機相對）
             if (moveVector.forward) {
-                direction.z -= 1;
+                direction.add(forward);
             }
             if (moveVector.backward) {
-                direction.z += 1;
-            }
-            if (moveVector.left) {
-                direction.x -= 1;
+                direction.sub(forward);
             }
             if (moveVector.right) {
-                direction.x += 1;
+                direction.add(right);
+            }
+            if (moveVector.left) {
+                direction.sub(right);
             }
 
             if (direction.length() > 0) {
                 direction.normalize();
-                direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.y);
+                const moveAmount = direction.clone().multiplyScalar(FPS_SPEED);
 
-                // 碰撞檢測
-                const checkDistance = 0.5;
-                const rayStart = pointerLockControls.getObject().position.clone();
-                rayStart.y = FPS_HEIGHT;
+                // 改進的碰撞檢測 - 多點檢測
+                const safeDistance = 1.0;  // 更大的安全距離
+                const rayStart = fpsCamera.position.clone();
+                const rayDir = moveAmount.clone().normalize();
 
-                const moveVector = direction.clone().multiplyScalar(FPS_SPEED);
-                raycaster.set(rayStart, moveVector.normalize());
+                // 檢測前方碰撞
+                raycaster.set(rayStart, rayDir);
                 const intersects = raycaster.intersectObjects(scene.children, true);
 
-                // 如果沒有碰撞，移動相機
-                if (intersects.length === 0 || intersects[0].distance > checkDistance) {
-                    pointerLockControls.getObject().position.add(moveVector);
+                let canMove = true;
+                if (intersects.length > 0) {
+                    // 如果前方有碰撞物體，檢查距離是否安全
+                    if (intersects[0].distance < safeDistance) {
+                        canMove = false;
+                    }
+                }
+
+                // 移動前檢查目標位置
+                if (canMove) {
+                    const newPos = rayStart.clone().add(moveAmount);
+
+                    // 約束相機到當前樓層內 (垂直邊界檢查)
+                    const currentFloorIndex = BUILDING_CONFIG.floors.indexOf(currentFloor);
+                    let floorBaseY = 0;
+                    let ceilingY = BUILDING_CONFIG.floorHeights[0];
+
+                    for (let i = 0; i < currentFloorIndex; i++) {
+                        floorBaseY += BUILDING_CONFIG.floorHeights[i];
+                    }
+                    ceilingY = floorBaseY + BUILDING_CONFIG.floorHeights[currentFloorIndex];
+
+                    // 攝像機高度約束 (防止穿透地板和天花板)
+                    const cameraEyeHeight = 0.2;  // 眼睛與地板的距離
+                    const minY = floorBaseY + cameraEyeHeight;
+                    const maxY = ceilingY - cameraEyeHeight;
+
+                    newPos.y = Math.max(minY, Math.min(maxY, newPos.y));
+
+                    // 再次檢查新位置是否安全（二次檢查）
+                    raycaster.set(newPos, new THREE.Vector3(0, -1, 0));
+                    const groundCheck = raycaster.intersectObjects(scene.children, true);
+
+                    // 水平移動被許可，垂直位置被約束
+                    fpsCamera.position.copy(newPos);
                 }
             }
+
+            // 根據 pitch 和 yaw 更新相機旋轉
+            // 限制 pitch 以防止完全翻轉
+            const maxPitch = Math.PI / 2 * 0.99;
+            minecraftControls.pitch = Math.max(-maxPitch, Math.min(maxPitch, minecraftControls.pitch));
+
+            // 應用旋轉到相機（Minecraft 風格）
+            fpsCamera.rotation.order = 'YXZ';
+            fpsCamera.rotation.y = minecraftControls.yaw;
+            fpsCamera.rotation.x = minecraftControls.pitch;
         }
 
         // ==================== UI 控制 ====================
 
         function switchMode(mode) {
             currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            window.currentMode = mode;  // 同時更新全局變數
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                if (btn.textContent.includes(mode === 'exterior' ? '外' : mode === 'interior' ? '內' : '人')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
 
             // 根據模式設置相機和控制器
             if (mode === 'exterior') {
-                // 外部視角
+                // 外部視角 - 啟用 OrbitControls
+                orbitControls.enabled = true;  // ✅ 啟用 OrbitControls
                 orbitControls.object = orbitCamera;
                 orbitControls.autoRotate = true;
                 orbitCamera.position.set(80, 60, 80);
                 orbitControls.target.set(0, 15, 0);
                 orbitControls.update();
+
+                // 顯示外牆
+                scene.children.forEach(child => {
+                    if (child.userData.floor) {
+                        child.visible = true;
+                    }
+                });
             } else if (mode === 'interior') {
-                // 內部軌道視角
-                orbitControls.object = fpsCamera;
+                // 內部導覽 - Minecraft 風格控制（WASD + 鼠標看，無 Pointer Lock）
+                // ❌ 禁止 OrbitControls - 使用 Minecraft 控制代替
                 orbitControls.autoRotate = false;
-                fpsCamera.position.set(0, FPS_HEIGHT, 10);
-                orbitControls.target.set(0, FPS_HEIGHT, 0);
-                orbitControls.update();
-                // 釋放 Pointer Lock
+                orbitControls.enabled = false;  // 禁用 OrbitControls
+
+                // 進入建築內部，切換到 1F（如果已選擇其他樓層則保持）
+                const floorIndex = BUILDING_CONFIG.floors.indexOf(currentFloor);
+                let floorCenterY = 0;
+                for (let i = 0; i < floorIndex; i++) {
+                    floorCenterY += BUILDING_CONFIG.floorHeights[i];
+                }
+
+                // 把相機放在該樓層內部的中央位置，面向前方
+                fpsCamera.position.set(0, floorCenterY + FPS_HEIGHT, 0);
+                minecraftControls.yaw = 0;  // 面向前方（+Z 方向）
+                minecraftControls.pitch = 0;
+
+                // ✅ 釋放 Pointer Lock（內部導覽不使用完整鎖定）
                 if (document.pointerLockElement) {
                     document.exitPointerLock();
                 }
+                isPointerLocked = false;
+
+                // 顯示所有內部幾何
+                scene.children.forEach(child => {
+                    if (child.userData && child.userData.floor) {
+                        child.visible = true;
+                    }
+                });
             } else if (mode === 'fps') {
-                // 第一人稱視角
+                // 第一人稱視角 - 街景導航模式（Google Maps Street View 風格）
+                // ❌ 禁止 OrbitControls
+                orbitControls.enabled = false;
                 orbitControls.autoRotate = false;
-                fpsCamera.position.set(0, FPS_HEIGHT, 10);
+
+                // 啟用街景導航
+                streetViewNav.enabled = true;
+                generateWaypoints(currentFloor);
+                createNavigationMarkers();
+
+                // 進入建築內部，使用當前樓層
+                const floorIndex = BUILDING_CONFIG.floors.indexOf(currentFloor);
+                let floorCenterY = 0;
+                for (let i = 0; i < floorIndex; i++) {
+                    floorCenterY += BUILDING_CONFIG.floorHeights[i];
+                }
+
+                // 把相機放在該樓層第一個導航點
+                if (streetViewNav.waypoints.length > 0) {
+                    fpsCamera.position.copy(streetViewNav.waypoints[0].position);
+                    streetViewNav.currentWaypoint = streetViewNav.waypoints[0];
+                } else {
+                    fpsCamera.position.set(0, floorCenterY + FPS_HEIGHT, 0);
+                }
+
+                minecraftControls.yaw = 0;  // 面向前方
+                minecraftControls.pitch = 0;
+
+                // ✅ 釋放 Pointer Lock（街景模式不需要）
+                if (document.pointerLockElement) {
+                    document.exitPointerLock();
+                }
+                isPointerLocked = false;
+
+                // 顯示所有內部幾何
+                scene.children.forEach(child => {
+                    if (child.userData && child.userData.floor) {
+                        child.visible = true;
+                    }
+                });
             }
         }
 
@@ -880,13 +2753,54 @@
             }
         }
 
+        // Minecraft 風格的鼠標移動控制（相機旋轉）
+        function onMouseMove(event) {
+            if (currentMode === 'interior' || currentMode === 'fps') {
+                const deltaX = event.clientX - minecraftControls.lastX;
+                const deltaY = event.clientY - minecraftControls.lastY;
+
+                // 更新相機旋轉（在任何時刻，只有當滑鼠在畫布上移動時）
+                minecraftControls.yaw -= deltaX * minecraftControls.mouseSensitivity;
+                minecraftControls.pitch -= deltaY * minecraftControls.mouseSensitivity;
+
+                // 記錄新位置
+                minecraftControls.lastX = event.clientX;
+                minecraftControls.lastY = event.clientY;
+            }
+        }
+
         function selectFloor(floor) {
             currentFloor = floor;
-            document.querySelectorAll('.floor-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            window.currentFloor = floor;  // 同時更新全局變數
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                if (btn.textContent.includes(floor.substring(0, 2))) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // 在外部視角模式下，更新相機位置來聚焦到該樓層
+            if (currentMode === 'exterior') {
+                // 計算該樓層的中心y坐標
+                let floorIndex = BUILDING_CONFIG.floors.indexOf(floor);
+                let floorCenterY = 0;
+
+                // 計算樓層中心高度
+                for (let i = 0; i < floorIndex; i++) {
+                    floorCenterY += BUILDING_CONFIG.floorHeights[i];
+                }
+                floorCenterY += BUILDING_CONFIG.floorHeights[floorIndex] / 2;
+
+                // 平滑地移動相機到新樓層
+                orbitCamera.position.set(80, floorCenterY + 40, 80);
+                orbitControls.target.set(0, floorCenterY, 0);
+                orbitControls.update();
+            }
 
             updateRoomsList();
             updateInfoPanel();
+            drawMinimap();  // 更新小地圖
         }
 
         function updateRoomsList() {
@@ -902,7 +2816,37 @@
 
         function selectRoom(roomId) {
             const room = ROOM_DATA[currentFloor].find(r => r.id === roomId);
-            if (room) updateInfoPanel(room);
+            if (room) {
+                updateInfoPanel(room);
+
+                // 導航攝像機到選中的房間
+                if (window.orbitControls && window.orbitCamera) {
+                    const roomCenterX = (room.x1 + room.x2) / 2;
+                    const roomCenterZ = (room.y1 + room.y2) / 2;
+                    const floorHeight = BUILDING_CONFIG.floorHeights.slice(0,
+                        BUILDING_CONFIG.floors.indexOf(currentFloor) + 1).reduce((a, b) => a + b, 0);
+                    const roomCenterY = floorHeight - 2;
+
+                    // 設定OrbitControls目標點
+                    window.orbitControls.target.set(roomCenterX, roomCenterY, roomCenterZ);
+
+                    // 計算房間尺寸
+                    const roomWidth = Math.abs(room.x2 - room.x1);
+                    const roomDepth = Math.abs(room.y2 - room.y1);
+                    const roomSize = Math.max(roomWidth, roomDepth);
+
+                    // 調整攝像機距離以適應房間大小
+                    const cameraDistance = roomSize * 1.5;
+                    const angle = Math.PI / 4; // 45度角
+
+                    window.orbitCamera.position.x = roomCenterX + cameraDistance * Math.cos(angle);
+                    window.orbitCamera.position.y = roomCenterY + cameraDistance * 0.6;
+                    window.orbitCamera.position.z = roomCenterZ + cameraDistance * Math.sin(angle);
+
+                    // 平滑動畫（可選）
+                    window.orbitControls.autoRotate = false;
+                }
+            }
         }
 
         function updateInfoPanel(room = null) {
@@ -971,7 +2915,7 @@
         }
 
         function resetView() {
-            camera.position.set(80, 60, 80);
+            orbitCamera.position.set(80, 60, 80);
             orbitControls.target.set(0, 15, 0);
             orbitControls.update();
         }
@@ -1004,6 +2948,71 @@
             alert(helpText.trim());
         }
 
+        // ==================== 小地圖繪製 ====================
+        function drawMinimap() {
+            const canvas = document.getElementById('minimap-canvas');
+            if (!canvas || !currentFloor) return;
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+
+            // 清空canvas
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, 200, 200);
+
+            // 繪製邊框
+            ctx.strokeStyle = 'rgba(0, 204, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, 200, 200);
+
+            // 獲取當前樓層的房間數據
+            const rooms = ROOM_DATA[currentFloor] || [];
+            if (rooms.length === 0) return;
+
+            // 計算縮放比例
+            const scale = 3;
+
+            // 繪製房間
+            rooms.forEach(room => {
+                const x = (room.x + 16) * scale;
+                const y = (room.z + 10) * scale;
+                const w = room.w * scale / 1.5;
+                const d = room.d * scale / 1.5;
+
+                // 根據房間類型著色
+                switch (room.type) {
+                    case 'healthcare':
+                        ctx.fillStyle = 'rgba(0, 255, 136, 0.6)';
+                        break;
+                    case 'activity':
+                        ctx.fillStyle = 'rgba(0, 204, 255, 0.6)';
+                        break;
+                    case 'dining':
+                        ctx.fillStyle = 'rgba(255, 170, 0, 0.6)';
+                        break;
+                    case 'technical':
+                        ctx.fillStyle = 'rgba(255, 0, 127, 0.4)';
+                        break;
+                    default:
+                        ctx.fillStyle = 'rgba(100, 100, 150, 0.5)';
+                }
+                ctx.fillRect(x, y, w, d);
+
+                // 繪製邊框
+                ctx.strokeStyle = 'rgba(0, 255, 136, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, w, d);
+            });
+
+            // 繪製樓層標籤
+            ctx.fillStyle = '#00ccff';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(currentFloor, 8, 8);
+        }
+
         function onWindowResize() {
             const container = document.getElementById('canvas-container');
             const width = container.clientWidth;
@@ -1021,17 +3030,36 @@
 
         // ==================== 初始化 ====================
         window.addEventListener('load', () => {
-            console.log('📍 頁面載入完成，檢查 Three.js...');
+            console.log('📍 頁面載入完成，檢查 Three.js 庫...');
 
-            // 等待 Three.js 加載（最多 5 秒）
+            // 等待 Three.js 和控制器加載（最多 10 秒）
             let attempts = 0;
-            const maxAttempts = 50; // 50 × 100ms = 5 秒
+            const maxAttempts = 100; // 100 × 100ms = 10 秒
 
-            function waitForThreeJS() {
+            // 本地調試日誌函式
+            function debugLog(msg) {
+                const log = document.getElementById('debug-log');
+                if (log) {
+                    log.innerHTML += '\n' + msg;
+                    log.scrollTop = log.scrollHeight;
+                }
+                console.log(msg);
+            }
+
+            function waitForLibraries() {
                 attempts++;
 
-                if (typeof THREE !== 'undefined') {
-                    console.log('✅ Three.js 已加載');
+                // 檢查所有必需的庫是否已加載
+                const hasThree = typeof THREE !== 'undefined';
+                const hasOrbitControls = typeof THREE !== 'undefined' && window.OrbitControls !== undefined;
+                const hasPointerLock = typeof THREE !== 'undefined' && window.PointerLockControls !== undefined;
+
+                if (hasThree && hasOrbitControls && hasPointerLock) {
+                    debugLog('✅ 所有庫已加載');
+                    debugLog('  • THREE: ✓');
+                    debugLog('  • OrbitControls: ✓');
+                    debugLog('  • PointerLockControls: ✓');
+
                     checkThreeJS(); // 初始化 raycaster 和 velocity
 
                     console.log('🏗️ 初始化 Three.js 場景...');
@@ -1039,17 +3067,42 @@
                     updateRoomsList();
                     updateInfoPanel();
                     document.getElementById('obj-display').textContent = scene.children.length;
+
+                    // 暴露全局變數供測試使用
+                    window.currentFloor = currentFloor;
+                    window.currentMode = currentMode;
+                    window.ROOM_DATA = ROOM_DATA;
+                    window.fpsCamera = fpsCamera;
+                    window.orbitCamera = orbitCamera;
+                    window.scene = scene;
+                    window.selectFloor = selectFloor;
+                    window.updateRoomsList = updateRoomsList;
+                    window.updateInfoPanel = updateInfoPanel;
+                    window.switchMode = switchMode;
+                    window.drawMinimap = drawMinimap;
+                    window.toggleWireframe = toggleWireframe;
+                    window.toggleAutoRotate = toggleAutoRotate;
+                    window.resetView = resetView;
+                    window.toggleHelp = toggleHelp;
+
+                    // 初始化小地圖
+                    setTimeout(drawMinimap, 500);
+
                     console.log('✅ 初始化完成，3D 建築應該出現了');
                 } else if (attempts < maxAttempts) {
-                    console.log(`⏳ 等待 Three.js 加載... (${attempts}/${maxAttempts})`);
-                    setTimeout(waitForThreeJS, 100);
+                    const missing = [];
+                    if (!hasThree) missing.push('THREE');
+                    if (!hasOrbitControls) missing.push('OrbitControls');
+                    if (!hasPointerLock) missing.push('PointerLockControls');
+                    console.log(`⏳ 等待庫加載... (${attempts}/${maxAttempts}) [缺少: ${missing.join(', ')}]`);
+                    setTimeout(waitForLibraries, 100);
                 } else {
-                    console.error('❌ Three.js 加載超時，嘗試備選 CDN...');
-                    window.location.reload();
+                    console.error('❌ 庫加載超時');
+                    alert('❌ 3D 場景加載失敗，請重新整理頁面');
                 }
             }
 
-            waitForThreeJS();
+            waitForLibraries();
         });
     </script>
 </body>
