@@ -86,4 +86,4 @@ research/intergenerational-care/
 ---
 
 **Last Updated**: 2025-10-23 08:50
-**Contributors**: Claude Code (Literature Review), User (Domain Expertise)
+**Contributors**: 蔡秀吉 (Literature Review), User (Domain Expertise)

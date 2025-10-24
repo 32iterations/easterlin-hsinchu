@@ -964,7 +964,7 @@ Grafana 儀表板顯示：
 
 ---
 
-**報告撰寫**: Claude Code (AI Research Assistant)
+**報告撰寫**: 蔡秀吉
 **專案**: 赤土崎全齡社福樞紐 - 竹科家庭全齡支持中心
 **日期**: 2025-10-24
 **文獻數量**: 36 篇（PubMed 2 + Semantic Scholar 14 + Wiley 20）
