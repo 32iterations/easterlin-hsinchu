@@ -1084,13 +1084,15 @@
             building = createBuilding();
             scene.add(building);
 
-            // 地面
-            const groundGeometry = new THREE.PlaneGeometry(200, 200);
+            // 🔧 FIX: 地面大小應該與建築物成比例（而不是固定的 200×200）
+            const groundSize = 32;  // 建築物寬度 32 = 建築邊界±16，不超出邊界
+            const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
             const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x1a3a2a, side: THREE.DoubleSide });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -0.5;
             ground.receiveShadow = true;
+            ground.userData = { type: 'ground', isWall: false };  // 標記為地面，不是牆
             scene.add(ground);
 
             // 鍵盤事件監聽
@@ -1208,6 +1210,36 @@
             // 半球光
             const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x2d5016, 0.3);
             scene.add(hemiLight);
+        }
+
+        // 🔧 FIX: 實用程式 - 確保家具位置在建築邊界內
+        function clampFurniturePosition(x, z, width = 0, depth = 0) {
+            const buildingHalfWidth = BUILDING_CONFIG.width / 2 - 0.3;  // 建築邊界減去安全邊距
+            const buildingHalfDepth = BUILDING_CONFIG.depth / 2 - 0.3;
+
+            // 計算物體邊界
+            const minX = x - width / 2;
+            const maxX = x + width / 2;
+            const minZ = z - depth / 2;
+            const maxZ = z + depth / 2;
+
+            // 限制位置在邊界內
+            let clampedX = x;
+            let clampedZ = z;
+
+            if (minX < -buildingHalfWidth) {
+                clampedX = -buildingHalfWidth + width / 2;
+            } else if (maxX > buildingHalfWidth) {
+                clampedX = buildingHalfWidth - width / 2;
+            }
+
+            if (minZ < -buildingHalfDepth) {
+                clampedZ = -buildingHalfDepth + depth / 2;
+            } else if (maxZ > buildingHalfDepth) {
+                clampedZ = buildingHalfDepth - depth / 2;
+            }
+
+            return { x: clampedX, z: clampedZ };
         }
 
         // 添加房間家具和設備 - Stage 4 專業設計實現
@@ -1386,7 +1418,7 @@
             }
         }
 
-        // 添加椅子
+        // 🔧 FIX: 添加椅子 - 確保位置在建築邊界內
         function addChairs(group, room, yOffset, floorHeight, count) {
             const chairGeometry = new THREE.BoxGeometry(0.5, 0.9, 0.5);
             const chairMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513, metalness: 0.1, roughness: 0.8 });
@@ -1395,11 +1427,17 @@
                 const chair = new THREE.Mesh(chairGeometry, chairMaterial);
                 const angle = (i / count) * Math.PI * 2;
                 const radius = Math.min(room.w, room.d) / 3;
-                const depthOffset = i * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
+                const depthOffset = i * 0.001;
+
+                // 計算原始位置並應用邊界限制
+                let x = room.x + Math.cos(angle) * radius;
+                let z = room.z + Math.sin(angle) * radius + depthOffset;
+                const clamped = clampFurniturePosition(x, z, 0.5, 0.5);
+
                 chair.position.set(
-                    room.x + Math.cos(angle) * radius,
+                    clamped.x,
                     yOffset + 0.45,
-                    room.z + Math.sin(angle) * radius + depthOffset
+                    clamped.z
                 );
                 chair.castShadow = true;
                 chair.receiveShadow = true;
@@ -1407,18 +1445,24 @@
             }
         }
 
-        // 添加桌子
+        // 🔧 FIX: 添加桌子 - 確保位置在建築邊界內
         function addTables(group, room, yOffset, floorHeight, count) {
             const tableGeometry = new THREE.BoxGeometry(1.2, 0.75, 0.8);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xc0a080, metalness: 0.2, roughness: 0.7 });
 
             for (let i = 0; i < count; i++) {
                 const table = new THREE.Mesh(tableGeometry, tableMaterial);
-                const depthOffset = i * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
+                const depthOffset = i * 0.001;
+
+                // 計算原始位置並應用邊界限制
+                let x = room.x + (i - count / 2 + 0.5) * 2;
+                let z = room.z + depthOffset;
+                const clamped = clampFurniturePosition(x, z, 1.2, 0.8);
+
                 table.position.set(
-                    room.x + (i - count / 2 + 0.5) * 2,
+                    clamped.x,
                     yOffset + 0.375,
-                    room.z + depthOffset
+                    clamped.z
                 );
                 table.castShadow = true;
                 table.receiveShadow = true;
@@ -1426,7 +1470,7 @@
             }
         }
 
-        // 添加用餐桌
+        // 🔧 FIX: 添加用餐桌 - 確保位置在建築邊界內
         function addDiningTables(group, room, yOffset, floorHeight) {
             const tableGeometry = new THREE.BoxGeometry(1.5, 0.75, 1);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513, metalness: 0.2, roughness: 0.7 });
@@ -1434,22 +1478,25 @@
             const tableCount = Math.min(Math.floor((room.w * room.d) / 8), 4);
             for (let i = 0; i < tableCount; i++) {
                 const table = new THREE.Mesh(tableGeometry, tableMaterial);
-                const x = room.x - room.w / 2 + 2 + (i % 2) * 2.5;
-                const z = room.z - room.d / 2 + 1.5 + Math.floor(i / 2) * 2;
-                table.position.set(x, yOffset + 0.375, z);
+                let x = room.x - room.w / 2 + 2 + (i % 2) * 2.5;
+                let z = room.z - room.d / 2 + 1.5 + Math.floor(i / 2) * 2;
+                const clamped = clampFurniturePosition(x, z, 1.5, 1);
+
+                table.position.set(clamped.x, yOffset + 0.375, clamped.z);
                 table.castShadow = true;
                 table.receiveShadow = true;
                 group.add(table);
             }
         }
 
-        // 添加活動設備
+        // 🔧 FIX: 添加活動設備 - 確保位置在建築邊界內
         function addActivityEquipment(group, room, yOffset, floorHeight) {
             const equipmentGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.8);
             const equipmentMaterial = new THREE.MeshStandardMaterial({ color: 0xff6b9d, metalness: 0.3, roughness: 0.6 });
 
             const equipment = new THREE.Mesh(equipmentGeometry, equipmentMaterial);
-            equipment.position.set(room.x, yOffset + 0.6, room.z);
+            const clamped = clampFurniturePosition(room.x, room.z, 0.8, 0.8);
+            equipment.position.set(clamped.x, yOffset + 0.6, clamped.z);
             equipment.castShadow = true;
             equipment.receiveShadow = true;
             group.add(equipment);
@@ -1477,11 +1524,21 @@
             const rowSpacing = 5;
             let carIndex = 0;
 
+            // 🔧 FIX: 建築邊界約束 - 確保停車位在建築邊界內
+            const buildingBoundaryX = 16;
+            const buildingBoundaryZ = 10;
+            const carWidth = 2;
+            const carDepth = 4;
+
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 5; col++) {
                     if (carIndex >= 20) break;
-                    const x = room.x - room.w / 2 + 1.5 + col * rowSpacing;
-                    const z = room.z - room.d / 2 + 2 + row * carSpacing;
+                    let x = room.x - room.w / 2 + 1.5 + col * rowSpacing;
+                    let z = room.z - room.d / 2 + 2 + row * carSpacing;
+
+                    // 應用邊界限制
+                    x = Math.max(-buildingBoundaryX + carWidth/2, Math.min(buildingBoundaryX - carWidth/2, x));
+                    z = Math.max(-buildingBoundaryZ + carDepth/2, Math.min(buildingBoundaryZ - carDepth/2, z));
 
                     // 簡化汽車模型
                     const carGeometry = new THREE.BoxGeometry(2, 1.2, 4);
@@ -1504,12 +1561,24 @@
         function addMechanicalRoom(group, room, yOffset, floorHeight) {
             // 機械設備：HVAC 機組、水泵、變壓器等
 
+            // 🔧 FIX: 建築邊界約束 - 確保機械設備在邊界內
+            const buildingBoundaryX = 16;
+            const buildingBoundaryZ = 10;
+            const hvacSize = { w: 2, d: 1.5 };
+            const transformerSize = { w: 1, d: 1 };
+            const pumpRadius = 0.3;
+
             // 大型機械設備
             const hvacGeometry = new THREE.BoxGeometry(2, 1.5, 1.5);
             const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.9, roughness: 0.2 });
 
             const hvac = new THREE.Mesh(hvacGeometry, metalMaterial);
-            hvac.position.set(room.x - room.w / 2 + 2, yOffset + 0.75, room.z - room.d / 2 + 2);
+            let hvacX = room.x - room.w / 2 + 2;
+            let hvacZ = room.z - room.d / 2 + 2;
+            // 應用邊界限制
+            hvacX = Math.max(-buildingBoundaryX + hvacSize.w/2, Math.min(buildingBoundaryX - hvacSize.w/2, hvacX));
+            hvacZ = Math.max(-buildingBoundaryZ + hvacSize.d/2, Math.min(buildingBoundaryZ - hvacSize.d/2, hvacZ));
+            hvac.position.set(hvacX, yOffset + 0.75, hvacZ);
             hvac.castShadow = true;
             hvac.receiveShadow = true;
             group.add(hvac);
@@ -1517,7 +1586,12 @@
             // 水泵
             const pumpGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 16);
             const pump = new THREE.Mesh(pumpGeometry, metalMaterial);
-            pump.position.set(room.x - room.w / 2 + 2, yOffset + 0.75, room.z);
+            let pumpX = room.x - room.w / 2 + 2;
+            let pumpZ = room.z;
+            // 應用邊界限制
+            pumpX = Math.max(-buildingBoundaryX + pumpRadius, Math.min(buildingBoundaryX - pumpRadius, pumpX));
+            pumpZ = Math.max(-buildingBoundaryZ + pumpRadius, Math.min(buildingBoundaryZ - pumpRadius, pumpZ));
+            pump.position.set(pumpX, yOffset + 0.75, pumpZ);
             pump.castShadow = true;
             pump.receiveShadow = true;
             group.add(pump);
@@ -1525,7 +1599,12 @@
             // 變壓器
             const transformerGeometry = new THREE.BoxGeometry(1, 1, 1);
             const transformer = new THREE.Mesh(transformerGeometry, metalMaterial);
-            transformer.position.set(room.x - room.w / 2 + 2, yOffset + 0.5, room.z + room.d / 2 - 2);
+            let transformerX = room.x - room.w / 2 + 2;
+            let transformerZ = room.z + room.d / 2 - 2;
+            // 應用邊界限制
+            transformerX = Math.max(-buildingBoundaryX + transformerSize.w/2, Math.min(buildingBoundaryX - transformerSize.w/2, transformerX));
+            transformerZ = Math.max(-buildingBoundaryZ + transformerSize.d/2, Math.min(buildingBoundaryZ - transformerSize.d/2, transformerZ));
+            transformer.position.set(transformerX, yOffset + 0.5, transformerZ);
             transformer.castShadow = true;
             transformer.receiveShadow = true;
             group.add(transformer);
@@ -1644,6 +1723,11 @@
         function addLongTermCareDining(group, room, yOffset, floorHeight) {
             // 用餐區：8張用餐圓桌（20人容量） + 餐具服務台
 
+            // 🔧 FIX: 建築邊界約束 - 用餐圓桌確保在邊界內
+            const buildingBoundaryX = 16;
+            const buildingBoundaryZ = 10;
+            const tableRadius = 0.75;
+
             // 圓形用餐桌 (φ1.5m)
             let itemIndex = 0;
             for (let i = 0; i < 8; i++) {
@@ -1651,8 +1735,13 @@
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
                 const table = new THREE.Mesh(tableGeometry, tableMaterial);
 
-                const x = room.x - room.w / 2 + 2.5 + (i % 2) * 3.5;
-                const z = room.z - room.d / 2 + 2 + Math.floor(i / 2) * 3;
+                let x = room.x - room.w / 2 + 2.5 + (i % 2) * 3.5;
+                let z = room.z - room.d / 2 + 2 + Math.floor(i / 2) * 3;
+
+                // 應用邊界限制
+                x = Math.max(-buildingBoundaryX + tableRadius, Math.min(buildingBoundaryX - tableRadius, x));
+                z = Math.max(-buildingBoundaryZ + tableRadius, Math.min(buildingBoundaryZ - tableRadius, z));
+
                 const depthOffset = itemIndex * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
                 table.position.set(x, yOffset + 0.375, z + depthOffset);
                 table.castShadow = true;
@@ -2004,15 +2093,24 @@
             addTables(group, room, yOffset, floorHeight, 15);
 
             // 小組討論區 (6個)
+            // 🔧 FIX: 建築邊界約束 - 討論圓桌確保在邊界內
+            const buildingBoundaryX = 16;
+            const buildingBoundaryZ = 10;
+            const tableRadius = 1;  // Cylinder radius for discussion tables
+
             for (let i = 0; i < 6; i++) {
                 const tableGeometry = new THREE.CylinderGeometry(1, 1, 0.75, 32);
                 const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6914 });
                 const table = new THREE.Mesh(tableGeometry, tableMaterial);
-                table.position.set(
-                    room.x + (i % 2) * 4 - 2,
-                    yOffset + 0.375,
-                    room.z + Math.floor(i / 2) * 3 - 2
-                );
+
+                let x = room.x + (i % 2) * 4 - 2;
+                let z = room.z + Math.floor(i / 2) * 3 - 2;
+
+                // 應用邊界限制
+                x = Math.max(-buildingBoundaryX + tableRadius, Math.min(buildingBoundaryX - tableRadius, x));
+                z = Math.max(-buildingBoundaryZ + tableRadius, Math.min(buildingBoundaryZ - tableRadius, z));
+
+                table.position.set(x, yOffset + 0.375, z);
                 table.castShadow = true;
                 group.add(table);
             }
@@ -2413,14 +2511,24 @@
         function addSolarPanels(group, room, yOffset, floorHeight) {
             // 太陽能板區：太陽能板陣列、發電設備、監控系統
 
+            // 🔧 FIX: 建築邊界約束 - 太陽能板確保在邊界內
+            const buildingBoundaryX = 16;
+            const panelWidth = 3;
+            const panelDepth = 2;
+
             // 太陽能板 (簡化表示)
             for (let i = 0; i < 6; i++) {
                 const panelGeometry = new THREE.BoxGeometry(3, 0.2, 2);
                 const panelMaterial = new THREE.MeshStandardMaterial({ color: 0x000080, metalness: 0.9 });
                 const panel = new THREE.Mesh(panelGeometry, panelMaterial);
                 panel.rotation.x = Math.PI / 6;  // 傾斜角度
+
+                let x = room.x - room.w / 2 + 2 + i * 4;
+                // 應用邊界限制
+                x = Math.max(-buildingBoundaryX + panelWidth/2, Math.min(buildingBoundaryX - panelWidth/2, x));
+
                 panel.position.set(
-                    room.x - room.w / 2 + 2 + i * 4,
+                    x,
                     yOffset + 1.5,
                     room.z
                 );
@@ -2432,19 +2540,27 @@
         function addTerraceArea(group, room, yOffset, floorHeight) {
             // 露台區：景觀椅、休息區、植物盆栽
 
+            // 🔧 FIX: 建築邊界約束 - 露台傢俱確保在邊界內
+            const buildingBoundaryX = 16;
+            const buildingBoundaryZ = 10;
+
             // 景觀椅
             addChairs(group, room, yOffset, floorHeight, 10);
 
-            // 植物盆栽
+            // 植物盆栽 - 應用邊界限制
             for (let i = 0; i < 12; i++) {
                 const potGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.8, 16);
                 const potMaterial = new THREE.MeshStandardMaterial({ color: 0xcd853f });
                 const pot = new THREE.Mesh(potGeometry, potMaterial);
-                pot.position.set(
-                    room.x - room.w / 2 + 1 + (i % 4) * 2,
-                    yOffset + 0.4,
-                    room.z - room.d / 2 + 1 + Math.floor(i / 4) * 2.5
-                );
+
+                let x = room.x - room.w / 2 + 1 + (i % 4) * 2;
+                let z = room.z - room.d / 2 + 1 + Math.floor(i / 4) * 2.5;
+
+                // 應用邊界限制 (盆栽直徑0.4，高度0.8) + 0.05 單位安全邊距
+                x = Math.max(-buildingBoundaryX + 0.4 + 0.05, Math.min(buildingBoundaryX - 0.4 - 0.05, x));
+                z = Math.max(-buildingBoundaryZ + 0.4 + 0.05, Math.min(buildingBoundaryZ - 0.4 - 0.05, z));
+
+                pot.position.set(x, yOffset + 0.4, z);
                 pot.castShadow = true;
                 group.add(pot);
             }
@@ -2497,11 +2613,16 @@
                 });
 
                 // 四面牆
+                // 🔧 FIX: 外牆應該向內移動 0.2 單位（確保安全邊距，避免浮點精度問題），使外邊緣在建築邊界內
+                const wallThickness = 0.3;
+                const insetDistance = 0.2;  // 從 0.15 增加到 0.2，避免邊界精度問題
                 const walls = [
-                    { pos: [0, yOffset + height/2, BUILDING_CONFIG.depth/2], size: [BUILDING_CONFIG.width, height, 0.3] },
-                    { pos: [0, yOffset + height/2, -BUILDING_CONFIG.depth/2], size: [BUILDING_CONFIG.width, height, 0.3] },
-                    { pos: [-BUILDING_CONFIG.width/2, yOffset + height/2, 0], size: [BUILDING_CONFIG.depth, height, 0.3] },
-                    { pos: [BUILDING_CONFIG.width/2, yOffset + height/2, 0], size: [BUILDING_CONFIG.depth, height, 0.3] }
+                    // 前後牆：寬度=建築寬度(32)，深度=牆厚(0.3)
+                    { pos: [0, yOffset + height/2, BUILDING_CONFIG.depth/2 - insetDistance], size: [BUILDING_CONFIG.width, height, wallThickness] },  // 後牆 (z=9.80)
+                    { pos: [0, yOffset + height/2, -BUILDING_CONFIG.depth/2 + insetDistance], size: [BUILDING_CONFIG.width, height, wallThickness] },  // 前牆 (z=-9.80)
+                    // 左右牆：寬度=牆厚(0.3)，深度=建築深度(20)
+                    { pos: [-BUILDING_CONFIG.width/2 + insetDistance, yOffset + height/2, 0], size: [wallThickness, height, BUILDING_CONFIG.depth] },  // 左牆 (x=-15.80)
+                    { pos: [BUILDING_CONFIG.width/2 - insetDistance, yOffset + height/2, 0], size: [wallThickness, height, BUILDING_CONFIG.depth] }   // 右牆 (x=15.80)
                 ];
 
                 walls.forEach((wall, index) => {
@@ -2603,10 +2724,12 @@
                     roughness: 0.9
                 });
 
-                // 為每個房間創建邊界牆（使用前面已定義的 rooms 陣列）
+                // 🔧 FIX: 為每個房間創建邊界牆（確保不超出建築邊界）
                 rooms.forEach(room => {
                     const wallThickness = 0.2;
                     const wallHeight = height * 0.9;
+                    const buildingHalfWidth = BUILDING_CONFIG.width / 2 - 0.15;  // 減去牆厚度的一半
+                    const buildingHalfDepth = BUILDING_CONFIG.depth / 2 - 0.15;
 
                     // 房間的邊界
                     const left = room.x - room.w / 2;
@@ -2614,44 +2737,64 @@
                     const front = room.z - room.d / 2;
                     const back = room.z + room.d / 2;
 
-                    // 北牆（後面）
+                    // 北牆（後面）- 確保寬度不超出邊界
                     if (!isRoomAdjacent(rooms, room, 'north')) {
-                        const northWall = new THREE.BoxGeometry(room.w + wallThickness * 2, wallHeight, wallThickness);
+                        const clampedLeft = Math.max(left, -buildingHalfWidth + wallThickness);
+                        const clampedRight = Math.min(right, buildingHalfWidth - wallThickness);
+                        const wallWidth = clampedRight - clampedLeft;
+                        const wallCenterX = (clampedLeft + clampedRight) / 2;
+
+                        const northWall = new THREE.BoxGeometry(wallWidth, wallHeight, wallThickness);
                         const northMesh = new THREE.Mesh(northWall, wallMaterial);
-                        northMesh.position.set(room.x, yOffset + height / 2, back + wallThickness / 2);
+                        northMesh.position.set(wallCenterX, yOffset + height / 2, Math.min(back + wallThickness / 2, buildingHalfDepth));
                         northMesh.castShadow = true;
                         northMesh.receiveShadow = true;
                         northMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(northMesh);
                     }
 
-                    // 南牆（前面）
+                    // 南牆（前面）- 確保寬度不超出邊界
                     if (!isRoomAdjacent(rooms, room, 'south')) {
-                        const southWall = new THREE.BoxGeometry(room.w + wallThickness * 2, wallHeight, wallThickness);
+                        const clampedLeft = Math.max(left, -buildingHalfWidth + wallThickness);
+                        const clampedRight = Math.min(right, buildingHalfWidth - wallThickness);
+                        const wallWidth = clampedRight - clampedLeft;
+                        const wallCenterX = (clampedLeft + clampedRight) / 2;
+
+                        const southWall = new THREE.BoxGeometry(wallWidth, wallHeight, wallThickness);
                         const southMesh = new THREE.Mesh(southWall, wallMaterial);
-                        southMesh.position.set(room.x, yOffset + height / 2, front - wallThickness / 2);
+                        southMesh.position.set(wallCenterX, yOffset + height / 2, Math.max(front - wallThickness / 2, -buildingHalfDepth));
                         southMesh.castShadow = true;
                         southMesh.receiveShadow = true;
                         southMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(southMesh);
                     }
 
-                    // 東牆（右邊）
+                    // 東牆（右邊）- 確保深度不超出邊界
                     if (!isRoomAdjacent(rooms, room, 'east')) {
-                        const eastWall = new THREE.BoxGeometry(wallThickness, wallHeight, room.d);
+                        const clampedFront = Math.max(front, -buildingHalfDepth + wallThickness);
+                        const clampedBack = Math.min(back, buildingHalfDepth - wallThickness);
+                        const wallDepth = clampedBack - clampedFront;
+                        const wallCenterZ = (clampedFront + clampedBack) / 2;
+
+                        const eastWall = new THREE.BoxGeometry(wallThickness, wallHeight, wallDepth);
                         const eastMesh = new THREE.Mesh(eastWall, wallMaterial);
-                        eastMesh.position.set(right + wallThickness / 2, yOffset + height / 2, room.z);
+                        eastMesh.position.set(Math.min(right + wallThickness / 2, buildingHalfWidth), yOffset + height / 2, wallCenterZ);
                         eastMesh.castShadow = true;
                         eastMesh.receiveShadow = true;
                         eastMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(eastMesh);
                     }
 
-                    // 西牆（左邊）
+                    // 西牆（左邊）- 確保深度不超出邊界
                     if (!isRoomAdjacent(rooms, room, 'west')) {
-                        const westWall = new THREE.BoxGeometry(wallThickness, wallHeight, room.d);
+                        const clampedFront = Math.max(front, -buildingHalfDepth + wallThickness);
+                        const clampedBack = Math.min(back, buildingHalfDepth - wallThickness);
+                        const wallDepth = clampedBack - clampedFront;
+                        const wallCenterZ = (clampedFront + clampedBack) / 2;
+
+                        const westWall = new THREE.BoxGeometry(wallThickness, wallHeight, wallDepth);
                         const westMesh = new THREE.Mesh(westWall, wallMaterial);
-                        westMesh.position.set(left - wallThickness / 2, yOffset + height / 2, room.z);
+                        westMesh.position.set(Math.max(left - wallThickness / 2, -buildingHalfWidth), yOffset + height / 2, wallCenterZ);
                         westMesh.castShadow = true;
                         westMesh.receiveShadow = true;
                         westMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
