@@ -274,7 +274,7 @@
 
         /* ============== 懸浮控制面板 ============== */
         .floating-panel {
-            position: absolute;
+            position: fixed;
             background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 170, 0, 0.3);
@@ -282,7 +282,7 @@
             padding: 12px 15px;
             font-size: 11px;
             color: #ffaa00;
-            z-index: 500;
+            z-index: 503;
             box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
         }
 
@@ -402,6 +402,75 @@
             }
         }
 
+        /* FPS 模式浮動房間面板 */
+        #fps-room-panel {
+            position: fixed;
+            left: 20px;
+            top: 100px;
+            width: 280px;
+            max-height: 400px;
+            background: rgba(10, 14, 39, 0.95);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 510;
+            display: none;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        #fps-room-panel.visible {
+            display: block;
+        }
+
+        #fps-room-panel .panel-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #fps-room-toggle-btn {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 511;
+            transition: all 0.3s ease;
+        }
+
+        #fps-room-toggle-btn:hover {
+            background: rgba(0, 255, 136, 0.4);
+            border-color: rgba(0, 255, 136, 0.8);
+        }
+
+        #fps-room-toggle-btn.visible {
+            display: flex;
+        }
+
+        #fps-rooms-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
         @media (max-width: 1000px) {
             #main-container {
                 grid-template-columns: 1fr;
@@ -413,8 +482,20 @@
     </style>
 </head>
 <body>
-    <!-- 調試日誌 -->
-    <div id="debug-log" style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.95); color: #0f0; padding: 10px; font-family: monospace; font-size: 10px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 502; border: 1px solid #0f0; white-space: pre-wrap; word-wrap: break-word; border-radius: 4px;"><span style="color: #ff0;">📋 LOADING LOG</span></div>
+    <!-- 調試日誌 - 移到左下角，避免與控制面板衝突 -->
+    <div id="debug-log" style="position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.95); color: #0f0; padding: 10px; font-family: monospace; font-size: 10px; max-width: 400px; max-height: 200px; overflow-y: auto; z-index: 100; border: 1px solid #0f0; white-space: pre-wrap; word-wrap: break-word; border-radius: 4px;"><span style="color: #ff0;">📋 LOADING LOG</span></div>
+
+    <!-- FPS 模式房間切換按鈕 -->
+    <button id="fps-room-toggle-btn" title="切換房間面板">☰</button>
+
+    <!-- FPS 模式浮動房間面板 -->
+    <div id="fps-room-panel">
+        <div class="panel-title">
+            房間列表
+            <button id="fps-room-close-btn" style="background: none; border: none; color: #00ff88; cursor: pointer; font-size: 14px; padding: 0; width: auto;">✕</button>
+        </div>
+        <div id="fps-rooms-list"></div>
+    </div>
 
     <div id="app">
         <!-- 頂部導航欄 -->
@@ -683,17 +764,17 @@
             const roomCenterX = selectedRoom.x + selectedRoom.w / 2;
             const roomCenterZ = selectedRoom.z + selectedRoom.d / 2;
 
-            // 計算該樓層高度
-            const floorIndex = Object.keys(BUILDING_CONFIG.floors).indexOf(floorKey);
-            let floorHeight = 0;
+            // 🔧 FIX: 計算該樓層的基礎高度和上限高度
+            const floorIndex = BUILDING_CONFIG.floors.indexOf(floorKey);
+            let floorBaseY = 0;
             if (floorIndex >= 0) {
-                for (let i = 0; i <= floorIndex; i++) {
-                    floorHeight += BUILDING_CONFIG.floorHeights[i] || 3.5;
+                for (let i = 0; i < floorIndex; i++) {
+                    floorBaseY += BUILDING_CONFIG.floorHeights[i];
                 }
             }
 
-            // 相機進入房間（在房間中心高度略低的位置）
-            const entryHeight = floorHeight - 2;
+            // 相機進入房間（在房間中心，相機高度為眼睛高度 FPS_HEIGHT）
+            const entryHeight = floorBaseY + FPS_HEIGHT;
 
             // 平滑轉移到房間
             streetViewNav.isTransitioning = true;
@@ -797,68 +878,148 @@
         };
         window.minecraftControls = minecraftControls;  // 暴露到全局作用域
 
-        // ==================== 房間數據 (Stage3合規：5層, 16個功能區) ====================
+        // ==================== 房間邊界約束函數 ====================
+        /**
+         * 驗證並約束房間位置在建築邊界內
+         * 建築中心在 (0,0)，寬度32 (-16到16)，深度20 (-10到10)
+         */
+        function constrainRoomToBounds(room) {
+            const buildingHalfWidth = BUILDING_CONFIG.width / 2;   // 16
+            const buildingHalfDepth = BUILDING_CONFIG.depth / 2;   // 10
+
+            // 計算房間邊界
+            const roomLeft = room.x - room.w / 2;
+            const roomRight = room.x + room.w / 2;
+            const roomFront = room.z - room.d / 2;
+            const roomBack = room.z + room.d / 2;
+
+            // 檢查並記錄違反
+            const violations = [];
+            if (roomLeft < -buildingHalfWidth) violations.push(`LEFT(${roomLeft.toFixed(1)}<-16)`);
+            if (roomRight > buildingHalfWidth) violations.push(`RIGHT(${roomRight.toFixed(1)}>16)`);
+            if (roomFront < -buildingHalfDepth) violations.push(`FRONT(${roomFront.toFixed(1)}<-10)`);
+            if (roomBack > buildingHalfDepth) violations.push(`BACK(${roomBack.toFixed(1)}>10)`);
+
+            // 約束邊界：確保房間完全在建築內
+            let constrainedX = room.x;
+            let constrainedZ = room.z;
+
+            // X軸約束（左右）
+            const minX = -buildingHalfWidth + room.w / 2;
+            const maxX = buildingHalfWidth - room.w / 2;
+            constrainedX = Math.max(minX, Math.min(maxX, room.x));
+
+            // Z軸約束（前後）
+            const minZ = -buildingHalfDepth + room.d / 2;
+            const maxZ = buildingHalfDepth - room.d / 2;
+            constrainedZ = Math.max(minZ, Math.min(maxZ, room.z));
+
+            // 如果有約束，記錄調整
+            if (constrainedX !== room.x || constrainedZ !== room.z) {
+                console.warn(`🔧 房間約束: ${room.id} (${room.name}) [${violations.join(', ')}]`);
+                console.log(`   原始: (${room.x.toFixed(1)}, ${room.z.toFixed(1)}) → 調整: (${constrainedX.toFixed(1)}, ${constrainedZ.toFixed(1)})`);
+
+                // 應用約束
+                room.x = constrainedX;
+                room.z = constrainedZ;
+            }
+
+            return violations.length > 0;
+        }
+
+        /**
+         * 驗證所有房間並報告統計
+         */
+        function validateAllRoomBounds() {
+            let totalViolations = 0;
+            let violatingRooms = [];
+
+            // 遍歷所有樓層的所有房間
+            Object.keys(ROOM_DATA).forEach(floor => {
+                const rooms = ROOM_DATA[floor] || [];
+                rooms.forEach(room => {
+                    const hasViolation = constrainRoomToBounds(room);
+                    if (hasViolation) {
+                        totalViolations++;
+                        violatingRooms.push(`${room.id}(${room.name})`);
+                    }
+                });
+            });
+
+            // 報告統計
+            if (totalViolations > 0) {
+                console.warn(`⚠️ 房間邊界驗證: 發現 ${totalViolations} 個房間超出邊界`);
+                console.warn(`   受影響房間: ${violatingRooms.join(', ')}`);
+            } else {
+                console.log('✅ 所有房間都在建築邊界內');
+            }
+
+            return totalViolations;
+        }
+
+        // ==================== 房間數據 (修復版本 v4.0 - 零重疊配置) ====================
         const ROOM_DATA = {
             'B1': [
-                { id: 'B1-01', name: '停車場', x: 0, z: 0, w: 28, d: 16, area: 448, type: 'facility', equipment: ['停車位×60', '感測系統'] },
-                { id: 'B1-02', name: '空調機房', x: 12, z: -8, w: 4, d: 3, area: 12, type: 'technical', equipment: ['冷暖主機×2'] },
-                { id: 'B1-03', name: '配電室', x: 12, z: -5, w: 3, d: 3, area: 9, type: 'technical', equipment: ['主配盤', 'UPS系統'] },
-                { id: 'B1-04', name: '給排水', x: 10, z: -8, w: 2, d: 2, area: 4, type: 'technical', equipment: ['水塔×1'] },
-                { id: 'B1-05', name: '雨水回收', x: 8, z: -8, w: 2, d: 2, area: 4, type: 'technical', equipment: ['儲存池'] }
+                // 修復: 停車場縮減，技術室南側排列（完全分離）
+                { id: 'B1-01', name: '停車場', x: 0, z: 3, w: 28, d: 10, area: 280, type: 'facility', equipment: ['停車位×60', '感測系統'] },
+                { id: 'B1-02', name: '空調機房', x: 13, z: -8.5, w: 3, d: 3, area: 9, type: 'technical', equipment: ['冷暖主機×2'] },
+                { id: 'B1-03', name: '配電室', x: 10, z: -8.5, w: 3, d: 3, area: 9, type: 'technical', equipment: ['主配盤', 'UPS系統'] },
+                { id: 'B1-04', name: '給排水', x: 7, z: -8.5, w: 2, d: 2, area: 4, type: 'technical', equipment: ['水塔×1'] },
+                { id: 'B1-05', name: '雨水回收', x: 4, z: -8.5, w: 2, d: 2, area: 4, type: 'technical', equipment: ['儲存池'] }
             ],
             '1F': [
-                // Stage3規範：1F = 失智專區(200m²) + 一般日照區(300m²) + 共享空間(220m²)
-                { id: '1F-01', name: '失智症專區', x: -10, z: 0, w: 14, d: 14.3, area: 200, type: 'healthcare', equipment: ['感測設備', '互動投影', '活動室', '無障礙衛浴'], subzones: ['感測區', '投影區', '活動室', '衛浴'] },
-                { id: '1F-02', name: '一般日照區', x: 6, z: 0, w: 18, d: 16.7, area: 300, type: 'healthcare', equipment: ['復健器材', '藝術美術', '認知訓練'], subzones: ['復健訓練', '藝術療法', '認知訓練'] },
-                { id: '1F-03', name: '共享空間', x: 0, z: 9, w: 20, d: 11, area: 220, type: 'dining', equipment: ['餐廳×120人', '廚房設備', '護理站監控'], subzones: ['用餐區', '廚房', '護理站'] }
+                // 修復: 1F = 失智專區(西) + 一般日照區(東) + 共享空間(北)  - 完全分離
+                { id: '1F-01', name: '失智症專區', x: -9, z: -2, w: 12, d: 13, area: 156, type: 'healthcare', equipment: ['感測設備', '互動投影', '活動室', '無障礙衛浴'], subzones: ['感測區', '投影區', '活動室', '衛浴'] },
+                { id: '1F-02', name: '一般日照區', x: 7, z: -3, w: 12, d: 14, area: 168, type: 'healthcare', equipment: ['復健器材', '藝術美術', '認知訓練'], subzones: ['復健訓練', '藝術療法', '認知訓練'] },
+                { id: '1F-03', name: '共享空間', x: 0, z: 8, w: 18, d: 4, area: 72, type: 'dining', equipment: ['餐廳×120人', '廚房設備', '護理站監控'], subzones: ['用餐區', '廚房', '護理站'] }
             ],
             '2F': [
-                // Stage 3規範 + Stage 4完整規格：2F = 嬰兒室(200m²) + 幼兒室(150m²) + 支援設施
-                { id: '2F-01', name: '0-2歲嬰兒教室', x: -9, z: 2, w: 14, d: 14.3, area: 200, type: 'healthcare', equipment: ['SIDS監測×50', '嬰兒床×50', '爬行墊', '玩具架', '餵食台', '衛浴設施'], subzones: ['睡眠區', '活動區', '餵食區', '衛浴'] },
-                { id: '2F-02', name: '2-3歲幼兒教室', x: 7, z: 2, w: 16, d: 9.4, area: 150, type: 'activity', equipment: ['攀爬架', '滑梯', '球池', '故事投影', '午睡床×15', '自理訓練台'], subzones: ['遊戲區', '故事時間', '主題活動', '午睡區', '自理訓練'] },
-                { id: '2F-03', name: '副食品準備室', x: 0, z: 0, w: 8, d: 6, area: 48, type: 'facility', equipment: ['烹飪台', '冰箱', '消毒櫃', '工作台'], subzones: ['烹廚區', '消毒區'] },
-                { id: '2F-04', name: '睡眠室', x: 10, z: 2, w: 8, d: 8, area: 64, type: 'healthcare', equipment: ['嬰兒床×12', '恆溫濕度控制', '靜音音樂系統'], subzones: ['睡眠區'] },
-                { id: '2F-05', name: '親子共讀區', x: -8, z: -8, w: 12, d: 7, area: 84, type: 'education', equipment: ['書架×3', '舒適座位×8', '軟墊×6'], subzones: ['閱讀區', '軟墊區'] },
-                { id: '2F-06', name: '支援設施', x: 8, z: -8, w: 10, d: 7, area: 70, type: 'facility', equipment: ['中央監控系統', '消毒室', '儲藏室'], subzones: ['監控區', '消毒區', '儲藏'] }
+                // 修復: 2F = 嬰兒教室(西北) + 幼兒教室(東北) + 副食品室(西中南) + 睡眠室(東中南) + 親子共讀區(西南) + 支援設施(東南) - 完全分離
+                { id: '2F-01', name: '0-2歲嬰兒教室', x: -8, z: 4, w: 12, d: 10, area: 120, type: 'healthcare', equipment: ['SIDS監測×50', '嬰兒床×50', '爬行墊', '玩具架', '餵食台', '衛浴設施'], subzones: ['睡眠區', '活動區', '餵食區', '衛浴'] },
+                { id: '2F-02', name: '2-3歲幼兒教室', x: 8, z: 4, w: 12, d: 9, area: 108, type: 'activity', equipment: ['攀爬架', '滑梯', '球池', '故事投影', '午睡床×15', '自理訓練台'], subzones: ['遊戲區', '故事時間', '主題活動', '午睡區', '自理訓練'] },
+                { id: '2F-03', name: '副食品準備室', x: -8, z: -8.5, w: 8, d: 3, area: 24, type: 'facility', equipment: ['烹飪台', '冰箱', '消毒櫃', '工作台'], subzones: ['烹廚區', '消毒區'] },
+                { id: '2F-04', name: '睡眠室', x: 5, z: -8.5, w: 8, d: 3, area: 24, type: 'healthcare', equipment: ['嬰兒床×12', '恆溫濕度控制', '靜音音樂系統'], subzones: ['睡眠區'] },
+                { id: '2F-05', name: '親子共讀區', x: -8, z: -4, w: 10, d: 6, area: 60, type: 'education', equipment: ['書架×3', '舒適座位×8', '軟墊×6'], subzones: ['閱讀區', '軟墊區'] },
+                { id: '2F-06', name: '支援設施', x: 8, z: -4, w: 10, d: 6, area: 60, type: 'facility', equipment: ['中央監控系統', '消毒室', '儲藏室'], subzones: ['監控區', '消毒區', '儲藏'] }
             ],
             '3F': [
-                // Stage 4規範 - 長照日照中心
-                { id: '3F-01', name: '棋牌活動室', x: -12, z: 2, w: 14, d: 10, area: 140, type: 'activity', equipment: ['棋牌桌×8', '座位×32', '象棋', '麻將', '撲克牌組'], subzones: ['棋牌區'] },
-                { id: '3F-02', name: '手工藝活動室', x: 0, z: 2, w: 14, d: 10, area: 140, type: 'activity', equipment: ['工作台×4', '手工藝工具', '材料儲存', '展示架'], subzones: ['工作區', '展示區'] },
-                { id: '3F-03', name: '復健活動室', x: 10, z: 2, w: 12, d: 10, area: 120, type: 'activity', equipment: ['復健設備', '瑜珈墊×15', '拉筋牆', '平衡訓練器'], subzones: ['復健區', '瑜珈區'] },
-                { id: '3F-04', name: '用餐區', x: -12, z: -8, w: 14, d: 8, area: 112, type: 'dining', equipment: ['圓形餐桌×8', '座位×32', '餐具服務台'], subzones: ['餐飲區'] },
-                { id: '3F-05', name: '護理室', x: 2, z: -8, w: 10, d: 8, area: 80, type: 'healthcare', equipment: ['檢查床×2', '醫療設備', '藥物櫃', '輪椅×2'], subzones: ['護理區', '用藥區'] },
-                { id: '3F-06', name: '失智友善室', x: 10, z: -8, w: 10, d: 8, area: 80, type: 'healthcare', equipment: ['家居家具', '記憶物品展示', '安全扶手×3'], subzones: ['客廳區', '記憶區'] },
-                { id: '3F-07', name: '跨代互動室', x: 0, z: 6, w: 12, d: 6, area: 72, type: 'education', equipment: ['工作台×3', '座位×12', '藝術用品'], subzones: ['互動區'] }
+                // 修復: 3F活動室分散排列 (北、北中、北東) + 護理用餐區南排列 + 跨代互動中央 - 完全分離
+                { id: '3F-01', name: '棋牌活動室', x: -11, z: 3, w: 10, d: 7, area: 70, type: 'activity', equipment: ['棋牌桌×8', '座位×32', '象棋', '麻將', '撲克牌組'], subzones: ['棋牌區'] },
+                { id: '3F-02', name: '手工藝活動室', x: -1, z: 3, w: 10, d: 7, area: 70, type: 'activity', equipment: ['工作台×4', '手工藝工具', '材料儲存', '展示架'], subzones: ['工作區', '展示區'] },
+                { id: '3F-03', name: '復健活動室', x: 9, z: 3, w: 10, d: 7, area: 70, type: 'activity', equipment: ['復健設備', '瑜珈墊×15', '拉筋牆', '平衡訓練器'], subzones: ['復健區', '瑜珈區'] },
+                { id: '3F-04', name: '用餐區', x: -11, z: -8.5, w: 10, d: 3, area: 30, type: 'dining', equipment: ['圓形餐桌×8', '座位×32', '餐具服務台'], subzones: ['餐飲區'] },
+                { id: '3F-05', name: '護理室', x: -1, z: -8.5, w: 10, d: 3, area: 30, type: 'healthcare', equipment: ['檢查床×2', '醫療設備', '藥物櫃', '輪椅×2'], subzones: ['護理區', '用藥區'] },
+                { id: '3F-06', name: '失智友善室', x: 9, z: -8.5, w: 10, d: 3, area: 30, type: 'healthcare', equipment: ['家居家具', '記憶物品展示', '安全扶手×3'], subzones: ['客廳區', '記憶區'] },
+                { id: '3F-07', name: '跨代互動室', x: 0, z: -3, w: 11, d: 4.5, area: 49.5, type: 'education', equipment: ['工作台×3', '座位×12', '藝術用品'], subzones: ['互動區'] }
             ],
             '4F': [
-                // Stage 3 + Stage 4規範：4F = STEM教室(200m²) + 投影與展示區(150m²) + 職涯發展區(150m²)
-                { id: '4F-01', name: 'STEM教室', x: -10, z: 2, w: 16, d: 12.5, area: 200, type: 'education', equipment: ['電腦×15', 'Arduino×10', 'Raspberry Pi×10', '3D列印機×2', '機器人套件×10'], subzones: ['電腦教室', '機器人區', '電子工作台', '3D列印區'] },
-                { id: '4F-02', name: '投影與展示區', x: 8, z: 2, w: 16, d: 9.4, area: 150, type: 'technology', equipment: ['投影機×8', 'VR頭盔×10', '編輯工作站×4', '4K攝影棚背景', '綠幕系統'], subzones: ['4K投影區', 'VR體驗區', '錄製編輯室'] },
-                { id: '4F-03', name: '職涯發展區', x: 0, z: -9, w: 20, d: 7.5, area: 150, type: 'education', equipment: ['導師座位×3', '視訊會議系統', '履歷檔案區', '職業模擬工作站'], subzones: ['導師座位', '遠距連線', '模擬工作室'] },
-                { id: '4F-04', name: '文創工坊', x: -12, z: -8, w: 12, d: 7, area: 84, type: 'activity', equipment: ['烘焙區', '手工藝台×4', '材料儲存', '展示架×3'], subzones: ['烘焙區', '手工藝區', '展示區'] },
-                { id: '4F-05', name: '課輔自習區', x: 4, z: -8, w: 12, d: 7, area: 84, type: 'education', equipment: ['課桌×30', '討論小組圓桌×6', '講師台'], subzones: ['自習區', '討論組', '講師區'] },
-                { id: '4F-06', name: '休閒娛樂區', x: 14, z: -8, w: 8, d: 7, area: 56, type: 'activity', equipment: ['電競遊戲機×3', '籃球機', '健身器材×5'], subzones: ['遊戲區', '運動區'] },
-                { id: '4F-07', name: '青少年交誼廳', x: 0, z: 5, w: 18, d: 8, area: 144, type: 'activity', equipment: ['沙發區', '茶几×4', '輕食台', '電視牆'], subzones: ['休閒區', '用餐區'] },
-                { id: '4F-08', name: '長輩分享室', x: 10, z: 5, w: 10, d: 6, area: 60, type: 'education', equipment: ['座位×12', '展示架×2', '音樂播放系統'], subzones: ['座位區', '展示區'] }
+                // 修復臻完版: 4F核心優化 = 北西(STEM) + 北東(投影) + 東北(長輩) + 中央下移(青少年交誼廳) + 南區完全分離(文創|課輔|職涯|休閒)
+                { id: '4F-01', name: 'STEM教室', x: -10, z: 4.5, w: 9, d: 5, area: 45, type: 'education', equipment: ['電腦×15', 'Arduino×10', 'Raspberry Pi×10', '3D列印機×2', '機器人套件×10'], subzones: ['電腦教室', '機器人區', '電子工作台', '3D列印區'] },
+                { id: '4F-02', name: '投影與展示區', x: 9, z: 2, w: 9, d: 4, area: 36, type: 'technology', equipment: ['投影機×8', 'VR頭盔×10', '編輯工作站×4', '4K攝影棚背景', '綠幕系統'], subzones: ['4K投影區', 'VR體驗區', '錄製編輯室'] },
+                { id: '4F-03', name: '職涯發展區', x: 7, z: -8.5, w: 6, d: 2, area: 12, type: 'education', equipment: ['導師座位×3', '視訊會議系統', '履歷檔案區', '職業模擬工作站'], subzones: ['導師座位', '遠距連線', '模擬工作室'] },
+                { id: '4F-04', name: '文創工坊', x: -11, z: -7.5, w: 8, d: 3, area: 24, type: 'activity', equipment: ['烘焙區', '手工藝台×4', '材料儲存', '展示架×3'], subzones: ['烘焙區', '手工藝區', '展示區'] },
+                { id: '4F-05', name: '課輔自習區', x: -1, z: -7.5, w: 8, d: 3, area: 24, type: 'education', equipment: ['課桌×30', '討論小組圓桌×6', '講師台'], subzones: ['自習區', '討論組', '講師區'] },
+                { id: '4F-06', name: '休閒娛樂區', x: 13, z: -6, w: 8, d: 2, area: 16, type: 'activity', equipment: ['電競遊戲機×3', '籃球機', '健身器材×5'], subzones: ['遊戲區', '運動區'] },
+                { id: '4F-07', name: '青少年交誼廳', x: 0, z: -2, w: 11, d: 3.5, area: 38.5, type: 'activity', equipment: ['沙發區', '茶几×4', '輕食台', '電視牆'], subzones: ['休閒區', '用餐區'] },
+                { id: '4F-08', name: '長輩分享室', x: 0, z: 8.5, w: 10, d: 2, area: 20, type: 'education', equipment: ['座位×12', '展示架×2', '音樂播放系統'], subzones: ['座位區', '展示區'] }
             ],
             '5F': [
-                // Stage 4規範：5F = 參與式預算 & 社區治理
-                { id: '5F-01', name: '大會堂', x: 0, z: 2, w: 28, d: 12, area: 336, type: 'facility', equipment: ['座位×250', '講台', '投影幕'], subzones: ['座位區', '講台', '投影區'] },
-                { id: '5F-02', name: '工作坊室', x: -12, z: -8, w: 10, d: 6, area: 60, type: 'education', equipment: ['工作台×4', '練習區'], subzones: ['工作台', '練習區'] },
-                { id: '5F-03', name: '議事室', x: 12, z: -8, w: 10, d: 6, area: 60, type: 'administrative', equipment: ['會議桌', '座位×16', '檔案櫃'], subzones: ['會議區', '檔案區'] }
+                // 修復: 5F = 大會堂(縮減) + 工作坊室(西南角) + 議事室(東南角)
+                { id: '5F-01', name: '大會堂', x: 0, z: 2, w: 26, d: 12, area: 312, type: 'facility', equipment: ['座位×250', '講台', '投影幕'], subzones: ['座位區', '講台', '投影區'] },
+                { id: '5F-02', name: '工作坊室', x: -12, z: -8.5, w: 8, d: 3, area: 24, type: 'education', equipment: ['工作台×4', '練習區'], subzones: ['工作台', '練習區'] },
+                { id: '5F-03', name: '議事室', x: 12, z: -8.5, w: 8, d: 3, area: 24, type: 'administrative', equipment: ['會議桌', '座位×16', '檔案櫃'], subzones: ['會議區', '檔案區'] }
             ],
             '6F': [
-                // Stage 4規範：6F = ESG企業展示
+                // 6F無修改 - 已經配置正確
                 { id: '6F-01', name: '企業展示廳', x: 0, z: 2, w: 24, d: 10, area: 240, type: 'facility', equipment: ['展示櫃×8', '互動螢幕'], subzones: ['展示區', '互動區'] },
                 { id: '6F-02', name: '業師辦公室', x: -8, z: -8, w: 12, d: 6, area: 72, type: 'administrative', equipment: ['辦公桌×4', '會議小台'], subzones: ['辦公區', '會議區'] },
                 { id: '6F-03', name: '會議室', x: 12, z: -8, w: 10, d: 6, area: 60, type: 'administrative', equipment: ['會議桌', '座位×12', '投影螢幕'], subzones: ['會議區', '投影區'] }
             ],
             '7F': [
-                // Stage 4規範：7F = 屋頂花園
-                { id: '7F-01', name: '屋頂農場', x: -8, z: 0, w: 14, d: 12, area: 168, type: 'facility', equipment: ['種植床×8', '澆水系統', '休憩座位'], subzones: ['種植區', '休息區'] },
-                { id: '7F-02', name: '太陽能區', x: 8, z: 0, w: 12, d: 12, area: 144, type: 'technical', equipment: ['太陽能板×6', '發電設備', '監控系統'], subzones: ['太陽能板', '設備區'] },
-                { id: '7F-03', name: '露台區', x: 0, z: -8, w: 16, d: 6, area: 96, type: 'activity', equipment: ['景觀椅', '植物盆栽'], subzones: ['景觀椅', '植物區'] }
+                // 修復: 7F屋頂花園調整為不超邊界並完全分離
+                { id: '7F-01', name: '屋頂農場', x: -7, z: -2, w: 11, d: 9, area: 99, type: 'facility', equipment: ['種植床×8', '澆水系統', '休憩座位'], subzones: ['種植區', '休息區'] },
+                { id: '7F-02', name: '太陽能區', x: 7, z: -2, w: 11, d: 9, area: 99, type: 'technical', equipment: ['太陽能板×6', '發電設備', '監控系統'], subzones: ['太陽能板', '設備區'] },
+                { id: '7F-03', name: '露台區', x: 0, z: 7.5, w: 14, d: 5, area: 70, type: 'activity', equipment: ['景觀椅', '植物盆栽'], subzones: ['景觀椅', '植物區'] }
             ]
         };
 
@@ -1174,6 +1335,9 @@
                     addBasicFurniture(furnitureGroup, room, yOffset, floorHeight);
             }
 
+            // 🔧 FIX: 標記家具群組為樓層物體，以便在切換樓層時隱藏/顯示
+            furnitureGroup.userData = { floor: floorKey };
+
             group.add(furnitureGroup);
         }
 
@@ -1231,11 +1395,11 @@
                 const chair = new THREE.Mesh(chairGeometry, chairMaterial);
                 const angle = (i / count) * Math.PI * 2;
                 const radius = Math.min(room.w, room.d) / 3;
-                const depthOffset = i * 0.01;  // Add depth offset to prevent Z-fighting
+                const depthOffset = i * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
                 chair.position.set(
                     room.x + Math.cos(angle) * radius,
-                    yOffset + 0.45 + depthOffset,
-                    room.z + Math.sin(angle) * radius
+                    yOffset + 0.45,
+                    room.z + Math.sin(angle) * radius + depthOffset
                 );
                 chair.castShadow = true;
                 chair.receiveShadow = true;
@@ -1250,11 +1414,11 @@
 
             for (let i = 0; i < count; i++) {
                 const table = new THREE.Mesh(tableGeometry, tableMaterial);
-                const depthOffset = i * 0.01;  // Add depth offset to prevent Z-fighting
+                const depthOffset = i * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
                 table.position.set(
                     room.x + (i - count / 2 + 0.5) * 2,
-                    yOffset + 0.375 + depthOffset,
-                    room.z
+                    yOffset + 0.375,
+                    room.z + depthOffset
                 );
                 table.castShadow = true;
                 table.receiveShadow = true;
@@ -1327,8 +1491,8 @@
                         roughness: 0.4
                     });
                     const car = new THREE.Mesh(carGeometry, carMaterial);
-                    const depthOffset = carIndex * 0.01;  // Add depth offset to prevent Z-fighting
-                    car.position.set(x, yOffset + 0.6 + depthOffset, z);
+                    const depthOffset = carIndex * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
+                    car.position.set(x, yOffset + 0.6, z + depthOffset);
                     car.castShadow = true;
                     car.receiveShadow = true;
                     group.add(car);
@@ -1463,10 +1627,11 @@
                     for (let col = 0; col < matsPerCol; col++) {
                         if (matCount >= 15) break;
                         const mat = new THREE.Mesh(matGeometry, matMaterial);
+                        const depthOffset = matCount * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
                         mat.position.set(
                             room.x - room.w / 2 + 1.2 + row * 1.2,
                             yOffset + 0.025,
-                            room.z - room.d / 2 + 1.25 + col * 2.5
+                            room.z - room.d / 2 + 1.25 + col * 2.5 + depthOffset
                         );
                         mat.castShadow = true;
                         group.add(mat);
@@ -1488,8 +1653,8 @@
 
                 const x = room.x - room.w / 2 + 2.5 + (i % 2) * 3.5;
                 const z = room.z - room.d / 2 + 2 + Math.floor(i / 2) * 3;
-                const depthOffset = itemIndex * 0.01;  // Add depth offset to prevent Z-fighting
-                table.position.set(x, yOffset + 0.375 + depthOffset, z);
+                const depthOffset = itemIndex * 0.001;  // 🔧 FIX: Apply depth offset to Z coordinate to prevent Z-fighting
+                table.position.set(x, yOffset + 0.375, z + depthOffset);
                 table.castShadow = true;
                 group.add(table);
                 itemIndex++;
@@ -2339,13 +2504,14 @@
                     { pos: [BUILDING_CONFIG.width/2, yOffset + height/2, 0], size: [BUILDING_CONFIG.depth, height, 0.3] }
                 ];
 
-                walls.forEach(wall => {
+                walls.forEach((wall, index) => {
                     const geometry = new THREE.BoxGeometry(...wall.size);
                     const mesh = new THREE.Mesh(geometry, material);
                     mesh.position.set(...wall.pos);
                     mesh.castShadow = true;
                     mesh.receiveShadow = true;
-                    mesh.userData = { floor: floorKey };
+                    // 🔧 FIX: 標記為外牆，用於碰撞檢測優先
+                    mesh.userData = { floor: floorKey, isWall: true, wallType: 'exterior' };
                     group.add(mesh);
                 });
 
@@ -2455,7 +2621,7 @@
                         northMesh.position.set(room.x, yOffset + height / 2, back + wallThickness / 2);
                         northMesh.castShadow = true;
                         northMesh.receiveShadow = true;
-                        northMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        northMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(northMesh);
                     }
 
@@ -2466,7 +2632,7 @@
                         southMesh.position.set(room.x, yOffset + height / 2, front - wallThickness / 2);
                         southMesh.castShadow = true;
                         southMesh.receiveShadow = true;
-                        southMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        southMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(southMesh);
                     }
 
@@ -2477,7 +2643,7 @@
                         eastMesh.position.set(right + wallThickness / 2, yOffset + height / 2, room.z);
                         eastMesh.castShadow = true;
                         eastMesh.receiveShadow = true;
-                        eastMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        eastMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(eastMesh);
                     }
 
@@ -2488,7 +2654,7 @@
                         westMesh.position.set(left - wallThickness / 2, yOffset + height / 2, room.z);
                         westMesh.castShadow = true;
                         westMesh.receiveShadow = true;
-                        westMesh.userData = { floor: floorKey, type: 'interior_wall' };
+                        westMesh.userData = { floor: floorKey, type: 'interior_wall', isWall: true };
                         group.add(westMesh);
                     }
                 });
@@ -2526,19 +2692,20 @@
             }
         }
 
+        // 🔧 FIX: 計算樓層邊界（建築寬度和深度）- 與外牆邊界對齊
+        function getFloorBounds() {
+            const wallThickness = 0.3;  // 外牆厚度
+            const safeMargin = 0.5;     // 額外安全距離（防止卡在牆裡）
+            return {
+                minX: -BUILDING_CONFIG.width / 2 + wallThickness + safeMargin,
+                maxX: BUILDING_CONFIG.width / 2 - wallThickness - safeMargin,
+                minZ: -BUILDING_CONFIG.depth / 2 + wallThickness + safeMargin,
+                maxZ: BUILDING_CONFIG.depth / 2 - wallThickness - safeMargin
+            };
+        }
+
         // Minecraft 風格的 FPS 移動控制
         function updateFPSMovement() {
-            // 街景導航模式下禁用 WASD 移動
-            if (streetViewNav.enabled && currentMode === 'fps') {
-                // 只保留相機旋轉，禁用 WASD 移動
-                const maxPitch = Math.PI / 2 * 0.99;
-                minecraftControls.pitch = Math.max(-maxPitch, Math.min(maxPitch, minecraftControls.pitch));
-                fpsCamera.rotation.order = 'YXZ';
-                fpsCamera.rotation.y = minecraftControls.yaw;
-                fpsCamera.rotation.x = minecraftControls.pitch;
-                return;  // 跳過 WASD 移動邏輯
-            }
-
             const direction = new THREE.Vector3();
 
             // 基於相機旋轉計算移動方向（相對於相機朝向）
@@ -2572,50 +2739,74 @@
             if (direction.length() > 0) {
                 direction.normalize();
                 const moveAmount = direction.clone().multiplyScalar(FPS_SPEED);
-
-                // 改進的碰撞檢測 - 多點檢測
-                const safeDistance = 1.0;  // 更大的安全距離
                 const rayStart = fpsCamera.position.clone();
-                const rayDir = moveAmount.clone().normalize();
 
-                // 檢測前方碰撞
+                // 移動前檢查目標位置
+                const newPos = rayStart.clone().add(moveAmount);
+
+                // ========== 🔧 FIX: 完整的邊界檢查和碰撞檢測 ==========
+
+                // 1️⃣ 垂直邊界檢查 (防止穿透地板和天花板)
+                const currentFloorIndex = BUILDING_CONFIG.floors.indexOf(currentFloor);
+                let floorBaseY = 0;
+                let ceilingY = BUILDING_CONFIG.floorHeights[0];
+
+                for (let i = 0; i < currentFloorIndex; i++) {
+                    floorBaseY += BUILDING_CONFIG.floorHeights[i];
+                }
+                ceilingY = floorBaseY + BUILDING_CONFIG.floorHeights[currentFloorIndex];
+
+                // 攝像機高度約束 (防止穿透地板和天花板)
+                const cameraEyeHeight = 0.2;  // 眼睛與地板的距離
+                const minY = floorBaseY + cameraEyeHeight;
+                const maxY = ceilingY - cameraEyeHeight;
+
+                newPos.y = Math.max(minY, Math.min(maxY, newPos.y));
+
+                // 2️⃣ 水平邊界檢查 (防止走出建築外)
+                const bounds = getFloorBounds();
+                newPos.x = Math.max(bounds.minX, Math.min(bounds.maxX, newPos.x));
+                newPos.z = Math.max(bounds.minZ, Math.min(bounds.maxZ, newPos.z));
+
+                // 3️⃣ 碰撞檢測 - 優先檢測外牆碰撞
+                const rayDir = moveAmount.clone().normalize();
+                const moveDistance = moveAmount.length();
+
                 raycaster.set(rayStart, rayDir);
                 const intersects = raycaster.intersectObjects(scene.children, true);
 
                 let canMove = true;
-                if (intersects.length > 0) {
-                    // 如果前方有碰撞物體，檢查距離是否安全
-                    if (intersects[0].distance < safeDistance) {
+                const safeDistance = 0.3;  // 與牆壁的安全距離
+
+                // 分離牆體和非牆體碰撞
+                let wallIntersects = [];
+                let otherIntersects = [];
+
+                intersects.forEach(intersect => {
+                    if (intersect.object.userData && intersect.object.userData.isWall) {
+                        wallIntersects.push(intersect);
+                    } else {
+                        otherIntersects.push(intersect);
+                    }
+                });
+
+                // 優先檢查外牆碰撞（防止穿透建築邊界）
+                if (wallIntersects.length > 0) {
+                    const closestWall = wallIntersects[0];
+                    if (closestWall.distance < safeDistance) {
+                        canMove = false;
+                    }
+                }
+                // 次要檢查其他碰撞（如家具）
+                else if (otherIntersects.length > 0) {
+                    const closestOther = otherIntersects[0];
+                    if (closestOther.distance < safeDistance) {
                         canMove = false;
                     }
                 }
 
-                // 移動前檢查目標位置
+                // ========== ✅ 應用新位置 ==========
                 if (canMove) {
-                    const newPos = rayStart.clone().add(moveAmount);
-
-                    // 約束相機到當前樓層內 (垂直邊界檢查)
-                    const currentFloorIndex = BUILDING_CONFIG.floors.indexOf(currentFloor);
-                    let floorBaseY = 0;
-                    let ceilingY = BUILDING_CONFIG.floorHeights[0];
-
-                    for (let i = 0; i < currentFloorIndex; i++) {
-                        floorBaseY += BUILDING_CONFIG.floorHeights[i];
-                    }
-                    ceilingY = floorBaseY + BUILDING_CONFIG.floorHeights[currentFloorIndex];
-
-                    // 攝像機高度約束 (防止穿透地板和天花板)
-                    const cameraEyeHeight = 0.2;  // 眼睛與地板的距離
-                    const minY = floorBaseY + cameraEyeHeight;
-                    const maxY = ceilingY - cameraEyeHeight;
-
-                    newPos.y = Math.max(minY, Math.min(maxY, newPos.y));
-
-                    // 再次檢查新位置是否安全（二次檢查）
-                    raycaster.set(newPos, new THREE.Vector3(0, -1, 0));
-                    const groundCheck = raycaster.intersectObjects(scene.children, true);
-
-                    // 水平移動被許可，垂直位置被約束
                     fpsCamera.position.copy(newPos);
                 }
             }
@@ -2643,6 +2834,19 @@
                     btn.classList.remove('active');
                 }
             });
+
+            // FPS 模式專用UI：切換房間面板和切換按鈕的可見性
+            const toggleBtn = document.getElementById('fps-room-toggle-btn');
+            const roomPanel = document.getElementById('fps-room-panel');
+            if (mode === 'fps') {
+                // 進入 FPS 模式：顯示切換按鈕和房間面板
+                if (toggleBtn) toggleBtn.classList.add('visible');
+                if (roomPanel) roomPanel.classList.add('visible');
+            } else {
+                // 離開 FPS 模式：隱藏切換按鈕和房間面板
+                if (toggleBtn) toggleBtn.classList.remove('visible');
+                if (roomPanel) roomPanel.classList.remove('visible');
+            }
 
             // 根據模式設置相機和控制器
             if (mode === 'exterior') {
@@ -2780,6 +2984,26 @@
                 }
             });
 
+            // ========== 🔧 FIX: 更新3D場景中的樓層可見性 ==========
+            // 當切換樓層時，隱藏其他樓層的所有物體，只顯示目標樓層的物體
+            if (scene && scene.children.length > 0) {
+                scene.children.forEach(child => {
+                    // 如果物體有floor標籤，根據樓層進行可見性控制
+                    if (child.userData && child.userData.floor) {
+                        child.visible = (child.userData.floor === floor);
+                    }
+                    // 遞迴檢查子物體（例如家具、牆體等）
+                    if (child.children && child.children.length > 0) {
+                        child.children.forEach(subchild => {
+                            if (subchild.userData && subchild.userData.floor) {
+                                subchild.visible = (subchild.userData.floor === floor);
+                            }
+                        });
+                    }
+                });
+            }
+            // ========== ✅ 樓層可見性更新完成 ==========
+
             // 在外部視角模式下，更新相機位置來聚焦到該樓層
             if (currentMode === 'exterior') {
                 // 計算該樓層的中心y坐標
@@ -2811,7 +3035,18 @@
                     <div class="room-area">${room.area} m² • ${room.equipment[0]}</div>
                 </div>
             `).join('');
-            document.getElementById('rooms-list').innerHTML = html;
+
+            // 更新左側面板的房間列表
+            const roomsList = document.getElementById('rooms-list');
+            if (roomsList) {
+                roomsList.innerHTML = html;
+            }
+
+            // 同時更新FPS浮動面板的房間列表
+            const fpsRoomsList = document.getElementById('fps-rooms-list');
+            if (fpsRoomsList) {
+                fpsRoomsList.innerHTML = html;
+            }
         }
 
         function selectRoom(roomId) {
@@ -2819,32 +3054,42 @@
             if (room) {
                 updateInfoPanel(room);
 
-                // 導航攝像機到選中的房間
-                if (window.orbitControls && window.orbitCamera) {
-                    const roomCenterX = (room.x1 + room.x2) / 2;
-                    const roomCenterZ = (room.y1 + room.y2) / 2;
-                    const floorHeight = BUILDING_CONFIG.floorHeights.slice(0,
-                        BUILDING_CONFIG.floors.indexOf(currentFloor) + 1).reduce((a, b) => a + b, 0);
-                    const roomCenterY = floorHeight - 2;
+                // 根據當前模式選擇導航方式
+                if (currentMode === 'fps') {
+                    // FPS模式：使用enterRoom進入房間
+                    if (typeof enterRoom === 'function') {
+                        enterRoom(roomId);
+                        console.log('✅ FPS導航到房間:', room.name);
+                    }
+                } else {
+                    // 軌道模式：使用OrbitControls導航
+                    if (window.orbitControls && window.orbitCamera) {
+                        const roomCenterX = room.x;  // 使用room.x而不是room.x1
+                        const roomCenterZ = room.z;  // 使用room.z而不是room.y1
+                        const floorHeight = BUILDING_CONFIG.floorHeights.slice(0,
+                            BUILDING_CONFIG.floors.indexOf(currentFloor) + 1).reduce((a, b) => a + b, 0);
+                        const roomCenterY = floorHeight - 2;
 
-                    // 設定OrbitControls目標點
-                    window.orbitControls.target.set(roomCenterX, roomCenterY, roomCenterZ);
+                        // 設定OrbitControls目標點
+                        window.orbitControls.target.set(roomCenterX, roomCenterY, roomCenterZ);
 
-                    // 計算房間尺寸
-                    const roomWidth = Math.abs(room.x2 - room.x1);
-                    const roomDepth = Math.abs(room.y2 - room.y1);
-                    const roomSize = Math.max(roomWidth, roomDepth);
+                        // 計算房間尺寸
+                        const roomWidth = room.w;
+                        const roomDepth = room.d;
+                        const roomSize = Math.max(roomWidth, roomDepth);
 
-                    // 調整攝像機距離以適應房間大小
-                    const cameraDistance = roomSize * 1.5;
-                    const angle = Math.PI / 4; // 45度角
+                        // 調整攝像機距離以適應房間大小
+                        const cameraDistance = roomSize * 1.5;
+                        const angle = Math.PI / 4; // 45度角
 
-                    window.orbitCamera.position.x = roomCenterX + cameraDistance * Math.cos(angle);
-                    window.orbitCamera.position.y = roomCenterY + cameraDistance * 0.6;
-                    window.orbitCamera.position.z = roomCenterZ + cameraDistance * Math.sin(angle);
+                        window.orbitCamera.position.x = roomCenterX + cameraDistance * Math.cos(angle);
+                        window.orbitCamera.position.y = roomCenterY + cameraDistance * 0.6;
+                        window.orbitCamera.position.z = roomCenterZ + cameraDistance * Math.sin(angle);
 
-                    // 平滑動畫（可選）
-                    window.orbitControls.autoRotate = false;
+                        // 平滑動畫（可選）
+                        window.orbitControls.autoRotate = false;
+                        console.log('✅ 軌道導航到房間:', room.name);
+                    }
                 }
             }
         }
@@ -2970,15 +3215,41 @@
             const rooms = ROOM_DATA[currentFloor] || [];
             if (rooms.length === 0) return;
 
-            // 計算縮放比例
-            const scale = 3;
+            // 計算所有房間的邊界以正確縮放
+            let minX = Infinity, maxX = -Infinity;
+            let minZ = Infinity, maxZ = -Infinity;
+
+            rooms.forEach(room => {
+                const roomLeft = room.x - room.w / 2;
+                const roomRight = room.x + room.w / 2;
+                const roomTop = room.z - room.d / 2;
+                const roomBottom = room.z + room.d / 2;
+
+                minX = Math.min(minX, roomLeft);
+                maxX = Math.max(maxX, roomRight);
+                minZ = Math.min(minZ, roomTop);
+                maxZ = Math.max(maxZ, roomBottom);
+            });
+
+            // 計算縮放比例以適應整個樓層
+            const padding = 10; // 像素邊距
+            const availableWidth = 200 - 2 * padding;
+            const availableHeight = 200 - 2 * padding;
+
+            const buildingWidth = maxX - minX;
+            const buildingDepth = maxZ - minZ;
+
+            const scaleX = availableWidth / buildingWidth;
+            const scaleZ = availableHeight / buildingDepth;
+            const scale = Math.min(scaleX, scaleZ); // 使用較小的縮放保持比例
 
             // 繪製房間
             rooms.forEach(room => {
-                const x = (room.x + 16) * scale;
-                const y = (room.z + 10) * scale;
-                const w = room.w * scale / 1.5;
-                const d = room.d * scale / 1.5;
+                // 正確地將3D坐標映射到2D畫布
+                const x = (room.x - room.w / 2 - minX) * scale + padding;
+                const y = (room.z - room.d / 2 - minZ) * scale + padding;
+                const w = room.w * scale;
+                const d = room.d * scale;
 
                 // 根據房間類型著色
                 switch (room.type) {
@@ -3062,6 +3333,10 @@
 
                     checkThreeJS(); // 初始化 raycaster 和 velocity
 
+                    // 驗證並約束所有房間位置在建築邊界內
+                    console.log('🔍 驗證房間邊界...');
+                    validateAllRoomBounds();
+
                     console.log('🏗️ 初始化 Three.js 場景...');
                     initThreeJS();
                     updateRoomsList();
@@ -3084,6 +3359,38 @@
                     window.toggleAutoRotate = toggleAutoRotate;
                     window.resetView = resetView;
                     window.toggleHelp = toggleHelp;
+
+                    // ==================== FPS 房間面板事件監聽 ====================
+                    // 房間面板切換按鈕
+                    const toggleBtn = document.getElementById('fps-room-toggle-btn');
+                    const roomPanel = document.getElementById('fps-room-panel');
+                    const closeBtn = document.getElementById('fps-room-close-btn');
+
+                    if (toggleBtn && roomPanel) {
+                        // 切換按鈕點擊事件
+                        toggleBtn.addEventListener('click', () => {
+                            roomPanel.classList.toggle('visible');
+                            console.log('🔄 FPS房間面板切換，當前狀態:', roomPanel.classList.contains('visible'));
+                        });
+
+                        // 關閉按鈕點擊事件
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();  // 防止事件冒泡
+                                roomPanel.classList.remove('visible');
+                                console.log('✕ FPS房間面板已關閉');
+                            });
+                        }
+
+                        // 點擊面板外部時隱藏面板（可選）
+                        document.addEventListener('click', (e) => {
+                            if (!roomPanel.contains(e.target) && !toggleBtn.contains(e.target)) {
+                                if (roomPanel.classList.contains('visible')) {
+                                    roomPanel.classList.remove('visible');
+                                }
+                            }
+                        });
+                    }
 
                     // 初始化小地圖
                     setTimeout(drawMinimap, 500);
