@@ -1,0 +1,116 @@
+# 赤土崎多功能館 - 真實配色材質庫
+
+newmtl floor_0_wall
+Ka 0.4800 0.4800 0.4800
+Kd 0.4800 0.4800 0.4800
+d 1.0
+Ns 25
+
+newmtl floor_1_wall
+Ka 0.6000 0.6000 0.6000
+Kd 0.6000 0.6000 0.6000
+d 1.0
+Ns 25
+
+newmtl floor_2_wall
+Ka 0.6000 0.6000 0.6000
+Kd 0.6000 0.6000 0.6000
+d 1.0
+Ns 25
+
+newmtl floor_3_wall
+Ka 0.6900 0.6900 0.6900
+Kd 0.6900 0.6900 0.6900
+d 1.0
+Ns 25
+
+newmtl floor_4_wall
+Ka 0.9600 0.9600 0.9600
+Kd 0.9600 0.9600 0.9600
+d 1.0
+Ns 25
+
+newmtl floor_5_wall
+Ka 0.9600 0.9600 0.9600
+Kd 0.9600 0.9600 0.9600
+d 1.0
+Ns 25
+
+newmtl floor_6_wall
+Ka 0.9400 0.9400 0.9400
+Kd 0.9400 0.9400 0.9400
+d 1.0
+Ns 25
+
+newmtl floor_7_wall
+Ka 0.9100 0.9100 0.9100
+Kd 0.9100 0.9100 0.9100
+d 1.0
+Ns 25
+
+newmtl room_healthcare
+Ka 0.0000 1.0000 0.5300
+Kd 0.0000 1.0000 0.5300
+d 0.3
+Ns 25
+
+newmtl room_activity
+Ka 0.0000 0.8000 1.0000
+Kd 0.0000 0.8000 1.0000
+d 0.3
+Ns 25
+
+newmtl room_dining
+Ka 1.0000 0.6700 0.0000
+Kd 1.0000 0.6700 0.0000
+d 0.3
+Ns 25
+
+newmtl room_technical
+Ka 1.0000 0.0000 0.5000
+Kd 1.0000 0.0000 0.5000
+d 0.3
+Ns 25
+
+newmtl room_education
+Ka 0.4000 0.6000 1.0000
+Kd 0.4000 0.6000 1.0000
+d 0.3
+Ns 25
+
+newmtl room_facility
+Ka 0.6000 0.6000 0.7000
+Kd 0.6000 0.6000 0.7000
+d 0.3
+Ns 25
+
+newmtl room_administrative
+Ka 0.5000 0.5000 0.5000
+Kd 0.5000 0.5000 0.5000
+d 0.3
+Ns 25
+
+newmtl partition_wall
+Ka 0.8300 0.8300 0.8300
+Kd 0.8300 0.8300 0.8300
+d 1.0
+Ns 25
+
+newmtl furniture_white
+Ka 1.0000 1.0000 1.0000
+Kd 1.0000 1.0000 1.0000
+d 1.0
+Ns 25
+
+newmtl furniture_brown
+Ka 0.5500 0.2700 0.0700
+Kd 0.5500 0.2700 0.0700
+d 1.0
+Ns 25
+
+newmtl furniture_darkbrown
+Ka 0.4100 0.4100 0.3600
+Kd 0.4100 0.4100 0.3600
+d 1.0
+Ns 25
+
